@@ -1,0 +1,9 @@
+__pycache__/
+.venv/
+*.pyc
+
+# Local input and output files generated or supplied by the user.
+pwc_report.csv
+vhq_report.csv
+itrac_report.csv
+mismatch_alert_report.xlsx

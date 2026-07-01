@@ -197,7 +197,7 @@ def main() -> None:
     write_csv("pwc_report.csv", pwc_rows)
     write_csv("vhq_report.csv", vhq_rows)
     write_csv("itrac_report.csv", itrac_rows)
-    print("\nMock files are ready. Run: python triangle_verification_report.py")
+    print("\nMock files are ready. Run: python3 triangle_verification_report.py")
 
 
 if __name__ == "__main__":

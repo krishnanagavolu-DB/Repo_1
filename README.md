@@ -35,34 +35,22 @@ Place these three CSV files in this folder:
 
 Copy and paste these commands into your terminal from this folder.
 
-### 1. Create a local Python environment
+### 1. Install the required packages
 
 ```bash
-python -m venv .venv
+python3 -m pip install --user -r requirements.txt
 ```
 
-### 2. Turn on the environment
+### 2. Create fake test CSV files
 
 ```bash
-source .venv/bin/activate
+python3 generate_mock_data.py
 ```
 
-### 3. Install the required packages
+### 3. Create the Excel mismatch report
 
 ```bash
-python -m pip install -r requirements.txt
-```
-
-### 4. Create fake test CSV files
-
-```bash
-python generate_mock_data.py
-```
-
-### 5. Create the Excel mismatch report
-
-```bash
-python triangle_verification_report.py
+python3 triangle_verification_report.py
 ```
 
 The report will be created here:
@@ -83,7 +71,7 @@ exports:
 Then run this command again:
 
 ```bash
-python triangle_verification_report.py
+python3 triangle_verification_report.py
 ```
 
 ## What the report checks

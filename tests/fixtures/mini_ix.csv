@@ -1,0 +1,4 @@
+Card Type,Transaction,Entry Mode,Mobile Wallet Desc,Surcharge Reason,Transaction Cnt,Transaction Amt,Interchange Fee
+VISA,SALE,07,APPLE PAY,.,80,1000,20
+VISA,RETURN,07,APPLE PAY,.,2,10,0
+MASTERCARD,SALE,05,,.,20,400,10

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dutch Bros · Payments Executive KPI Dashboard</title>
+    <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="brand">
+            <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="150" height="36" />
+            <div class="brand-divider" aria-hidden="true"></div>
+            <div>
+              <div class="eyebrow">Payments</div>
+              <h1>Executive KPI Dashboard</h1>
+            </div>
+          </div>
+          <div class="period">
+            <div class="period-label">Period</div>
+            <div class="period-control">
+              <label for="period-select" class="visually-hidden" style="position:absolute;left:-9999px">Period</label>
+              <select id="period-select" aria-label="Select period"></select>
+            </div>
+            <div class="scope" id="scope-line">Company owned shops only</div>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="Sales channels">
+          <div class="tab active" aria-current="page">
+            <strong>In Shop</strong>
+            <span>Worldpay</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Olo Pay</strong>
+            <span>Coming soon</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Gift Cards</strong>
+            <span>Coming soon</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Other</strong>
+            <span>Coming soon</span>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        <div class="section-head">
+          <h2>In Shop performance</h2>
+          <p>Authorizations and interchange for physical shops</p>
+        </div>
+
+        <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
+
+        <section class="charts-2">
+          <article class="panel">
+            <h3>Entry method mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-entry"></canvas></div>
+              <table class="mix-legend" id="legend-entry"></table>
+            </div>
+          </article>
+          <article class="panel">
+            <h3>Payment type mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
+              <table class="mix-legend" id="legend-payment"></table>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel declines">
+          <h3>Decline reasons</h3>
+          <div class="chart-wrap"><canvas id="chart-declines"></canvas></div>
+        </section>
+
+        <section class="coming" id="coming-soon">
+          <div class="coming-card">Coming soon · Auth latency</div>
+          <div class="coming-card">Coming soon · False decline / retry</div>
+          <div class="coming-card">Coming soon · Chargebacks</div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

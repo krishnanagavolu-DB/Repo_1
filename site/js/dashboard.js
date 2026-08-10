@@ -1,6 +1,6 @@
 /* global Chart */
 
-const KPI_ORDER = [
+window.KPI_ORDER = [
   {
     key: "auth_rate",
     label: "Auth rate",
@@ -39,9 +39,12 @@ const KPI_ORDER = [
   },
 ];
 
+const KPI_ORDER = window.KPI_ORDER;
+
 const MIX_COLORS = ["#005F98", "#132550", "#FDE021", "#D7282F", "#9FE5FA", "#69788b"];
 
 let dashboardData = null;
+window.__dashboardState = { data: null, periodId: null };
 const charts = {
   trends: {},
   entry: null,
@@ -127,7 +130,10 @@ function populatePeriodSelect(data) {
   ytd.textContent = "YTD";
   select.appendChild(ytd);
   select.value = data.periods.weeks[data.periods.weeks.length - 1].id;
-  select.addEventListener("change", () => renderPeriod(data, select.value));
+  select.addEventListener("change", () => {
+    window.__dashboardState.periodId = select.value;
+    renderPeriod(data, select.value);
+  });
 }
 
 function getPeriod(data, id) {
@@ -274,6 +280,7 @@ function renderDeclines(items) {
 function renderPeriod(data, periodId) {
   const period = getPeriod(data, periodId);
   if (!period) return;
+  window.__dashboardState = { data, periodId };
   renderKpis(period);
   renderMix("chart-entry", "legend-entry", period.entry_method_mix || [], "entry");
   renderMix("chart-payment", "legend-payment", period.payment_type_mix || [], "payment");
@@ -288,7 +295,9 @@ async function loadDashboard() {
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
     populatePeriodSelect(dashboardData);
-    renderPeriod(dashboardData, document.getElementById("period-select").value);
+    const periodId = document.getElementById("period-select").value;
+    window.__dashboardState = { data: dashboardData, periodId };
+    renderPeriod(dashboardData, periodId);
   } catch (err) {
     const page = document.querySelector(".page");
     const box = document.createElement("div");

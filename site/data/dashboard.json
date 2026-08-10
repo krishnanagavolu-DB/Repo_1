@@ -1,0 +1,1202 @@
+{
+  "meta": {
+    "channel": "In Shop \u00b7 Worldpay",
+    "scope": "Company owned shops only",
+    "generated_at": "2026-08-10T20:08:09Z",
+    "brand": {
+      "blue": "#005F98",
+      "red": "#D7282F",
+      "yellow": "#FDE021",
+      "dark": "#021521"
+    }
+  },
+  "periods": {
+    "weeks": [
+      {
+        "id": "2026-07-20",
+        "label": "Jul 20 \u2013 Jul 26, 2026",
+        "week_start": "2026-07-20",
+        "week_end": "2026-07-26",
+        "kpis": {
+          "auth_rate": {
+            "value": 0.9865828139270321,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.9865828139270321
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.9860388311988993
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.98708039996459
+              }
+            ]
+          },
+          "aov": {
+            "value": 12.232337795288055,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 12.232337795288055
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 12.37099477169506
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 12.187304202503839
+              }
+            ]
+          },
+          "returns_pct_of_sales": {
+            "value": 0.0009387271508434653,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.0009387271508434653
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.0009315330553654074
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.0009560011220551966
+              }
+            ]
+          },
+          "sales_volume": {
+            "value": 37866168.0,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 37866168.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 32397433.27
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 28316860.07
+              }
+            ]
+          },
+          "transaction_volume": {
+            "value": 3095579.0,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 3095579.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 2618822.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 2323472.0
+              }
+            ]
+          },
+          "ic_rate": {
+            "value": 0.01938601233692303,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.01938601233692303
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.01927050654898995
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.019443125354964542
+              }
+            ]
+          }
+        },
+        "entry_method_mix": [
+          {
+            "label": "Contactless",
+            "count": 2923573,
+            "pct": 0.944434950618285
+          },
+          {
+            "label": "Chip / Dip",
+            "count": 158448,
+            "pct": 0.0511852548424705
+          },
+          {
+            "label": "Swipe",
+            "count": 13437,
+            "pct": 0.00434070653664468
+          },
+          {
+            "label": "Other",
+            "count": 65,
+            "pct": 2.0997687347019734e-05
+          },
+          {
+            "label": "Key entered",
+            "count": 56,
+            "pct": 1.8090315252817e-05
+          }
+        ],
+        "payment_type_mix": [
+          {
+            "label": "Visa",
+            "count": 2318648,
+            "pct": 0.7490191657198864
+          },
+          {
+            "label": "Mastercard",
+            "count": 617340,
+            "pct": 0.19942634318167943
+          },
+          {
+            "label": "Discover",
+            "count": 88705,
+            "pct": 0.02865538240180593
+          },
+          {
+            "label": "Amex",
+            "count": 70886,
+            "pct": 0.02289910869662832
+          }
+        ],
+        "decline_reasons": [
+          {
+            "label": "Decline",
+            "count": 29118
+          },
+          {
+            "label": "Other",
+            "count": 4376
+          },
+          {
+            "label": "Do not honor",
+            "count": 1603
+          },
+          {
+            "label": "Suspected fraud",
+            "count": 1573
+          },
+          {
+            "label": "Restricted card",
+            "count": 1161
+          },
+          {
+            "label": "Invalid/nonexistent Account specified (general)",
+            "count": 998
+          },
+          {
+            "label": "Transaction not permitted to Issuer/Cardholder",
+            "count": 632
+          },
+          {
+            "label": "Security violation",
+            "count": 319
+          },
+          {
+            "label": "Stolen Card",
+            "count": 318
+          },
+          {
+            "label": "Lost Card",
+            "count": 294
+          },
+          {
+            "label": "Expired Card",
+            "count": 290
+          },
+          {
+            "label": "Exceeds withdrawal amount limit",
+            "count": 271
+          },
+          {
+            "label": "Exceeds withdrawal count limit",
+            "count": 235
+          },
+          {
+            "label": "Invalid Card Number",
+            "count": 226
+          },
+          {
+            "label": "Invalid Merchant",
+            "count": 136
+          },
+          {
+            "label": "Allowable number of PIN tries exceeded",
+            "count": 73
+          },
+          {
+            "label": "Pick-up Card, special condition",
+            "count": 56
+          },
+          {
+            "label": "Invalid Issuer",
+            "count": 37
+          },
+          {
+            "label": "Re-enter transaction",
+            "count": 34
+          },
+          {
+            "label": "Refer to Card Issuer",
+            "count": 29
+          },
+          {
+            "label": "Invalid Transaction",
+            "count": 28
+          },
+          {
+            "label": "Capture Card",
+            "count": 24
+          },
+          {
+            "label": "Invalid Amount",
+            "count": 13
+          },
+          {
+            "label": "Authorization system or Issuer system inoperative",
+            "count": 7
+          },
+          {
+            "label": "No credit Account",
+            "count": 7
+          },
+          {
+            "label": "Transaction cannot be completed, violation of law",
+            "count": 3
+          },
+          {
+            "label": "Refer to Card Issuer's special condition",
+            "count": 3
+          },
+          {
+            "label": "Transaction not permitted to Acquirer/terminal",
+            "count": 3
+          },
+          {
+            "label": "Invalid/nonexistent 'from' Account specified",
+            "count": 2
+          }
+        ],
+        "totals": {
+          "auth_approved_cnt": 3078681.0,
+          "auth_total_cnt": 3120550.0,
+          "sales_amt": 37866168.0,
+          "sales_cnt": 3095579.0,
+          "sales_fee": 734074.0,
+          "return_amt": 35546.0,
+          "return_cnt": 3822.0
+        }
+      },
+      {
+        "id": "2026-07-27",
+        "label": "Jul 27 \u2013 Aug 2, 2026",
+        "week_start": "2026-07-27",
+        "week_end": "2026-08-02",
+        "kpis": {
+          "auth_rate": {
+            "value": 0.9860388311988993,
+            "delta": -0.0005439827281327192,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.9865828139270321
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.9860388311988993
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.98708039996459
+              }
+            ]
+          },
+          "aov": {
+            "value": 12.37099477169506,
+            "delta": 0.13865697640700425,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 12.232337795288055
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 12.37099477169506
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 12.187304202503839
+              }
+            ]
+          },
+          "returns_pct_of_sales": {
+            "value": 0.0009315330553654074,
+            "delta": -7.194095478057941e-06,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.0009387271508434653
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.0009315330553654074
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.0009560011220551966
+              }
+            ]
+          },
+          "sales_volume": {
+            "value": 32397433.27,
+            "delta": -5468734.73,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 37866168.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 32397433.27
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 28316860.07
+              }
+            ]
+          },
+          "transaction_volume": {
+            "value": 2618822.0,
+            "delta": -476757.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 3095579.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 2618822.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 2323472.0
+              }
+            ]
+          },
+          "ic_rate": {
+            "value": 0.01927050654898995,
+            "delta": -0.00011550578793307828,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.01938601233692303
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.01927050654898995
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.019443125354964542
+              }
+            ]
+          }
+        },
+        "entry_method_mix": [
+          {
+            "label": "Contactless",
+            "count": 2475886,
+            "pct": 0.9454197345218576
+          },
+          {
+            "label": "Chip / Dip",
+            "count": 131741,
+            "pct": 0.050305442676134536
+          },
+          {
+            "label": "Swipe",
+            "count": 11094,
+            "pct": 0.004236255843276099
+          },
+          {
+            "label": "Other",
+            "count": 62,
+            "pct": 2.3674766746269887e-05
+          },
+          {
+            "label": "Key entered",
+            "count": 39,
+            "pct": 1.4892191985556864e-05
+          }
+        ],
+        "payment_type_mix": [
+          {
+            "label": "Visa",
+            "count": 1966575,
+            "pct": 0.750938780871705
+          },
+          {
+            "label": "Mastercard",
+            "count": 517232,
+            "pct": 0.19750559602752688
+          },
+          {
+            "label": "Discover",
+            "count": 74790,
+            "pct": 0.028558642015379433
+          },
+          {
+            "label": "Amex",
+            "count": 60225,
+            "pct": 0.022996981085388776
+          }
+        ],
+        "decline_reasons": [
+          {
+            "label": "Decline",
+            "count": 23620
+          },
+          {
+            "label": "Other",
+            "count": 3730
+          },
+          {
+            "label": "Exceeds withdrawal count limit",
+            "count": 1695
+          },
+          {
+            "label": "Suspected fraud",
+            "count": 1377
+          },
+          {
+            "label": "Do not honor",
+            "count": 1369
+          },
+          {
+            "label": "Restricted card",
+            "count": 1004
+          },
+          {
+            "label": "Invalid/nonexistent Account specified (general)",
+            "count": 860
+          },
+          {
+            "label": "Expired Card",
+            "count": 620
+          },
+          {
+            "label": "Transaction not permitted to Issuer/Cardholder",
+            "count": 561
+          },
+          {
+            "label": "Security violation",
+            "count": 281
+          },
+          {
+            "label": "Exceeds withdrawal amount limit",
+            "count": 269
+          },
+          {
+            "label": "Stolen Card",
+            "count": 260
+          },
+          {
+            "label": "Lost Card",
+            "count": 233
+          },
+          {
+            "label": "Invalid Card Number",
+            "count": 200
+          },
+          {
+            "label": "Invalid Merchant",
+            "count": 102
+          },
+          {
+            "label": "Allowable number of PIN tries exceeded",
+            "count": 84
+          },
+          {
+            "label": "Pick-up Card, special condition",
+            "count": 68
+          },
+          {
+            "label": "Capture Card",
+            "count": 34
+          },
+          {
+            "label": "Re-enter transaction",
+            "count": 28
+          },
+          {
+            "label": "Invalid Issuer",
+            "count": 17
+          },
+          {
+            "label": "Invalid Transaction",
+            "count": 15
+          },
+          {
+            "label": "Refer to Card Issuer",
+            "count": 14
+          },
+          {
+            "label": "Invalid Amount",
+            "count": 10
+          },
+          {
+            "label": "Authorization system or Issuer system inoperative",
+            "count": 9
+          },
+          {
+            "label": "No credit Account",
+            "count": 8
+          },
+          {
+            "label": "Transaction not permitted to Acquirer/terminal",
+            "count": 6
+          },
+          {
+            "label": "No savings Account",
+            "count": 3
+          },
+          {
+            "label": "Invalid/nonexistent 'from' Account specified",
+            "count": 2
+          },
+          {
+            "label": "Transaction cannot be completed, violation of law",
+            "count": 2
+          },
+          {
+            "label": "Decline for AVS or CID mismatch",
+            "count": 1
+          }
+        ],
+        "totals": {
+          "auth_approved_cnt": 2576623.0,
+          "auth_total_cnt": 2613105.0,
+          "sales_amt": 32397433.27,
+          "sales_cnt": 2618822.0,
+          "sales_fee": 624314.95,
+          "return_amt": 30179.28,
+          "return_cnt": 3332.0
+        }
+      },
+      {
+        "id": "2026-08-03",
+        "label": "Aug 3 \u2013 Aug 9, 2026",
+        "week_start": "2026-08-03",
+        "week_end": "2026-08-09",
+        "kpis": {
+          "auth_rate": {
+            "value": 0.98708039996459,
+            "delta": 0.0010415687656906147,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.9865828139270321
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.9860388311988993
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.98708039996459
+              }
+            ]
+          },
+          "aov": {
+            "value": 12.187304202503839,
+            "delta": -0.18369056919122073,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 12.232337795288055
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 12.37099477169506
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 12.187304202503839
+              }
+            ]
+          },
+          "returns_pct_of_sales": {
+            "value": 0.0009560011220551966,
+            "delta": 2.4468066689789254e-05,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.0009387271508434653
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.0009315330553654074
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.0009560011220551966
+              }
+            ]
+          },
+          "sales_volume": {
+            "value": 28316860.07,
+            "delta": -4080573.1999999993,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 37866168.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 32397433.27
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 28316860.07
+              }
+            ]
+          },
+          "transaction_volume": {
+            "value": 2323472.0,
+            "delta": -295350.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 3095579.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 2618822.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 2323472.0
+              }
+            ]
+          },
+          "ic_rate": {
+            "value": 0.019443125354964542,
+            "delta": 0.000172618805974592,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.01938601233692303
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.01927050654898995
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.019443125354964542
+              }
+            ]
+          }
+        },
+        "entry_method_mix": [
+          {
+            "label": "Contactless",
+            "count": 2198638,
+            "pct": 0.9462726471418635
+          },
+          {
+            "label": "Chip / Dip",
+            "count": 114994,
+            "pct": 0.04949231150622861
+          },
+          {
+            "label": "Swipe",
+            "count": 9748,
+            "pct": 0.004195445436829022
+          },
+          {
+            "label": "Other",
+            "count": 62,
+            "pct": 2.668420364006969e-05
+          },
+          {
+            "label": "Key entered",
+            "count": 30,
+            "pct": 1.2911711438743397e-05
+          }
+        ],
+        "payment_type_mix": [
+          {
+            "label": "Visa",
+            "count": 1746211,
+            "pct": 0.7515524181053183
+          },
+          {
+            "label": "Mastercard",
+            "count": 458170,
+            "pct": 0.1971919609963021
+          },
+          {
+            "label": "Discover",
+            "count": 66292,
+            "pct": 0.028531439156572577
+          },
+          {
+            "label": "Amex",
+            "count": 52799,
+            "pct": 0.022724181741807088
+          }
+        ],
+        "decline_reasons": [
+          {
+            "label": "Decline",
+            "count": 20648
+          },
+          {
+            "label": "Other",
+            "count": 3354
+          },
+          {
+            "label": "Do not honor",
+            "count": 1290
+          },
+          {
+            "label": "Suspected fraud",
+            "count": 1136
+          },
+          {
+            "label": "Restricted card",
+            "count": 920
+          },
+          {
+            "label": "Invalid/nonexistent Account specified (general)",
+            "count": 698
+          },
+          {
+            "label": "Transaction not permitted to Issuer/Cardholder",
+            "count": 487
+          },
+          {
+            "label": "Expired Card",
+            "count": 358
+          },
+          {
+            "label": "Security violation",
+            "count": 275
+          },
+          {
+            "label": "Stolen Card",
+            "count": 253
+          },
+          {
+            "label": "Lost Card",
+            "count": 246
+          },
+          {
+            "label": "Exceeds withdrawal amount limit",
+            "count": 182
+          },
+          {
+            "label": "Invalid Card Number",
+            "count": 175
+          },
+          {
+            "label": "Exceeds withdrawal count limit",
+            "count": 115
+          },
+          {
+            "label": "Invalid Merchant",
+            "count": 79
+          },
+          {
+            "label": "Allowable number of PIN tries exceeded",
+            "count": 60
+          },
+          {
+            "label": "Pick-up Card, special condition",
+            "count": 46
+          },
+          {
+            "label": "Re-enter transaction",
+            "count": 27
+          },
+          {
+            "label": "Transaction not permitted to Acquirer/terminal",
+            "count": 27
+          },
+          {
+            "label": "Authorization system or Issuer system inoperative",
+            "count": 26
+          },
+          {
+            "label": "System malfunction",
+            "count": 23
+          },
+          {
+            "label": "Invalid Transaction",
+            "count": 17
+          },
+          {
+            "label": "Capture Card",
+            "count": 16
+          },
+          {
+            "label": "Invalid Amount",
+            "count": 11
+          },
+          {
+            "label": "Invalid Issuer",
+            "count": 10
+          },
+          {
+            "label": "No credit Account",
+            "count": 9
+          },
+          {
+            "label": "Refer to Card Issuer",
+            "count": 9
+          },
+          {
+            "label": "Invalid PIN",
+            "count": 2
+          },
+          {
+            "label": "Decline for AVS or CID mismatch",
+            "count": 1
+          },
+          {
+            "label": "Invalid/nonexistent 'from' Account specified",
+            "count": 1
+          },
+          {
+            "label": "Transaction cannot be completed, violation of law",
+            "count": 1
+          }
+        ],
+        "totals": {
+          "auth_approved_cnt": 2330407.0,
+          "auth_total_cnt": 2360909.0,
+          "sales_amt": 28316860.07,
+          "sales_cnt": 2323472.0,
+          "sales_fee": 550568.26,
+          "return_amt": 27070.949999999993,
+          "return_cnt": 2931.0
+        }
+      }
+    ],
+    "ytd": {
+      "id": "ytd",
+      "label": "YTD",
+      "kpis": {
+        "auth_rate": {
+          "value": 0.9865523331460472,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 0.9865828139270321
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 0.9860388311988993
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 0.98708039996459
+            }
+          ]
+        },
+        "aov": {
+          "value": 12.26449601032512,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 12.232337795288055
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 12.37099477169506
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 12.187304202503839
+            }
+          ]
+        },
+        "returns_pct_of_sales": {
+          "value": 0.0009413247690122851,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 0.0009387271508434653
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 0.0009315330553654074
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 0.0009560011220551966
+            }
+          ]
+        },
+        "sales_volume": {
+          "value": 98580461.34,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 37866168.0
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 32397433.27
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 28316860.07
+            }
+          ]
+        },
+        "transaction_volume": {
+          "value": 8037873.0,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 3095579.0
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 2618822.0
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 2323472.0
+            }
+          ]
+        },
+        "ic_rate": {
+          "value": 0.019364458068583026,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 0.01938601233692303
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 0.01927050654898995
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 0.019443125354964542
+            }
+          ]
+        }
+      },
+      "entry_method_mix": [
+        {
+          "label": "Contactless",
+          "count": 7598097,
+          "pct": 0.9452870180954588
+        },
+        {
+          "label": "Chip / Dip",
+          "count": 405183,
+          "pct": 0.050409231397410735
+        },
+        {
+          "label": "Swipe",
+          "count": 34279,
+          "pct": 0.004264685446012894
+        },
+        {
+          "label": "Other",
+          "count": 189,
+          "pct": 2.3513683284122554e-05
+        },
+        {
+          "label": "Key entered",
+          "count": 125,
+          "pct": 1.5551377833414387e-05
+        }
+      ],
+      "payment_type_mix": [
+        {
+          "label": "Visa",
+          "count": 6031434,
+          "pct": 0.7503768720904149
+        },
+        {
+          "label": "Mastercard",
+          "count": 1592742,
+          "pct": 0.19815466106518478
+        },
+        {
+          "label": "Discover",
+          "count": 229787,
+          "pct": 0.028588035665654335
+        },
+        {
+          "label": "Amex",
+          "count": 183910,
+          "pct": 0.02288043117874592
+        }
+      ],
+      "decline_reasons": [
+        {
+          "label": "Decline",
+          "count": 73386
+        },
+        {
+          "label": "Other",
+          "count": 11460
+        },
+        {
+          "label": "Do not honor",
+          "count": 4262
+        },
+        {
+          "label": "Suspected fraud",
+          "count": 4086
+        },
+        {
+          "label": "Restricted card",
+          "count": 3085
+        },
+        {
+          "label": "Invalid/nonexistent Account specified (general)",
+          "count": 2556
+        },
+        {
+          "label": "Exceeds withdrawal count limit",
+          "count": 2045
+        },
+        {
+          "label": "Transaction not permitted to Issuer/Cardholder",
+          "count": 1680
+        },
+        {
+          "label": "Expired Card",
+          "count": 1268
+        },
+        {
+          "label": "Security violation",
+          "count": 875
+        },
+        {
+          "label": "Stolen Card",
+          "count": 831
+        },
+        {
+          "label": "Lost Card",
+          "count": 773
+        },
+        {
+          "label": "Exceeds withdrawal amount limit",
+          "count": 722
+        },
+        {
+          "label": "Invalid Card Number",
+          "count": 601
+        },
+        {
+          "label": "Invalid Merchant",
+          "count": 317
+        },
+        {
+          "label": "Allowable number of PIN tries exceeded",
+          "count": 217
+        },
+        {
+          "label": "Pick-up Card, special condition",
+          "count": 170
+        },
+        {
+          "label": "Re-enter transaction",
+          "count": 89
+        },
+        {
+          "label": "Capture Card",
+          "count": 74
+        },
+        {
+          "label": "Invalid Issuer",
+          "count": 64
+        },
+        {
+          "label": "Invalid Transaction",
+          "count": 60
+        },
+        {
+          "label": "Refer to Card Issuer",
+          "count": 52
+        },
+        {
+          "label": "Authorization system or Issuer system inoperative",
+          "count": 42
+        },
+        {
+          "label": "Transaction not permitted to Acquirer/terminal",
+          "count": 36
+        },
+        {
+          "label": "Invalid Amount",
+          "count": 34
+        },
+        {
+          "label": "No credit Account",
+          "count": 24
+        },
+        {
+          "label": "System malfunction",
+          "count": 23
+        },
+        {
+          "label": "Transaction cannot be completed, violation of law",
+          "count": 6
+        },
+        {
+          "label": "Invalid/nonexistent 'from' Account specified",
+          "count": 5
+        },
+        {
+          "label": "Refer to Card Issuer's special condition",
+          "count": 3
+        },
+        {
+          "label": "No savings Account",
+          "count": 3
+        },
+        {
+          "label": "Decline for AVS or CID mismatch",
+          "count": 2
+        },
+        {
+          "label": "Invalid PIN",
+          "count": 2
+        }
+      ]
+    }
+  }
+}

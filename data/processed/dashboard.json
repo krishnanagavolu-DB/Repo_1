@@ -2,7 +2,7 @@
   "meta": {
     "channel": "In Shop \u00b7 Worldpay",
     "scope": "Company owned shops only",
-    "generated_at": "2026-08-10T20:08:09Z",
+    "generated_at": "2026-08-10T20:09:23Z",
     "brand": {
       "blue": "#005F98",
       "red": "#D7282F",
@@ -180,10 +180,6 @@
           {
             "label": "Decline",
             "count": 29118
-          },
-          {
-            "label": "Other",
-            "count": 4376
           },
           {
             "label": "Do not honor",
@@ -472,10 +468,6 @@
           {
             "label": "Decline",
             "count": 23620
-          },
-          {
-            "label": "Other",
-            "count": 3730
           },
           {
             "label": "Exceeds withdrawal count limit",
@@ -768,10 +760,6 @@
           {
             "label": "Decline",
             "count": 20648
-          },
-          {
-            "label": "Other",
-            "count": 3354
           },
           {
             "label": "Do not honor",
@@ -1067,10 +1055,6 @@
         {
           "label": "Decline",
           "count": 73386
-        },
-        {
-          "label": "Other",
-          "count": 11460
         },
         {
           "label": "Do not honor",

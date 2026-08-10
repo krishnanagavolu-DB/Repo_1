@@ -78,12 +78,13 @@ def compute_week_kpis(
     auth_rate = _safe_div(auth_approved, auth_total)
 
     declines = auth.loc[auth["Auth Response cd"] != "00"].copy()
+    resp = declines["Auth Response"].astype(str).str.strip()
+    declines = declines.loc[~resp.isin(["", ".", "nan", "None"])].copy()
     decline_grouped = (
         declines.groupby("Auth Response", dropna=False)["Auth Request Cnt"].sum().sort_values(ascending=False)
     )
     decline_reasons = [
-        {"label": str(label) if pd.notna(label) and str(label).strip() not in ("", ".") else "Other", "count": int(cnt)}
-        for label, cnt in decline_grouped.items()
+        {"label": str(label), "count": int(cnt)} for label, cnt in decline_grouped.items()
     ]
 
     ix["Transaction"] = ix["Transaction"].astype(str).str.strip().str.upper()

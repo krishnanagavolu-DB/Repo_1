@@ -107,34 +107,29 @@
       ]
     },
     {
-      "name": "Subway",
+      "name": "Starbucks",
       "public_context": [
-        "Subway reports nearly 37,000 restaurants globally.",
-        "A 2023 release reported 11.7% same-store sales growth and 21.2% digital-sales growth for Q1 2023."
+        "Starbucks Card represented 42% of U.S. company-operated transactions in its Q4 FY25 Digital IR Dashboard.",
+        "Starbucks Rewards accounted for 58% of tender dollars, and Mobile Order & Pay was 31% of transactions."
       ],
-      "comparable_payment_kpis_available": false,
-      "unavailable_metrics": [
-        "authorization rate",
-        "decline dollars",
-        "interchange fee/rate",
-        "downgrade rate",
-        "returns rate",
-        "AOV",
-        "wallet mix",
-        "entry-method mix"
+      "payment_proxy": [
+        {
+          "label": "Starbucks Card share of transactions",
+          "value": "42%",
+          "note": "Closest public tender-mix proxy; it is a stored-value/loyalty card, not the tap/chip/wallet entry mix on our Worldpay feed."
+        },
+        {
+          "label": "Mobile Order & Pay share of transactions",
+          "value": "31%",
+          "note": "App ordering channel, not a card entry method; directional context only."
+        }
       ],
       "sources": [
         {
-          "publisher": "Subway",
-          "title": "Subway Expands Presence in the Nordics",
-          "url": "https://newsroom.subway.com/2025-05-20-Subway-Expands-Presence-in-the-Nordics-with-Nordic-Bites-Group-Oy",
-          "published": "2025-05-20"
-        },
-        {
-          "publisher": "Subway",
-          "title": "Subway Continues Positive Momentum with Double-Digit Global Sales Growth",
-          "url": "https://newsroom.subway.com/2023-04-24-Subway-R-Continues-Positive-Momentum-with-Double-Digit-Global-Sales-Growth",
-          "published": "2023-04-24"
+          "publisher": "Starbucks",
+          "title": "Q4 FY25 Digital IR Dashboard",
+          "url": "https://s203.q4cdn.com/326826266/files/doc_financials/2025/q4/Q4-FY25-Digital-IR-Dashboard.pdf",
+          "published": "2025-10"
         }
       ]
     },

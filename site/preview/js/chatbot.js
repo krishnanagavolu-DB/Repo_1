@@ -99,7 +99,10 @@ const chatContext = {
   kpiKey: null,
   mixKind: null,
   entryLabel: null,
+  lastView: null,
 };
+
+let benchmarkData = window.__benchmarkData || null;
 
 const OFF_TOPIC_REPLIES = [
   "I’m the payments data desk, not the whole internet. Ask me to explain a trend, compare weeks, convert a number to a percentage, or drill into a payment metric.",
@@ -164,6 +167,51 @@ function sentenceDirection(delta, inverse = false) {
   if (Math.abs(Number(delta || 0)) < 1e-12) return "flat";
   const improved = inverse ? delta < 0 : delta > 0;
   return improved ? "improved" : "worsened";
+}
+
+function rememberView(title, rows, note = "") {
+  chatContext.lastView = {
+    title,
+    rows: (rows || []).filter((row) => row && Number.isFinite(Number(row.value))),
+    note,
+  };
+}
+
+function formatRememberedView(mode) {
+  const view = chatContext.lastView;
+  if (!view?.rows?.length) {
+    return "Ask for a metric, trend, mix, or breakdown first—then I can reformat that result.";
+  }
+  const rows = view.rows;
+  if (mode === "bars") {
+    const max = Math.max(...rows.map((row) => Math.abs(Number(row.value))), 1);
+    const lines = rows.map((row) => {
+      const size = Math.max(1, Math.round((Math.abs(Number(row.value)) / max) * 16));
+      return `${row.label.padEnd(20, " ")} ${"█".repeat(size)} ${row.display}`;
+    });
+    return `**${view.title} — visual bars**\n${lines.join("\n")}${view.note ? `\n\n${view.note}` : ""}`;
+  }
+  if (mode === "table") {
+    const lines = rows.map((row) => `• **${row.label}** | ${row.display}${row.secondary ? ` | ${row.secondary}` : ""}`);
+    return `**${view.title} — table view**\n${lines.join("\n")}${view.note ? `\n\n${view.note}` : ""}`;
+  }
+  if (mode === "percentages") {
+    const total = rows.reduce((sum, row) => sum + Math.max(0, Number(row.value)), 0);
+    if (!total) return "I can’t convert that result to percentages because its total is zero.";
+    const lines = rows.map((row) => `• ${row.label}: **${pct(row.value / total, 1)}**`);
+    return `**${view.title} — percentage view**\n${lines.join("\n")}`;
+  }
+  const ranked = [...rows].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  const top = ranked.slice(0, 3);
+  return `**Executive summary — ${view.title}**\n${top.map((row, index) => `${index + 1}. **${row.label}: ${row.display}**`).join("\n")}\n\n${view.note || "Largest values shown first; ask for a table or bars to see the full result."}`;
+}
+
+function detectFormatRequest(q) {
+  if (/\b(bar chart|bars|visual|graph)\b/.test(q)) return "bars";
+  if (/\b(table|tabular|columns)\b/.test(q)) return "table";
+  if (/\b(as percentages|percentage view|percent view|convert.*percent)\b/.test(q)) return "percentages";
+  if (/\b(executive summary|summarize|summary|in words|narrative)\b/.test(q) && chatContext.lastView) return "summary";
+  return null;
 }
 
 function detectKpiKey(q) {
@@ -282,6 +330,15 @@ function answerTrend(key) {
   const best = [...history].sort((a, b) => inverse ? a.value - b.value : b.value - a.value)[0];
   const worst = [...history].sort((a, b) => inverse ? b.value - a.value : a.value - b.value)[0];
   const points = history.map((h) => `${h.week_start}: ${formatKpiValue(key, h.value)}`).join(" → ");
+  rememberView(
+    `${meta.label} trend`,
+    history.map((item) => ({
+      label: item.week_start,
+      value: item.value,
+      display: formatKpiValue(key, item.value),
+    })),
+    `Best: ${formatKpiValue(key, best.value)}; worst: ${formatKpiValue(key, worst.value)}.`
+  );
 
   let interpretation = `${meta.label} ${direction} over the loaded trend`;
   if (key.includes("rate") || key.includes("pct")) {
@@ -319,6 +376,14 @@ function answerEntryAuth(q, requestedLabel = null) {
     const declined = Number(item.total_cnt) - Number(item.approved_cnt);
     const totalAttempts = items.reduce((sum, i) => sum + Number(i.total_cnt || 0), 0);
     const definition = findDefinition(normalize(item.label));
+    rememberView(
+      `${item.label} authorization outcome`,
+      [
+        { label: "Approved", value: Number(item.approved_cnt), display: count(item.approved_cnt) },
+        { label: "Declined", value: declined, display: count(declined) },
+      ],
+      `Auth rate: ${pct(item.auth_rate)}.`
+    );
     const note = item.label === "Other"
       ? " “Other” combines Worldpay entry-mode codes 80/85; this aggregate file does not provide a finer description."
       : definition ? ` ${definition.body}` : "";
@@ -329,6 +394,16 @@ function answerEntryAuth(q, requestedLabel = null) {
     const declined = Number(i.total_cnt) - Number(i.approved_cnt);
     return `• ${i.label}: **${pct(i.auth_rate)}** (${count(declined)} declined of ${count(i.total_cnt)})`;
   });
+  rememberView(
+    `Auth rate by entry method — ${period.label}`,
+    items.map((item) => ({
+      label: item.label,
+      value: Number(item.auth_rate),
+      display: pct(item.auth_rate),
+      secondary: `${count(item.total_cnt)} attempts`,
+    })),
+    "Approval rates by terminal entry method."
+  );
   return `**Auth rate by entry method — ${period.label}**\n${lines.join("\n")}\n\nAsk a follow-up like “What is Key entered?” or “Break down Other.”`;
 }
 
@@ -357,12 +432,30 @@ function answerMix(kind, q, forceCounts = false) {
 
   const selected = findMixItem(items, q);
   if (selected) {
+    rememberView(
+      `${selected.label} share`,
+      [
+        { label: selected.label, value: Number(selected.count), display: count(selected.count) },
+        { label: "All other", value: Math.max(0, items.reduce((sum, item) => sum + Number(item.count || 0), 0) - Number(selected.count)), display: count(Math.max(0, items.reduce((sum, item) => sum + Number(item.count || 0), 0) - Number(selected.count))) },
+      ],
+      `${selected.label}: ${pct(selected.pct, 1)}.`
+    );
     return `For **${period.label}**, **${selected.label}** represents **${pct(selected.pct, 1)}** of ${config.title.toLowerCase()} — **${count(selected.count)} transactions**.`;
   }
 
   const total = items.reduce((sum, i) => sum + Number(i.count || 0), 0);
   const lines = items.slice(0, 8).map((item) =>
     `• ${item.label}: **${pct(item.pct, 1)}**${forceCounts ? ` (${count(item.count)})` : ""}`
+  );
+  rememberView(
+    `${config.title} — ${period.label}`,
+    items.slice(0, 8).map((item) => ({
+      label: item.label,
+      value: Number(item.count),
+      display: pct(item.pct, 1),
+      secondary: `${count(item.count)} transactions`,
+    })),
+    `Total: ${count(total)} transactions.`
   );
   return `**${config.title} — ${period.label}**\n${lines.join("\n")}\n${forceCounts ? `\nTotal: ${count(total)} transactions.` : "\nAsk “how many” to see counts."}`;
 }
@@ -379,6 +472,16 @@ function answerDeclines(asPercent = false) {
   const denominator = allDeclines || knownTotal;
   const lines = reasons.slice(0, 8).map((d, idx) =>
     `${idx + 1}. ${d.label}: **${asPercent ? pct(d.count / denominator, 1) : count(d.count)}**${asPercent ? ` (${count(d.count)})` : ""}`
+  );
+  rememberView(
+    `Decline reasons — ${period.label}`,
+    reasons.slice(0, 8).map((reason) => ({
+      label: reason.label,
+      value: Number(reason.count),
+      display: asPercent ? pct(reason.count / denominator, 1) : count(reason.count),
+      secondary: asPercent ? `${count(reason.count)} requests` : pct(reason.count / denominator, 1),
+    })),
+    `${count(allDeclines)} total declined authorization requests.`
   );
   const unnamed = Math.max(0, allDeclines - knownTotal);
   const note = asPercent && unnamed > 0
@@ -402,6 +505,22 @@ function answerComparison() {
     return `• ${meta.label}: **${formatKpiValue(key, current)}** vs ${formatKpiValue(key, previous)} — ${direction} (${meta.formatDelta(delta)})`;
   }).filter(Boolean);
   chatContext.topic = "comparison";
+  rememberView(
+    `${period.label} vs ${prior.label}`,
+    keys.map((key) => {
+      const meta = kpiMeta(key);
+      const current = period.kpis[key]?.value;
+      const previous = prior.kpis[key]?.value;
+      if (current === undefined || previous === undefined) return null;
+      return {
+        label: meta.label,
+        value: Math.abs(current - previous),
+        display: formatKpiValue(key, current),
+        secondary: `prior ${formatKpiValue(key, previous)}`,
+      };
+    }),
+    "Rows are ordered by leadership priority; changes use each metric's native unit."
+  );
   return `**${period.label} vs ${prior.label}**\n${lines.join("\n")}`;
 }
 
@@ -429,6 +548,16 @@ function answerAttention() {
   const top = concerns.length ? concerns.slice(0, 4) : candidates.slice(0, 3);
   const lines = top.map((x) =>
     `• **${x.meta.label}: ${formatKpiValue(x.key, x.obj.value)}** — ${x.worsened ? `moved the wrong way (${x.meta.formatDelta(x.obj.delta)})` : "stable / no adverse weekly move"}`
+  );
+  rememberView(
+    `Leadership attention — ${period.label}`,
+    top.map((item) => ({
+      label: item.meta.label,
+      value: Math.abs(Number(item.obj.delta || 0)),
+      display: formatKpiValue(item.key, item.obj.value),
+      secondary: item.worsened ? "adverse weekly move" : "stable",
+    })),
+    "Directional screen only; formal alert thresholds require leadership targets."
   );
   const headline = concerns.length
     ? `${concerns.length} leadership metric${concerns.length === 1 ? "" : "s"} moved adversely.`
@@ -464,15 +593,79 @@ function answerScope() {
   return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. I can calculate only from these aggregate Worldpay files.`;
 }
 
+async function loadBenchmarks() {
+  if (benchmarkData) return benchmarkData;
+  try {
+    const response = await fetch("data/benchmarks.json", { cache: "no-store" });
+    if (!response.ok) throw new Error(`benchmark file ${response.status}`);
+    benchmarkData = await response.json();
+    window.__benchmarkData = benchmarkData;
+  } catch (error) {
+    console.warn("Benchmark research is unavailable", error);
+  }
+  return benchmarkData;
+}
+
+function sourceLink(source) {
+  if (!source?.url) return "";
+  return `[${source.publisher || "Source"}](${source.url})`;
+}
+
+function answerIndustryBenchmark(q) {
+  if (!benchmarkData) {
+    return "The curated benchmark library has not loaded yet. Refresh the page and try again.";
+  }
+  const period = currentPeriod();
+  chatContext.topic = "benchmark";
+  const authRate = period?.kpis?.auth_rate?.value;
+  const benchmarks = benchmarkData.payment_benchmarks || [];
+  if (/\b(auth|approval|authorization)\b/.test(q) || !detectKpiKey(q)) {
+    const restaurant = benchmarks.find((item) => item.segment?.includes("Restaurants"));
+    const worldpay = benchmarks.find((item) => item.source?.publisher === "Worldpay");
+    const current = authRate === undefined ? "" : `Dutch Bros In Shop is **${pct(authRate)}** for ${period.label}. `;
+    return `**Directional authorization context**\n${current}A provider-published in-store restaurant range is **${pct(restaurant.range_low, 0)}–${pct(restaurant.range_high, 0)}**; Worldpay describes **97%+** as best-in-class for select verticals.\n\nThis suggests current performance is strong, but it is **not an apples-to-apples QSR target**—definitions, issuer mix, retries, and merchant mix differ.\n\nSources: ${sourceLink(restaurant.source)} · ${sourceLink(worldpay.source)}\nResearch updated: ${benchmarkData.updated_at}.`;
+  }
+  return "The public benchmark library currently has defensible context for authorization rate, not for interchange, downgrade, returns, AOV, or wallet mix. I won’t invent a standard where comparable definitions are unavailable.";
+}
+
+function answerCompetitor(q) {
+  if (!benchmarkData) return "The curated competitor research has not loaded yet. Refresh and try again.";
+  const competitors = benchmarkData.competitors || [];
+  chatContext.topic = "competitor";
+  const selected = competitors.filter((competitor) => q.includes(normalize(competitor.name)));
+  const list = selected.length ? selected : competitors;
+  const sections = list.map((competitor) => {
+    const facts = competitor.public_context.map((fact) => `• ${fact}`).join("\n");
+    const sources = competitor.sources.map(sourceLink).join(" · ");
+    return `**${competitor.name}**\n${facts}\nPayment KPI comparison: **not publicly available**.\nSources: ${sources}`;
+  });
+  return `**Competitor research context**\n${sections.join("\n\n")}\n\nSubway, Dunkin, and 7 Brew do not publish authorization rate, decline $, interchange, downgrade, returns, AOV, wallet mix, or entry-method mix on definitions comparable to this Worldpay feed. Their footprint/growth facts provide market context—not a direct payment-performance benchmark. Research updated: ${benchmarkData.updated_at}.`;
+}
+
+function answerDataQuality() {
+  const quality = getState()?.data?.meta?.data_quality;
+  chatContext.topic = "quality";
+  if (!quality) {
+    return "This dashboard predates the certification metadata. The new publish gate still runs schema, type, duplicate, reconciliation, anomaly, and copy-consistency checks before deployment.";
+  }
+  return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitHub Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
+}
+
 function answerQuestion(raw) {
   const q = normalize(raw);
   if (!q) return "Ask me to explain a metric, build a trend, compare weeks, or convert a number to a percentage.";
 
+  const format = detectFormatRequest(q);
+  if (format) return formatRememberedView(format);
+
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I can now:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Convert dollars/counts to **percentages**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Flag **which leadership metrics moved adversely**`;
+    return `Good morning! I can:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Reformat answers as **tables, visual bars, percentages, or executive summaries**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Give cited **QSR/coffee benchmark context**\n• Research public facts about **Subway, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
+  if (/\b(data quality|certified|certification|sanity check|validated|validation|accurate)\b/.test(q)) return answerDataQuality();
+  if (/\b(subway|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
+  if (/\b(industry standard|industry benchmark|qsr benchmark|coffee chain benchmark|restaurant benchmark|benchmark)\b/.test(q)) return answerIndustryBenchmark(q);
   if (/\b(what needs attention|need attention|critical|biggest concern|leadership summary|executive summary)\b/.test(q)) return answerAttention();
   if (/\b(compare|versus|vs|prior week|last week|week over week|wow)\b/.test(q) && !detectKpiKey(q)) return answerComparison();
 
@@ -529,8 +722,68 @@ function appendMessage(role, text) {
     .replace(/>/g, "&gt;")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/_(.+?)_/g, "<em>$1</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>')
     .replace(/\n/g, "<br>");
   log.appendChild(bubble);
+  log.scrollTop = log.scrollHeight;
+}
+
+function suggestedFollowUps() {
+  const commonFormats = [
+    { label: "Would you like a table?", question: "Show that as a table" },
+    { label: "Would a visual help?", question: "Show that as visual bars" },
+  ];
+  const byTopic = {
+    auth_entry: [
+      { label: "Do you know why Key entered is lower?", question: "What is key entered?" },
+      { label: "Would you like entry rates as bars?", question: "Show that as visual bars" },
+    ],
+    declines: [
+      { label: "Would you like decline percentages?", question: "Show decline reasons as percentages" },
+      { label: "Do you know the decline dollars?", question: "What percent are decline dollars of sales?" },
+    ],
+    trend: [
+      { label: "Would you like the trend as a table?", question: "Show that as a table" },
+      { label: "Do you know what needs attention?", question: "Which metrics need attention?" },
+    ],
+    comparison: [
+      { label: "Would you like an executive summary?", question: "Summarize that for an executive" },
+      { label: "Do you know the auth trend?", question: "Explain the auth rate trend" },
+    ],
+    mix: [
+      { label: "Would you like transaction counts?", question: "Show that as a table" },
+      { label: "Do you know the wallet mix?", question: "Show wallet mix" },
+    ],
+    benchmark: [
+      { label: "Do you know what competitors disclose?", question: "Compare us with Subway, Dunkin, and 7 Brew" },
+      { label: "Would you like the source caveats?", question: "What makes the benchmark directional?" },
+    ],
+    competitor: [
+      { label: "Would you like the QSR benchmark?", question: "How does our auth rate compare with industry benchmarks?" },
+      { label: "Do you know why direct comparison is limited?", question: "Which competitor payment KPIs are public?" },
+    ],
+    quality: [
+      { label: "Do you know what gets checked?", question: "What data sanity checks run before publish?" },
+      { label: "Would you like this week's trend?", question: "Compare this week with the prior week" },
+    ],
+    kpi: commonFormats,
+  };
+  return (byTopic[chatContext.topic] || commonFormats).slice(0, 2);
+}
+
+function appendFollowUps(input) {
+  const log = document.getElementById("chat-log");
+  if (!log) return;
+  const row = document.createElement("div");
+  row.className = "chat-followups";
+  for (const suggestion of suggestedFollowUps()) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = suggestion.label;
+    button.addEventListener("click", () => submitQuestion(suggestion.question, input));
+    row.appendChild(button);
+  }
+  log.appendChild(row);
   log.scrollTop = log.scrollHeight;
 }
 
@@ -540,13 +793,17 @@ function submitQuestion(text, input) {
   appendMessage("user", value);
   if (input) input.value = "";
   const reply = answerQuestion(value);
-  setTimeout(() => appendMessage("bot", reply), 100);
+  setTimeout(() => {
+    appendMessage("bot", reply);
+    appendFollowUps(input);
+  }, 100);
 }
 
-function initChatbot() {
+async function initChatbot() {
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
   if (!form || !input) return;
+  await loadBenchmarks();
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -559,8 +816,9 @@ function initChatbot() {
 
   appendMessage(
     "bot",
-    "Ask me to **explain trends**, **compare weeks**, convert numbers to **percentages**, or drill into a payment metric. I’ll remember the topic for follow-up questions."
+    "Ask me to **explain trends**, **compare weeks**, reformat results, check **industry context**, research public competitor facts, or explain this week's **data certification**."
   );
+  appendFollowUps(input);
 }
 
 function startChatbotWhenUnlocked() {

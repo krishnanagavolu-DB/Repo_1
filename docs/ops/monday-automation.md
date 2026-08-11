@@ -5,11 +5,12 @@
 1. Michelle / Worldpay drops two Excels into SharePoint:  
    `Payment Systems/Reports/Worldpay/WP Weekly Reports`
 2. A **Cursor Automation** (Monday cron) pulls the new files into this repo.
-3. Ingest rebuilds `data/processed/dashboard.json` and copies it to:
+3. Ingest validates raw files, rebuilds `data/processed/dashboard.json`, and copies it to:
    - `site/data/dashboard.json` (leadership homepage)
    - `site/preview/data/dashboard.json` (preview page, if present)
-4. Push to `main` triggers GitHub Pages deploy of the `site/` folder only.
-5. Leadership opens the **same Pages URL** — no new link needed.
+4. Certification checks the output copies and writes `data/processed/validation_report.json`.
+5. Push to `main` triggers GitHub Pages deploy; CI runs the certification again and blocks bad data.
+6. Leadership opens the **same Pages URL** — no new link needed.
    Preview UI work stays at `/preview/` until promoted (see `docs/ops/preview-workflow.md`).
 
 ## One-time setup
@@ -49,13 +50,22 @@ Refresh the Dutch Bros In Shop · Worldpay Executive KPI Dashboard.
      --site-copy site/data/dashboard.json \
      --site-copy site/preview/data/dashboard.json
 
-4. If either file is missing or ingest fails, do NOT publish partial data. Report the error and stop.
+4. Certify the final outputs:
+   python3 scripts/validate_worldpay.py \
+     --raw data/raw \
+     --dashboard data/processed/dashboard.json \
+     --dashboard site/data/dashboard.json \
+     --dashboard site/preview/data/dashboard.json
 
-5. Commit and push to main so GitHub Pages updates:
+5. If validation has any ERROR, do NOT publish. If it has WARNING, review and
+   explain the movement before publishing. Never suppress a check just to make CI green.
+
+6. Commit and push to main so GitHub Pages updates:
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json
    - site/preview/data/dashboard.json (if preview folder exists)
+   - data/processed/validation_report.json
 
 Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
 ```
@@ -67,6 +77,10 @@ Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashbo
 | Only one of two files present | Ingest/discover raises; no publish |
 | SharePoint auth failure | Automation reports error; prior dashboard remains live |
 | Unexpected columns | Investigate before forcing a publish |
+| Exact duplicate rows | Certification fails; identify/remove duplicate delivery |
+| Numeric/type failure | Certification fails; inspect source workbook formatting |
+| Unusual weekly movement | Warning; reconcile against Worldpay totals and explain |
+| Published JSON copies differ | Certification fails; regenerate all copies together |
 
 ## Local refresh (manual)
 

@@ -282,9 +282,9 @@ function answerQuestion(raw) {
 
 function appendMessage(role, text) {
   const log = document.getElementById("chat-log");
+  if (!log) return;
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${role}`;
-  // lightweight markdown: **bold** and newlines
   bubble.innerHTML = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -296,26 +296,10 @@ function appendMessage(role, text) {
   log.scrollTop = log.scrollHeight;
 }
 
-function setOpen(open) {
-  const panel = document.getElementById("chat-panel");
-  const launcher = document.getElementById("chat-launcher");
-  panel.hidden = !open;
-  launcher.setAttribute("aria-expanded", open ? "true" : "false");
-  if (open) document.getElementById("chat-input")?.focus();
-}
-
 function initChatbot() {
-  const launcher = document.getElementById("chat-launcher");
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
-  const closeBtn = document.getElementById("chat-close");
-  if (!launcher || !form) return;
-
-  launcher.addEventListener("click", () => {
-    const panel = document.getElementById("chat-panel");
-    setOpen(panel.hidden);
-  });
-  closeBtn?.addEventListener("click", () => setOpen(false));
+  if (!form || !input) return;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -327,12 +311,10 @@ function initChatbot() {
     setTimeout(() => appendMessage("bot", reply), 120);
   });
 
-  if (!document.querySelector("#chat-log .chat-bubble")) {
-    appendMessage(
-      "bot",
-      "Hi! I only answer questions about **this dashboard’s data** and **payment term definitions**. " + HELP_TEXT
-    );
-  }
+  appendMessage(
+    "bot",
+    "Ask about the numbers on this page or payment terms (auth rate, IC rate, AOV, declines, and more). Off-topic questions get a polite pass."
+  );
 }
 
 document.addEventListener("DOMContentLoaded", initChatbot);

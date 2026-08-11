@@ -2,33 +2,32 @@
 
 const KEY_PHRASES = [
   // Hitchhiker's Guide
-  "Don’t panic — but we do need the key. What’s the answer around here?",
-  "The mice are waiting. Enter the key to life, the universe, and this dashboard.",
-  "So long, and thanks for all the fish… after you type the key.",
+  "Don’t panic. What’s the answer around here?",
+  "Life, the universe, and this dashboard need a key.",
+  "So long, and thanks for all the fish — after the key.",
   // Lord of the Rings / Harry Potter
-  "Speak, friend, and enter — Dutch Bros edition. What’s the key?",
-  "Not every door opens with Alohomora. This one wants the key.",
-  "Mischief managed only after you produce the key.",
-  "You’re a wizard, Broista — now cast the key.",
+  "Speak, friend, and enter.",
+  "Alohomora won’t cut it. We need the key.",
+  "Mischief managed… after you produce the key.",
+  "You’re a wizard, Broista. Cast the key.",
   // V for Vendetta
   "Remember, remember… the key to this page.",
-  "A building is a symbol. This popup is a lock. Enter the key.",
+  "Ideas are bulletproof. This lock is not. Enter the key.",
   // Home Alone
-  "Keep the change, ya filthy animal — kidding. We need the key.",
-  "This is my house (dashboard). What’s the key, buzz?",
+  "Keep the change — kidding. We need the key.",
+  "This is my dashboard. What’s the key, buzz?",
   // Robert Zemeckis
   "Roads? Where we’re going, we need a key.",
-  "Great Scott! Enter the key before this DeLorean leaves.",
+  "Great Scott! Enter the key before we hit 88.",
   "Life is like a box of… wait, wrong movie. Still need the key.",
   // Spielberg
   "You’re gonna need a bigger key.",
-  "E.T. phone home — you phone in the key.",
-  "This dashboard doesn’t phone home until you enter the key.",
-  "We named the dog Indiana. We named the password… enter it.",
-  // Dutch Bros flavor + misc
+  "E.T. phone home. You enter the key.",
+  "We named the dog Indiana. Enter the key.",
+  // Dutch Bros flavor
   "Broista checkpoint: drop the key to pour the numbers.",
-  "Rebel-energy only beyond this point. What’s the key?",
-  "No free samples of the KPIs — show us the key.",
+  "Rebel energy beyond this point. What’s the key?",
+  "No free samples of the KPIs. Show us the key.",
 ];
 
 function pickPhrase() {

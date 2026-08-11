@@ -16,9 +16,11 @@
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
       <div class="auth-card">
         <div class="auth-mark">
-          <img src="assets/dutchbros-key-mark.svg" alt="" width="88" height="88" />
+          <img src="assets/dutchbros-key-mark.svg" alt="Dutch Bros keyhole" width="96" height="96" />
         </div>
+        <p class="auth-eyebrow">Dutch Bros Payments</p>
         <p id="auth-phrase" class="auth-phrase">Enter the key to continue.</p>
+        <p class="auth-hint">Type the access key below</p>
         <form id="auth-form" class="auth-form" autocomplete="off">
           <label for="auth-password" class="visually-hidden">Access key</label>
           <input
@@ -26,10 +28,10 @@
             name="password"
             type="password"
             autocomplete="current-password"
-            placeholder="Enter the key"
+            placeholder="Access key"
             required
           />
-          <button type="submit">Unlock</button>
+          <button type="submit">Unlock the metrics</button>
         </form>
         <p id="auth-error" class="auth-error" hidden></p>
       </div>

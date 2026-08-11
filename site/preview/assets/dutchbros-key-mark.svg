@@ -1,16 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Dutch Bros key">
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Dutch Bros logo with keyhole">
+  <defs>
+    <mask id="keyhole-cut">
+      <rect width="120" height="120" fill="#fff"/>
+      <circle cx="60" cy="48" r="11" fill="#000"/>
+      <path d="M52.5 55h15l-3.5 32h-8z" fill="#000"/>
+    </mask>
+  </defs>
+
+  <!-- Outer brand ring -->
   <circle cx="60" cy="60" r="58" fill="#005F98"/>
-  <circle cx="60" cy="60" r="50" fill="#021521"/>
-  <!-- simplified windmill mark -->
-  <g transform="translate(60 44)" fill="#FDE021">
-    <path d="M0-22c8 6 12 14 12 22S8 16 0 22C-8 16-12 8-12 0S-8-16 0-22Z" opacity="0.95"/>
-    <circle cx="0" cy="0" r="5" fill="#D7282F"/>
+  <!-- Inner face -->
+  <circle cx="60" cy="60" r="50" fill="#FFFFFF"/>
+
+  <!-- Windmill with keyhole punched through to navy -->
+  <circle cx="60" cy="60" r="50" fill="#021521" mask="url(#keyhole-cut)" opacity="0"/>
+  <!-- Draw navy keyhole first as the "hole" color under the windmill... 
+       Better approach: windmill masked, hole shows white then we paint hole navy -->
+  <g mask="url(#keyhole-cut)">
+    <g transform="translate(60, 64) scale(1.22) translate(-20, -32)">
+      <path
+        fill="#005F98"
+        d="M31.247 27.273l1.855-.386-5.068-5.268-.06-.062a37.282 37.282 0 0 1 18.112-11.67 60.311 60.311 0 0 0-10.023-4.357 59.645 59.645 0 0 0-11.149 12.845l-1.569-1.633-1.569 1.633a36.775 36.775 0 0 1-12.6-18.375 58.619 58.619 0 0 0-4.417 9.885 60.019 60.019 0 0 0 13.958 11.672l-5.127 5.331 1.856.386a37.473 37.473 0 0 1-15.443 8.9 60.235 60.235 0 0 0 10.021 4.357q2.149-1.759 4.145-3.731l-3.466 24.7 5.749 1.159h13.789l5.749-1.159c-.092-.661-3.4-24.274-3.465-24.692a36.764 36.764 0 0 1 4.146 9.254 58.638 58.638 0 0 0 4.417-9.885 59.837 59.837 0 0 0-10.021-4.364z"
+      />
+    </g>
   </g>
-  <!-- key -->
-  <g transform="translate(36 62)" fill="none" stroke="#FDE021" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="14" cy="14" r="10"/>
-    <path d="M24 14h28"/>
-    <path d="M42 14v8"/>
-    <path d="M50 14v6"/>
-  </g>
+
+  <!-- Explicit keyhole so it always reads, even over white -->
+  <circle cx="60" cy="48" r="11" fill="#021521"/>
+  <path d="M52.5 55h15l-3.5 32h-8z" fill="#021521"/>
 </svg>

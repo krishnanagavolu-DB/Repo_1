@@ -2,12 +2,18 @@
   "meta": {
     "channel": "In Shop \u00b7 Worldpay",
     "scope": "Company owned shops only",
-    "generated_at": "2026-08-11T05:31:24Z",
+    "generated_at": "2026-08-11T20:02:21Z",
     "brand": {
       "blue": "#005F98",
       "red": "#D7282F",
       "yellow": "#FDE021",
       "dark": "#021521"
+    },
+    "data_quality": {
+      "status": "passed_with_warnings",
+      "certified": true,
+      "weeks_checked": 3,
+      "warning_count": 8
     }
   },
   "periods": {

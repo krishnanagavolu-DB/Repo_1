@@ -6,11 +6,11 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=20260811e" />
+    <link rel="stylesheet" href="css/dashboard.css?v=20260811f" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=20260811e" defer></script>
-    <script src="js/dashboard.js?v=20260811e" defer></script>
-    <script src="js/chatbot.js?v=20260811e" defer></script>
+    <script src="js/auth-gate.js?v=20260811f" defer></script>
+    <script src="js/dashboard.js?v=20260811f" defer></script>
+    <script src="js/chatbot.js?v=20260811f" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -159,7 +159,13 @@
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p>In Shop · Worldpay answers only — KPIs and payment definitions</p>
+            <p>Explore trends, comparisons, percentages, and payment definitions</p>
+            <div class="ask-data-prompts" aria-label="Suggested questions">
+              <button type="button" data-question="Explain the auth rate trend">Explain auth trend</button>
+              <button type="button" data-question="Show decline reasons as percentages">Declines as %</button>
+              <button type="button" data-question="Which metrics need attention?">What needs attention?</button>
+              <button type="button" data-question="Compare this week with the prior week">Compare weeks</button>
+            </div>
           </div>
           <div id="chat-log" class="ask-data-log" aria-live="polite"></div>
           <form id="chat-form" class="ask-data-form">

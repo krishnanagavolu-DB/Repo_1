@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/dashboard.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/dashboard.js" defer></script>
+    <script src="js/chatbot.js" defer></script>
   </head>
   <body>
     <div class="page">
@@ -87,5 +88,25 @@
         </section>
       </main>
     </div>
+
+    <button type="button" id="chat-launcher" class="chat-launcher" aria-expanded="false" aria-controls="chat-panel">
+      Ask about this data
+    </button>
+
+    <section id="chat-panel" class="chat-panel" hidden aria-label="Data assistant">
+      <header class="chat-header">
+        <div>
+          <strong>Data assistant</strong>
+          <span>In Shop · Worldpay only</span>
+        </div>
+        <button type="button" id="chat-close" class="chat-close" aria-label="Close chat">✕</button>
+      </header>
+      <div id="chat-log" class="chat-log" aria-live="polite"></div>
+      <form id="chat-form" class="chat-form">
+        <label for="chat-input" class="visually-hidden" style="position:absolute;left:-9999px">Your question</label>
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Ask about KPIs or payment terms…" />
+        <button type="submit">Ask</button>
+      </form>
+    </section>
   </body>
 </html>

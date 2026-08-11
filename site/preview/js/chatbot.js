@@ -207,6 +207,8 @@ function formatRememberedView(mode) {
 }
 
 function detectFormatRequest(q) {
+  const refersToPrior = /\b(that|it|this|the result|the answer|same data)\b/.test(q);
+  if (!refersToPrior) return null;
   if (/\b(bar chart|bars|visual|graph)\b/.test(q)) return "bars";
   if (/\b(table|tabular|columns)\b/.test(q)) return "table";
   if (/\b(as percentages|percentage view|percent view|convert.*percent)\b/.test(q)) return "percentages";
@@ -665,7 +667,7 @@ function answerQuestion(raw) {
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
   if (/\b(data quality|certified|certification|sanity check|validated|validation|accurate)\b/.test(q)) return answerDataQuality();
   if (/\b(subway|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
-  if (/\b(industry standard|industry benchmark|qsr benchmark|coffee chain benchmark|restaurant benchmark|benchmark)\b/.test(q)) return answerIndustryBenchmark(q);
+  if (/\b(industry standards?|industry benchmarks?|qsr benchmarks?|coffee chain benchmarks?|restaurant benchmarks?|benchmarks?)\b/.test(q)) return answerIndustryBenchmark(q);
   if (/\b(what needs attention|need attention|critical|biggest concern|leadership summary|executive summary)\b/.test(q)) return answerAttention();
   if (/\b(compare|versus|vs|prior week|last week|week over week|wow)\b/.test(q) && !detectKpiKey(q)) return answerComparison();
 

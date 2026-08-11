@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dutch Bros · Payments Executive KPI Dashboard</title>
+    <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
+    <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="js/dashboard.js" defer></script>
+    <script src="js/chatbot.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="brand">
+            <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="160" height="38" />
+            <div class="brand-divider" aria-hidden="true"></div>
+            <div>
+              <div class="eyebrow">Payments</div>
+              <h1>Executive KPI Dashboard</h1>
+            </div>
+          </div>
+          <div class="period">
+            <div class="period-label">Period</div>
+            <div class="period-control">
+              <label for="period-select" class="visually-hidden">Period</label>
+              <select id="period-select" aria-label="Select period"></select>
+            </div>
+            <div class="scope" id="scope-line">Company owned shops only</div>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="Sales channels">
+          <div class="tab active" aria-current="page">
+            <strong>In Shop</strong>
+            <span>Worldpay</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Olo Pay</strong>
+            <span>Coming soon</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Gift Cards</strong>
+            <span>Coming soon</span>
+          </div>
+          <div class="tab disabled" title="Coming soon">
+            <strong>Other</strong>
+            <span>Coming soon</span>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        <div class="section-head">
+          <h2>In Shop performance</h2>
+          <p>Authorizations and interchange for physical shops</p>
+        </div>
+
+        <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
+
+        <section class="charts-2">
+          <article class="panel">
+            <h3>Entry method mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-entry"></canvas></div>
+              <table class="mix-legend" id="legend-entry"></table>
+            </div>
+          </article>
+          <article class="panel">
+            <h3>Payment type mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
+              <table class="mix-legend" id="legend-payment"></table>
+            </div>
+          </article>
+        </section>
+
+        <section class="panel declines">
+          <h3>Decline reasons</h3>
+          <div class="chart-wrap"><canvas id="chart-declines"></canvas></div>
+        </section>
+
+        <section class="coming" id="coming-soon">
+          <div class="coming-card">Coming soon · Auth latency</div>
+          <div class="coming-card">Coming soon · False decline / retry</div>
+          <div class="coming-card">Coming soon · Chargebacks</div>
+        </section>
+
+        <!-- In-page chatbot: title + chat thread + question bar -->
+        <section class="ask-data" aria-label="Ask about this data">
+          <div class="ask-data-head">
+            <h2>Ask about this data</h2>
+            <p>In Shop · Worldpay answers only — KPIs and payment definitions</p>
+          </div>
+          <div id="chat-log" class="ask-data-log" aria-live="polite"></div>
+          <form id="chat-form" class="ask-data-form">
+            <label for="chat-input" class="visually-hidden">Your question</label>
+            <input
+              id="chat-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Type a question — e.g. What is the auth rate?"
+            />
+            <button type="submit">Ask</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

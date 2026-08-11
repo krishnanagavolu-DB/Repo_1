@@ -639,10 +639,14 @@ function answerCompetitor(q) {
   const list = selected.length ? selected : competitors;
   const sections = list.map((competitor) => {
     const facts = competitor.public_context.map((fact) => `• ${fact}`).join("\n");
+    const proxy = (competitor.payment_proxy || [])
+      .map((item) => `• ${item.label}: **${item.value}** — ${item.note}`)
+      .join("\n");
     const sources = competitor.sources.map(sourceLink).join(" · ");
-    return `**${competitor.name}**\n${facts}\nPayment KPI comparison: **not publicly available**.\nSources: ${sources}`;
+    const proxyBlock = proxy ? `\nClosest payment-related proxy:\n${proxy}` : "";
+    return `**${competitor.name}**\n${facts}${proxyBlock}\nSources: ${sources}`;
   });
-  return `**Competitor research context**\n${sections.join("\n\n")}\n\nSubway, Dunkin, and 7 Brew do not publish authorization rate, decline $, interchange, downgrade, returns, AOV, wallet mix, or entry-method mix on definitions comparable to this Worldpay feed. Their footprint/growth facts provide market context—not a direct payment-performance benchmark. Research updated: ${benchmarkData.updated_at}.`;
+  return `**Competitor research context**\n${sections.join("\n\n")}\n\nThese are public footprint, growth, and (for Starbucks) tender-mix facts—useful market context, not a like-for-like payment-performance benchmark against our Worldpay feed. Research updated: ${benchmarkData.updated_at}.`;
 }
 
 function answerDataQuality() {
@@ -662,12 +666,12 @@ function answerQuestion(raw) {
   if (format) return formatRememberedView(format);
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I can:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Reformat answers as **tables, visual bars, percentages, or executive summaries**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Give cited **QSR/coffee benchmark context**\n• Research public facts about **Subway, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I can:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Reformat answers as **tables, visual bars, percentages, or executive summaries**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Give cited **QSR/coffee benchmark context**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
   if (/\b(data quality|certified|certification|sanity check|validated|validation|accurate)\b/.test(q)) return answerDataQuality();
-  if (/\b(subway|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
+  if (/\b(starbucks|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
   if (/\b(industry standards?|industry benchmarks?|qsr benchmarks?|coffee chain benchmarks?|restaurant benchmarks?|benchmarks?)\b/.test(q)) return answerIndustryBenchmark(q);
   if (/\b(what needs attention|need attention|critical|biggest concern|leadership summary|executive summary)\b/.test(q)) return answerAttention();
   if (/\b(compare|versus|vs|prior week|last week|week over week|wow)\b/.test(q) && !detectKpiKey(q)) return answerComparison();
@@ -758,7 +762,7 @@ function suggestedFollowUps() {
       { label: "Which wallets are guests reaching for?", question: "Show wallet mix" },
     ],
     benchmark: [
-      { label: "What do our competitors actually disclose?", question: "Compare us with Subway, Dunkin, and 7 Brew" },
+      { label: "What do our competitors actually disclose?", question: "Compare us with Starbucks, Dunkin, and 7 Brew" },
       { label: "How confidently can we use this benchmark?", question: "What makes the benchmark directional?" },
     ],
     competitor: [

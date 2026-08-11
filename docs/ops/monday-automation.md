@@ -5,9 +5,12 @@
 1. Michelle / Worldpay drops two Excels into SharePoint:  
    `Payment Systems/Reports/Worldpay/WP Weekly Reports`
 2. A **Cursor Automation** (Monday cron) pulls the new files into this repo.
-3. Ingest rebuilds `data/processed/dashboard.json` and copies it to `site/data/dashboard.json`.
+3. Ingest rebuilds `data/processed/dashboard.json` and copies it to:
+   - `site/data/dashboard.json` (leadership homepage)
+   - `site/preview/data/dashboard.json` (preview page, if present)
 4. Push to `main` triggers GitHub Pages deploy of the `site/` folder only.
 5. Leadership opens the **same Pages URL** — no new link needed.
+   Preview UI work stays at `/preview/` until promoted (see `docs/ops/preview-workflow.md`).
 
 ## One-time setup
 
@@ -42,7 +45,9 @@ Refresh the Dutch Bros In Shop · Worldpay Executive KPI Dashboard.
    Auth and Interchange.
 
 3. Run:
-   python3 scripts/ingest_worldpay.py --raw data/raw --out data/processed/dashboard.json --site-copy site/data/dashboard.json
+   python3 scripts/ingest_worldpay.py --raw data/raw --out data/processed/dashboard.json \
+     --site-copy site/data/dashboard.json \
+     --site-copy site/preview/data/dashboard.json
 
 4. If either file is missing or ingest fails, do NOT publish partial data. Report the error and stop.
 
@@ -50,6 +55,7 @@ Refresh the Dutch Bros In Shop · Worldpay Executive KPI Dashboard.
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json
+   - site/preview/data/dashboard.json (if preview folder exists)
 
 Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
 ```
@@ -65,8 +71,10 @@ Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashbo
 ## Local refresh (manual)
 
 ```bash
-python3 scripts/ingest_worldpay.py --raw data/raw --out data/processed/dashboard.json --site-copy site/data/dashboard.json
+python3 scripts/ingest_worldpay.py --raw data/raw --out data/processed/dashboard.json \
+  --site-copy site/data/dashboard.json \
+  --site-copy site/preview/data/dashboard.json
 cd site && python3 -m http.server 8080
 ```
 
-Open `http://localhost:8080` in Chrome.
+Open leadership at `http://localhost:8080` and preview at `http://localhost:8080/preview/`.

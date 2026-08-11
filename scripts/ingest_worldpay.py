@@ -16,17 +16,23 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Ingest Worldpay weekly Excels into dashboard.json")
     parser.add_argument("--raw", type=Path, default=ROOT / "data" / "raw")
     parser.add_argument("--out", type=Path, default=ROOT / "data" / "processed" / "dashboard.json")
-    parser.add_argument("--site-copy", type=Path, default=None)
+    parser.add_argument(
+        "--site-copy",
+        type=Path,
+        action="append",
+        default=None,
+        help="Copy dashboard.json to a site path (repeatable; e.g. leadership + preview)",
+    )
     args = parser.parse_args()
 
     out = ingest_raw_tree(args.raw.resolve(), args.out.resolve())
-    if args.site_copy:
-        site_path = args.site_copy.resolve()
-        site_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(out, site_path)
-        print(f"Wrote {out} and copied to {site_path}")
-    else:
-        print(f"Wrote {out}")
+    copies = args.site_copy or []
+    for site_path in copies:
+        dest = site_path.resolve()
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(out, dest)
+        print(f"Copied to {dest}")
+    print(f"Wrote {out}")
     return 0
 
 

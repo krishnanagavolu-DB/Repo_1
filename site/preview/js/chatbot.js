@@ -317,4 +317,12 @@ function initChatbot() {
   );
 }
 
-document.addEventListener("DOMContentLoaded", initChatbot);
+function startChatbotWhenUnlocked() {
+  if (document.body.classList.contains("auth-unlocked")) {
+    initChatbot();
+    return;
+  }
+  window.addEventListener("dashboard:unlocked", () => initChatbot(), { once: true });
+}
+
+document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);

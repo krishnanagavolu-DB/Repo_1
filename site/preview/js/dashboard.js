@@ -296,15 +296,16 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
   const colors = labels.map((_, idx) => MIX_COLORS[idx % MIX_COLORS.length]);
 
   legend.innerHTML = list
-    .map(
-      (item, idx) => `
+    .map((item, idx) => {
+      const digits = item.detail?.length ? (item.pct < 0.001 ? 3 : 2) : 1;
+      return `
       <tr>
         <td><span style="color:${colors[idx]}">●</span> ${item.label}${
           item.detail?.length ? ` <span class="mix-hint">(${item.detail.length})</span>` : ""
         }</td>
-        <td>${pct(item.pct, 1)}</td>
-      </tr>`
-    )
+        <td>${pct(item.pct, digits)}</td>
+      </tr>`;
+    })
     .join("");
 
   if (charts[chartKey]) charts[chartKey].destroy();

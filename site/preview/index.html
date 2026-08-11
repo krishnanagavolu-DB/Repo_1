@@ -6,11 +6,11 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=20260811c" />
+    <link rel="stylesheet" href="css/dashboard.css?v=20260811e" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=20260811c" defer></script>
-    <script src="js/dashboard.js?v=20260811c" defer></script>
-    <script src="js/chatbot.js?v=20260811c" defer></script>
+    <script src="js/auth-gate.js?v=20260811e" defer></script>
+    <script src="js/dashboard.js?v=20260811e" defer></script>
+    <script src="js/chatbot.js?v=20260811e" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -84,22 +84,45 @@
       <main>
         <div class="section-head">
           <h2>In Shop performance</h2>
-          <p>Authorizations and interchange for physical shops</p>
+          <p>Ranked for leadership action — revenue risk first, then cost, then context</p>
         </div>
 
-        <section id="auth-skeleton" class="kpi-grid auth-skeleton" aria-hidden="true">
-          <article class="kpi-card"><div class="label">Auth rate</div><div class="kpi-value">••.••%</div></article>
-          <article class="kpi-card"><div class="label">AOV</div><div class="kpi-value">$•.••</div></article>
-          <article class="kpi-card"><div class="label">Returns as % of sales</div><div class="kpi-value">•.••%</div></article>
-          <article class="kpi-card"><div class="label">Sales volume</div><div class="kpi-value">$••.•M</div></article>
-          <article class="kpi-card"><div class="label">Transaction volume</div><div class="kpi-value">•.••M</div></article>
-          <article class="kpi-card"><div class="label">IC rate</div><div class="kpi-value">•.••%</div></article>
-          <article class="kpi-card"><div class="label">Decline $</div><div class="kpi-value">$•••K</div></article>
-          <article class="kpi-card"><div class="label">IC fee $</div><div class="kpi-value">$•••K</div></article>
-          <article class="kpi-card"><div class="label">Downgrade rate</div><div class="kpi-value">•.••%</div></article>
+        <section id="auth-skeleton" class="kpi-board auth-skeleton" aria-hidden="true">
+          <section class="kpi-section">
+            <div class="section-head kpi-section-head">
+              <h2>Protect revenue</h2>
+              <p>Highest urgency — lost approvals hit sales immediately</p>
+            </div>
+            <div class="kpi-grid">
+              <article class="kpi-card"><div class="label">Auth rate</div><div class="kpi-value">••.••%</div></article>
+              <article class="kpi-card"><div class="label">Decline $</div><div class="kpi-value">$•••K</div></article>
+              <article class="kpi-card"><div class="label">Sales volume</div><div class="kpi-value">$••.•M</div></article>
+            </div>
+          </section>
         </section>
 
-        <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
+        <div id="kpi-board" class="kpi-board" aria-live="polite"></div>
+
+        <div class="section-head">
+          <h2>Diagnose</h2>
+          <p>Where to look next when revenue metrics move</p>
+        </div>
+
+        <section class="charts-2">
+          <article class="panel bar-panel">
+            <h3>Decline reasons</h3>
+            <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
+          </article>
+          <article class="panel bar-panel">
+            <h3>Auth rate by entry method</h3>
+            <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry"></canvas></div>
+          </article>
+        </section>
+
+        <div class="section-head">
+          <h2>Mix context</h2>
+          <p>How customers pay — useful background, lower urgency</p>
+        </div>
 
         <section class="charts-2">
           <article class="panel">
@@ -124,17 +147,6 @@
             <div class="chart-wrap"><canvas id="chart-wallet"></canvas></div>
             <table class="mix-legend" id="legend-wallet"></table>
           </div>
-        </section>
-
-        <section class="charts-2">
-          <article class="panel bar-panel">
-            <h3>Auth rate by entry method</h3>
-            <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry"></canvas></div>
-          </article>
-          <article class="panel bar-panel">
-            <h3>Decline reasons</h3>
-            <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
-          </article>
         </section>
 
         <section class="coming" id="coming-soon">

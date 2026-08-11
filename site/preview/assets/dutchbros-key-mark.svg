@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Dutch Bros key">
+  <circle cx="60" cy="60" r="58" fill="#005F98"/>
+  <circle cx="60" cy="60" r="50" fill="#021521"/>
+  <!-- simplified windmill mark -->
+  <g transform="translate(60 44)" fill="#FDE021">
+    <path d="M0-22c8 6 12 14 12 22S8 16 0 22C-8 16-12 8-12 0S-8-16 0-22Z" opacity="0.95"/>
+    <circle cx="0" cy="0" r="5" fill="#D7282F"/>
+  </g>
+  <!-- key -->
+  <g transform="translate(36 62)" fill="none" stroke="#FDE021" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="14" cy="14" r="10"/>
+    <path d="M24 14h28"/>
+    <path d="M42 14v8"/>
+    <path d="M50 14v6"/>
+  </g>
+</svg>

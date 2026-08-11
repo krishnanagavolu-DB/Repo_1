@@ -222,6 +222,32 @@ main {
   margin-bottom: 28px;
 }
 
+.kpi-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kpi-section {
+  margin-bottom: 8px;
+}
+
+.kpi-section-head {
+  margin-bottom: 14px;
+}
+
+.kpi-section-head h2 {
+  font-size: 18px;
+}
+
+.kpi-why {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+  margin: -6px 0 12px;
+  min-height: 32px;
+}
+
 .kpi-card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -309,6 +335,10 @@ main {
   padding: 22px;
 }
 
+.mix-panel {
+  margin-bottom: 16px;
+}
+
 .panel h3 {
   margin: 0 0 18px;
   font-size: 16px;
@@ -349,13 +379,17 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
-.declines {
+.declines,
+.bar-panel {
   margin-bottom: 16px;
 }
 
-.declines .chart-wrap {
+.declines .chart-wrap,
+.bar-chart {
   max-width: 720px;
+  width: 100%;
   height: 260px;
+  min-height: 260px;
 }
 
 .coming {
@@ -504,7 +538,7 @@ body.auth-locked .page {
   user-select: none;
 }
 
-body.auth-locked #kpi-grid,
+body.auth-locked #kpi-board,
 body.auth-unlocked #auth-skeleton {
   display: none;
 }

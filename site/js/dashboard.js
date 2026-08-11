@@ -1,45 +1,101 @@
 /* global Chart */
 
-window.KPI_ORDER = [
+window.KPI_SECTIONS = [
   {
-    key: "auth_rate",
-    label: "Auth rate",
-    format: (v) => pct(v, 2),
-    formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+    id: "protect-revenue",
+    title: "Protect revenue",
+    subtitle: "Highest urgency — lost approvals hit sales immediately",
+    metrics: [
+      {
+        key: "auth_rate",
+        label: "Auth rate",
+        format: (v) => pct(v, 2),
+        formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+        why: "Approval health — small drops mean lost tickets now",
+      },
+      {
+        key: "decline_volume",
+        label: "Decline $",
+        format: (v) => compactMoney(v),
+        formatDelta: (d) => compactMoney(d, true),
+        invertDelta: true,
+        why: "Revenue at risk this period, in dollars",
+      },
+      {
+        key: "sales_volume",
+        label: "Sales volume",
+        format: (v) => compactMoney(v),
+        formatDelta: (d) => compactMoney(d, true),
+        why: "Top-line card-captured sales — is money flowing?",
+      },
+    ],
   },
   {
-    key: "aov",
-    label: "AOV",
-    format: (v) => money(v, 2),
-    formatDelta: (d) => money(d, 2, true),
+    id: "cost-margin",
+    title: "Cost & margin",
+    subtitle: "Next — preventable fee leakage and acceptance cost",
+    metrics: [
+      {
+        key: "downgrade_rate",
+        label: "Downgrade rate",
+        format: (v) => pct(v, 2),
+        formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+        invertDelta: true,
+        why: "Often fixable (e.g. Level 2 data) — margin protection",
+      },
+      {
+        key: "ic_fee",
+        label: "IC fee $",
+        format: (v) => compactMoney(v),
+        formatDelta: (d) => compactMoney(d, true),
+        invertDelta: true,
+        why: "Absolute interchange cost this period",
+      },
+      {
+        key: "ic_rate",
+        label: "IC rate",
+        format: (v) => pct(v, 2),
+        formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+        invertDelta: true,
+        why: "Blended interchange rate vs sales",
+      },
+    ],
   },
   {
-    key: "returns_pct_of_sales",
-    label: "Returns as % of sales",
-    format: (v) => pct(v, 2),
-    formatDelta: (d) => `${signed(d * 100, 2)} pts`,
-  },
-  {
-    key: "sales_volume",
-    label: "Sales volume",
-    format: (v) => compactMoney(v),
-    formatDelta: (d) => compactMoney(d, true),
-  },
-  {
-    key: "transaction_volume",
-    label: "Transaction volume",
-    format: (v) => compactCount(v),
-    formatDelta: (d) => compactCount(d, true),
-  },
-  {
-    key: "ic_rate",
-    label: "IC rate",
-    format: (v) => pct(v, 2),
-    formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+    id: "volume-context",
+    title: "Volume context",
+    subtitle: "Watch trends — usually not a same-day fire drill",
+    metrics: [
+      {
+        key: "returns_pct_of_sales",
+        label: "Returns as % of sales",
+        format: (v) => pct(v, 2),
+        formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+        invertDelta: true,
+        why: "Refund leakage relative to sales",
+      },
+      {
+        key: "transaction_volume",
+        label: "Transaction volume",
+        format: (v) => compactCount(v),
+        formatDelta: (d) => compactCount(d, true),
+        why: "Ticket count companion to sales $",
+      },
+      {
+        key: "aov",
+        label: "AOV",
+        format: (v) => money(v, 2),
+        formatDelta: (d) => money(d, 2, true),
+        why: "Average ticket — strategic, slower-moving",
+      },
+    ],
   },
 ];
 
+window.KPI_ORDER = window.KPI_SECTIONS.flatMap((section) => section.metrics);
+
 const KPI_ORDER = window.KPI_ORDER;
+const KPI_SECTIONS = window.KPI_SECTIONS;
 
 const MIX_COLORS = ["#005F98", "#132550", "#FDE021", "#D7282F", "#9FE5FA", "#69788b"];
 
@@ -49,6 +105,8 @@ const charts = {
   trends: {},
   entry: null,
   payment: null,
+  wallet: null,
+  authEntry: null,
   declines: null,
 };
 
@@ -104,9 +162,11 @@ function compactCount(value, withSign = false) {
   return text;
 }
 
-function deltaClass(delta) {
+function deltaClass(delta, invert = false) {
   if (delta === null || delta === undefined || Number(delta) === 0) return "flat";
-  return Number(delta) > 0 ? "up" : "down";
+  const up = Number(delta) > 0;
+  if (invert) return up ? "down" : "up";
+  return up ? "up" : "down";
 }
 
 function deltaText(meta, kpiObj) {
@@ -142,37 +202,58 @@ function getPeriod(data, id) {
 }
 
 function renderKpis(period) {
-  const grid = document.getElementById("kpi-grid");
-  grid.innerHTML = "";
+  const board = document.getElementById("kpi-board") || document.getElementById("kpi-grid");
+  board.innerHTML = "";
+  board.className = "kpi-board";
 
-  for (const meta of KPI_ORDER) {
-    const kpi = period.kpis[meta.key];
-    const card = document.createElement("article");
-    card.className = "kpi-card";
-    card.innerHTML = `
-      <div class="label">${meta.label}</div>
-      <div class="kpi-main">
-        <div class="kpi-value">${meta.format(kpi.value)}</div>
-        <div class="kpi-delta ${deltaClass(kpi.delta)}">${deltaText(meta, kpi)}</div>
+  for (const section of KPI_SECTIONS) {
+    const block = document.createElement("section");
+    block.className = "kpi-section";
+    block.innerHTML = `
+      <div class="section-head kpi-section-head">
+        <h2>${section.title}</h2>
+        <p>${section.subtitle}</p>
       </div>
-      <div class="kpi-trend">
-        <div class="trend-label">4-week trend</div>
-        <canvas id="trend-${meta.key}" height="48"></canvas>
-      </div>
+      <div class="kpi-grid" data-section="${section.id}"></div>
     `;
-    grid.appendChild(card);
+    const grid = block.querySelector(".kpi-grid");
+
+    for (const meta of section.metrics) {
+      const kpi = period.kpis[meta.key];
+      if (!kpi) continue;
+      const card = document.createElement("article");
+      card.className = "kpi-card";
+      card.title = meta.why || "";
+      card.innerHTML = `
+        <div class="label">${meta.label}</div>
+        <div class="kpi-main">
+          <div class="kpi-value">${meta.format(kpi.value)}</div>
+          <div class="kpi-delta ${deltaClass(kpi.delta, meta.invertDelta)}">${deltaText(meta, kpi)}</div>
+        </div>
+        <div class="kpi-why">${meta.why || ""}</div>
+        <div class="kpi-trend">
+          <div class="trend-label">4-week trend</div>
+          <canvas id="trend-${meta.key}" height="48"></canvas>
+        </div>
+      `;
+      grid.appendChild(card);
+    }
+    board.appendChild(block);
   }
 
   for (const meta of KPI_ORDER) {
     const kpi = period.kpis[meta.key];
+    if (!kpi) continue;
     const history = (kpi.history || []).slice(-4);
     const ctx = document.getElementById(`trend-${meta.key}`);
+    if (!ctx) continue;
     if (charts.trends[meta.key]) {
       charts.trends[meta.key].destroy();
     }
     const last = history.length ? history[history.length - 1].value : kpi.value;
     const prev = history.length > 1 ? history[history.length - 2].value : last;
-    const endColor = last < prev ? "#D7282F" : "#005F98";
+    const improved = meta.invertDelta ? last < prev : last > prev;
+    const endColor = improved ? "#005F98" : last === prev ? "#005F98" : "#D7282F";
     charts.trends[meta.key] = new Chart(ctx, {
       type: "line",
       data: {
@@ -205,24 +286,81 @@ function renderKpis(period) {
   }
 }
 
-function renderMix(canvasId, legendId, items, chartKey) {
-  const labels = items.map((i) => i.label);
-  const values = items.map((i) => i.pct);
+function resizeChartsSoon() {
+  requestAnimationFrame(() => {
+    Object.values(charts).forEach((chart) => {
+      if (chart && typeof chart.resize === "function") chart.resize();
+    });
+    Object.values(charts.trends || {}).forEach((chart) => {
+      if (chart && typeof chart.resize === "function") chart.resize();
+    });
+  });
+}
+
+/** Roll tiny slices into Other; detail[] is shown on hover. */
+function groupSmallMixItems(items, thresholdPct = 0.005) {
+  const source = (items || []).filter((i) => i && Number(i.pct) >= 0);
+  const kept = [];
+  const small = [];
+  for (const item of source) {
+    if (Number(item.pct) < thresholdPct) small.push(item);
+    else kept.push({ ...item });
+  }
+  if (!small.length) {
+    kept.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+    return kept;
+  }
+  small.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+  kept.push({
+    label: "Other",
+    pct: small.reduce((sum, i) => sum + Number(i.pct), 0),
+    count: small.reduce((sum, i) => sum + Number(i.count || 0), 0),
+    detail: small.map((i) => ({
+      label: i.label,
+      pct: Number(i.pct),
+      count: i.count,
+    })),
+  });
+  kept.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+  return kept;
+}
+
+function renderMix(canvasId, legendId, items, chartKey, options = {}) {
+  const list = options.groupUnder
+    ? groupSmallMixItems(items, options.groupUnder)
+    : (items || []).filter((i) => i && Number(i.pct) >= 0);
+  const canvas = document.getElementById(canvasId);
+  const legend = document.getElementById(legendId);
+  if (!canvas || !legend) return;
+
+  if (!list.length) {
+    legend.innerHTML = `<tr><td colspan="2">No data for this period</td></tr>`;
+    if (charts[chartKey]) {
+      charts[chartKey].destroy();
+      charts[chartKey] = null;
+    }
+    return;
+  }
+
+  const labels = list.map((i) => i.label);
+  const values = list.map((i) => i.pct);
   const colors = labels.map((_, idx) => MIX_COLORS[idx % MIX_COLORS.length]);
 
-  const legend = document.getElementById(legendId);
-  legend.innerHTML = items
-    .map(
-      (item, idx) => `
+  legend.innerHTML = list
+    .map((item, idx) => {
+      const digits = item.detail?.length ? (item.pct < 0.001 ? 3 : 2) : 1;
+      return `
       <tr>
-        <td><span style="color:${colors[idx]}">●</span> ${item.label}</td>
-        <td>${pct(item.pct, 1)}</td>
-      </tr>`
-    )
+        <td><span style="color:${colors[idx]}">●</span> ${item.label}${
+          item.detail?.length ? ` <span class="mix-hint">(${item.detail.length})</span>` : ""
+        }</td>
+        <td>${pct(item.pct, digits)}</td>
+      </tr>`;
+    })
     .join("");
 
   if (charts[chartKey]) charts[chartKey].destroy();
-  charts[chartKey] = new Chart(document.getElementById(canvasId), {
+  charts[chartKey] = new Chart(canvas, {
     type: "doughnut",
     data: {
       labels,
@@ -238,13 +376,86 @@ function renderMix(canvasId, legendId, items, chartKey) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: "58%",
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title(tooltipItems) {
+              const item = list[tooltipItems[0]?.dataIndex];
+              return item?.label || "";
+            },
+            label(ctx) {
+              const item = list[ctx.dataIndex];
+              if (!item) return "";
+              if (item.detail?.length) {
+                return [
+                  `Combined ${pct(item.pct, 1)}`,
+                  ...item.detail.map((d) => `${d.label}: ${pct(d.pct, 2)}`),
+                ];
+              }
+              return pct(item.pct, 1);
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function renderAuthByEntry(items) {
+  const canvas = document.getElementById("chart-auth-entry");
+  if (!canvas) return;
+  const rows = (items || []).slice(0, 6);
+  if (charts.authEntry) charts.authEntry.destroy();
+  if (!rows.length) {
+    charts.authEntry = null;
+    return;
+  }
+  charts.authEntry = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: rows.map((i) => i.label),
+      datasets: [
+        {
+          data: rows.map((i) => Number(i.auth_rate) * 100),
+          backgroundColor: ["#005F98", "#132550", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${Number(ctx.raw).toFixed(2)}%`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          grid: { color: "#eef2f6" },
+          ticks: {
+            color: "#69788b",
+            callback: (v) => `${v}%`,
+          },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: "#021521" },
+        },
+      },
     },
   });
 }
 
 function renderDeclines(items) {
-  const top = items.slice(0, 8);
+  const top = (items || []).slice(0, 8);
   if (charts.declines) charts.declines.destroy();
   charts.declines = new Chart(document.getElementById("chart-declines"), {
     type: "bar",
@@ -284,7 +495,10 @@ function renderPeriod(data, periodId) {
   renderKpis(period);
   renderMix("chart-entry", "legend-entry", period.entry_method_mix || [], "entry");
   renderMix("chart-payment", "legend-payment", period.payment_type_mix || [], "payment");
+  renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet", { groupUnder: 0.005 });
+  renderAuthByEntry(period.auth_rate_by_entry || []);
   renderDeclines(period.decline_reasons || []);
+  resizeChartsSoon();
 }
 
 async function loadDashboard() {

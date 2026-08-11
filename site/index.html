@@ -8,11 +8,36 @@
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="js/auth-gate.js" defer></script>
     <script src="js/dashboard.js" defer></script>
     <script src="js/chatbot.js" defer></script>
   </head>
-  <body>
-    <div class="page">
+  <body class="auth-locked">
+    <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
+      <div class="auth-card">
+        <div class="auth-mark">
+          <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="180" height="43" />
+        </div>
+        <p class="auth-eyebrow">Dutch Bros Payments</p>
+        <p id="auth-phrase" class="auth-phrase">Enter the key to continue.</p>
+        <p class="auth-hint">Type the access key below</p>
+        <form id="auth-form" class="auth-form" autocomplete="off">
+          <label for="auth-password" class="visually-hidden">Access key</label>
+          <input
+            id="auth-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Access key"
+            required
+          />
+          <button type="submit">Unlock the metrics</button>
+        </form>
+        <p id="auth-error" class="auth-error" hidden></p>
+      </div>
+    </div>
+
+    <div class="page" aria-hidden="true">
       <header class="topbar">
         <div class="topbar-row">
           <div class="brand">
@@ -58,6 +83,15 @@
           <p>Authorizations and interchange for physical shops</p>
         </div>
 
+        <section id="auth-skeleton" class="kpi-grid auth-skeleton" aria-hidden="true">
+          <article class="kpi-card"><div class="label">Auth rate</div><div class="kpi-value">••.••%</div></article>
+          <article class="kpi-card"><div class="label">AOV</div><div class="kpi-value">$•.••</div></article>
+          <article class="kpi-card"><div class="label">Returns as % of sales</div><div class="kpi-value">•.••%</div></article>
+          <article class="kpi-card"><div class="label">Sales volume</div><div class="kpi-value">$••.•M</div></article>
+          <article class="kpi-card"><div class="label">Transaction volume</div><div class="kpi-value">•.••M</div></article>
+          <article class="kpi-card"><div class="label">IC rate</div><div class="kpi-value">•.••%</div></article>
+        </section>
+
         <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
 
         <section class="charts-2">
@@ -88,7 +122,6 @@
           <div class="coming-card">Coming soon · Chargebacks</div>
         </section>
 
-        <!-- In-page chatbot: title + chat thread + question bar -->
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>

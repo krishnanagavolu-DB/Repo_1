@@ -9,7 +9,22 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CONFIG = ROOT / "site" / "preview" / "auth-config.json"
+DEFAULT_CONFIGS = [
+    ROOT / "site" / "auth-config.json",
+    ROOT / "site" / "preview" / "auth-config.json",
+]
+
+
+def write_hash(config_path: Path, password: str) -> None:
+    if config_path.exists():
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    else:
+        data = {"sessionKey": "db_wp_dashboard_auth_v1"}
+
+    data["passwordHash"] = hashlib.sha256(password.encode("utf-8")).hexdigest()
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    print(f"Updated password hash in {config_path}")
 
 
 def main() -> int:
@@ -20,8 +35,9 @@ def main() -> int:
     parser.add_argument(
         "--config",
         type=Path,
-        default=DEFAULT_CONFIG,
-        help=f"Path to auth-config.json (default: {DEFAULT_CONFIG})",
+        action="append",
+        default=None,
+        help="Path to auth-config.json (repeatable; default: leadership + preview)",
     )
     args = parser.parse_args()
 
@@ -29,17 +45,11 @@ def main() -> int:
         print("Password cannot be empty.", file=sys.stderr)
         return 1
 
-    config_path = args.config.resolve()
-    if config_path.exists():
-        data = json.loads(config_path.read_text(encoding="utf-8"))
-    else:
-        data = {"sessionKey": "db_wp_dashboard_auth_v1"}
+    configs = args.config or DEFAULT_CONFIGS
+    for path in configs:
+        write_hash(path.resolve(), args.password)
 
-    data["passwordHash"] = hashlib.sha256(args.password.encode("utf-8")).hexdigest()
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-    print(f"Updated password hash in {config_path}")
-    print("Commit and push that file to change the live gate password.")
+    print("Commit and push the updated auth-config.json file(s) to change the live gate password.")
     return 0
 
 

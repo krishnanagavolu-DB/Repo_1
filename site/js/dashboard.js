@@ -307,4 +307,12 @@ async function loadDashboard() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", loadDashboard);
+function startDashboardWhenUnlocked() {
+  if (document.body.classList.contains("auth-unlocked")) {
+    loadDashboard();
+    return;
+  }
+  window.addEventListener("dashboard:unlocked", () => loadDashboard(), { once: true });
+}
+
+document.addEventListener("DOMContentLoaded", startDashboardWhenUnlocked);

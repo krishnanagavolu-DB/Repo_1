@@ -39,7 +39,7 @@ const checks = [
   ["How many Apple Pay transactions?", /884,901 transactions/],
   ["What are IC fees per transaction?", /\$0\.24 per sales transaction/],
   ["How does our auth rate compare with industry benchmarks?", /Directional authorization context/],
-  ["Compare us with Subway, Dunkin, and 7 Brew", /not publicly available/],
+  ["Compare us with Starbucks, Dunkin, and 7 Brew", /Starbucks Card/],
   ["Is this data certified?", /Certified for publish: \*\*Yes\*\*/],
   ["Show decline reasons", /20,648/],
   ["Show that as visual bars", /█/],

@@ -235,13 +235,36 @@ function renderKpis(period) {
   }
 }
 
+function resizeChartsSoon() {
+  requestAnimationFrame(() => {
+    Object.values(charts).forEach((chart) => {
+      if (chart && typeof chart.resize === "function") chart.resize();
+    });
+    Object.values(charts.trends || {}).forEach((chart) => {
+      if (chart && typeof chart.resize === "function") chart.resize();
+    });
+  });
+}
+
 function renderMix(canvasId, legendId, items, chartKey) {
-  const list = items || [];
+  const list = (items || []).filter((i) => i && Number(i.pct) >= 0);
+  const canvas = document.getElementById(canvasId);
+  const legend = document.getElementById(legendId);
+  if (!canvas || !legend) return;
+
+  if (!list.length) {
+    legend.innerHTML = `<tr><td colspan="2">No data for this period</td></tr>`;
+    if (charts[chartKey]) {
+      charts[chartKey].destroy();
+      charts[chartKey] = null;
+    }
+    return;
+  }
+
   const labels = list.map((i) => i.label);
   const values = list.map((i) => i.pct);
   const colors = labels.map((_, idx) => MIX_COLORS[idx % MIX_COLORS.length]);
 
-  const legend = document.getElementById(legendId);
   legend.innerHTML = list
     .map(
       (item, idx) => `
@@ -253,7 +276,7 @@ function renderMix(canvasId, legendId, items, chartKey) {
     .join("");
 
   if (charts[chartKey]) charts[chartKey].destroy();
-  charts[chartKey] = new Chart(document.getElementById(canvasId), {
+  charts[chartKey] = new Chart(canvas, {
     type: "doughnut",
     data: {
       labels,
@@ -275,15 +298,21 @@ function renderMix(canvasId, legendId, items, chartKey) {
 }
 
 function renderAuthByEntry(items) {
+  const canvas = document.getElementById("chart-auth-entry");
+  if (!canvas) return;
   const rows = (items || []).slice(0, 6);
   if (charts.authEntry) charts.authEntry.destroy();
-  charts.authEntry = new Chart(document.getElementById("chart-auth-entry"), {
+  if (!rows.length) {
+    charts.authEntry = null;
+    return;
+  }
+  charts.authEntry = new Chart(canvas, {
     type: "bar",
     data: {
       labels: rows.map((i) => i.label),
       datasets: [
         {
-          data: rows.map((i) => i.auth_rate * 100),
+          data: rows.map((i) => Number(i.auth_rate) * 100),
           backgroundColor: ["#005F98", "#132550", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
           borderRadius: 4,
         },
@@ -364,6 +393,7 @@ function renderPeriod(data, periodId) {
   renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet");
   renderAuthByEntry(period.auth_rate_by_entry || []);
   renderDeclines(period.decline_reasons || []);
+  resizeChartsSoon();
 }
 
 async function loadDashboard() {

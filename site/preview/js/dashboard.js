@@ -246,8 +246,38 @@ function resizeChartsSoon() {
   });
 }
 
-function renderMix(canvasId, legendId, items, chartKey) {
-  const list = (items || []).filter((i) => i && Number(i.pct) >= 0);
+/** Roll tiny slices into Other; detail[] is shown on hover. */
+function groupSmallMixItems(items, thresholdPct = 0.005) {
+  const source = (items || []).filter((i) => i && Number(i.pct) >= 0);
+  const kept = [];
+  const small = [];
+  for (const item of source) {
+    if (Number(item.pct) < thresholdPct) small.push(item);
+    else kept.push({ ...item });
+  }
+  if (!small.length) {
+    kept.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+    return kept;
+  }
+  small.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+  kept.push({
+    label: "Other",
+    pct: small.reduce((sum, i) => sum + Number(i.pct), 0),
+    count: small.reduce((sum, i) => sum + Number(i.count || 0), 0),
+    detail: small.map((i) => ({
+      label: i.label,
+      pct: Number(i.pct),
+      count: i.count,
+    })),
+  });
+  kept.sort((a, b) => b.pct - a.pct || String(a.label).localeCompare(String(b.label)));
+  return kept;
+}
+
+function renderMix(canvasId, legendId, items, chartKey, options = {}) {
+  const list = options.groupUnder
+    ? groupSmallMixItems(items, options.groupUnder)
+    : (items || []).filter((i) => i && Number(i.pct) >= 0);
   const canvas = document.getElementById(canvasId);
   const legend = document.getElementById(legendId);
   if (!canvas || !legend) return;
@@ -269,7 +299,9 @@ function renderMix(canvasId, legendId, items, chartKey) {
     .map(
       (item, idx) => `
       <tr>
-        <td><span style="color:${colors[idx]}">●</span> ${item.label}</td>
+        <td><span style="color:${colors[idx]}">●</span> ${item.label}${
+          item.detail?.length ? ` <span class="mix-hint">(${item.detail.length})</span>` : ""
+        }</td>
         <td>${pct(item.pct, 1)}</td>
       </tr>`
     )
@@ -292,7 +324,28 @@ function renderMix(canvasId, legendId, items, chartKey) {
       responsive: true,
       maintainAspectRatio: false,
       cutout: "58%",
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title(tooltipItems) {
+              const item = list[tooltipItems[0]?.dataIndex];
+              return item?.label || "";
+            },
+            label(ctx) {
+              const item = list[ctx.dataIndex];
+              if (!item) return "";
+              if (item.detail?.length) {
+                return [
+                  `Combined ${pct(item.pct, 1)}`,
+                  ...item.detail.map((d) => `${d.label}: ${pct(d.pct, 2)}`),
+                ];
+              }
+              return pct(item.pct, 1);
+            },
+          },
+        },
+      },
     },
   });
 }
@@ -390,7 +443,7 @@ function renderPeriod(data, periodId) {
   renderKpis(period);
   renderMix("chart-entry", "legend-entry", period.entry_method_mix || [], "entry");
   renderMix("chart-payment", "legend-payment", period.payment_type_mix || [], "payment");
-  renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet");
+  renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet", { groupUnder: 0.005 });
   renderAuthByEntry(period.auth_rate_by_entry || []);
   renderDeclines(period.decline_reasons || []);
   resizeChartsSoon();

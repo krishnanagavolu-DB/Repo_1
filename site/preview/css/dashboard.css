@@ -455,6 +455,32 @@ main {
   color: var(--muted);
 }
 
+.ask-data-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.ask-data-prompts button {
+  border: 1px solid #b8c7d6;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--blue);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 11px;
+  cursor: pointer;
+}
+
+.ask-data-prompts button:hover,
+.ask-data-prompts button:focus-visible {
+  border-color: var(--blue);
+  background: #eef6ff;
+  outline: none;
+}
+
 .ask-data-log {
   flex: 1;
   min-height: 200px;

@@ -2,7 +2,7 @@
   "meta": {
     "channel": "In Shop \u00b7 Worldpay",
     "scope": "Company owned shops only",
-    "generated_at": "2026-08-10T20:09:23Z",
+    "generated_at": "2026-08-11T05:31:24Z",
     "brand": {
       "blue": "#005F98",
       "red": "#D7282F",
@@ -125,6 +125,60 @@
                 "value": 0.019443125354964542
               }
             ]
+          },
+          "decline_volume": {
+            "value": 525652.0,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 525652.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 459586.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 383643.0
+              }
+            ]
+          },
+          "ic_fee": {
+            "value": 734074.0,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 734074.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 624314.95
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 550568.26
+              }
+            ]
+          },
+          "downgrade_rate": {
+            "value": 0.007466982135609814,
+            "delta": null,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.007466982135609814
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.006997687073251282
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.007265752964537638
+              }
+            ]
           }
         },
         "entry_method_mix": [
@@ -174,6 +228,85 @@
             "label": "Amex",
             "count": 70886,
             "pct": 0.02289910869662832
+          }
+        ],
+        "wallet_mix": [
+          {
+            "label": "Card / Other",
+            "count": 1843375,
+            "pct": 0.5954863371278847
+          },
+          {
+            "label": "Apple Pay",
+            "count": 1174682,
+            "pct": 0.37947085181802825
+          },
+          {
+            "label": "Android Pay (Google)",
+            "count": 59801,
+            "pct": 0.019318195400601954
+          },
+          {
+            "label": "Samsung Pay",
+            "count": 17569,
+            "pct": 0.005675513369227534
+          },
+          {
+            "label": "Garmin Pay",
+            "count": 107,
+            "pct": 3.456542378663249e-05
+          },
+          {
+            "label": "Fitbit",
+            "count": 26,
+            "pct": 8.399074938807894e-06
+          },
+          {
+            "label": "Bronco",
+            "count": 16,
+            "pct": 5.168661500804857e-06
+          },
+          {
+            "label": "Samsung Electronics Co., Ltd",
+            "count": 2,
+            "pct": 6.460826876006072e-07
+          },
+          {
+            "label": "Deutscher Sparkassen- Und Giroverband",
+            "count": 1,
+            "pct": 3.230413438003036e-07
+          }
+        ],
+        "auth_rate_by_entry": [
+          {
+            "label": "Contactless",
+            "auth_rate": 0.9874654137513702,
+            "approved_cnt": 2907900.0,
+            "total_cnt": 2944812.0
+          },
+          {
+            "label": "Chip / Dip",
+            "auth_rate": 0.9825733990641502,
+            "approved_cnt": 156859.0,
+            "total_cnt": 159641.0
+          },
+          {
+            "label": "Swipe",
+            "auth_rate": 0.8660256815737871,
+            "approved_cnt": 13691.0,
+            "total_cnt": 15809.0
+          },
+          {
+            "label": "Other",
+            "auth_rate": 0.9267015706806283,
+            "approved_cnt": 177.0,
+            "total_cnt": 191.0
+          },
+          {
+            "label": "Key entered",
+            "auth_rate": 0.5567010309278351,
+            "approved_cnt": 54.0,
+            "total_cnt": 97.0
           }
         ],
         "decline_reasons": [
@@ -297,7 +430,10 @@
           "sales_cnt": 3095579.0,
           "sales_fee": 734074.0,
           "return_amt": 35546.0,
-          "return_cnt": 3822.0
+          "return_cnt": 3822.0,
+          "decline_amt": 525652.0,
+          "surcharged_amt": 282746.0,
+          "surcharged_cnt": 20485.0
         }
       },
       {
@@ -413,6 +549,60 @@
                 "value": 0.019443125354964542
               }
             ]
+          },
+          "decline_volume": {
+            "value": 459586.0,
+            "delta": -66066.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 525652.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 459586.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 383643.0
+              }
+            ]
+          },
+          "ic_fee": {
+            "value": 624314.95,
+            "delta": -109759.05000000005,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 734074.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 624314.95
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 550568.26
+              }
+            ]
+          },
+          "downgrade_rate": {
+            "value": 0.006997687073251282,
+            "delta": -0.0004692950623585322,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.007466982135609814
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.006997687073251282
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.007265752964537638
+              }
+            ]
           }
         },
         "entry_method_mix": [
@@ -462,6 +652,85 @@
             "label": "Amex",
             "count": 60225,
             "pct": 0.022996981085388776
+          }
+        ],
+        "wallet_mix": [
+          {
+            "label": "Card / Other",
+            "count": 1560729,
+            "pct": 0.5959660488570815
+          },
+          {
+            "label": "Apple Pay",
+            "count": 992421,
+            "pct": 0.3789570272435469
+          },
+          {
+            "label": "Android Pay (Google)",
+            "count": 50689,
+            "pct": 0.019355649219381845
+          },
+          {
+            "label": "Samsung Pay",
+            "count": 14853,
+            "pct": 0.005671634040037849
+          },
+          {
+            "label": "Garmin Pay",
+            "count": 92,
+            "pct": 3.513029904285209e-05
+          },
+          {
+            "label": "Fitbit",
+            "count": 27,
+            "pct": 1.0309979066923984e-05
+          },
+          {
+            "label": "Bronco",
+            "count": 9,
+            "pct": 3.4366596889746613e-06
+          },
+          {
+            "label": "Deutscher Sparkassen- Und Giroverband",
+            "count": 1,
+            "pct": 3.818510765527401e-07
+          },
+          {
+            "label": "Samsung Electronics Co., Ltd",
+            "count": 1,
+            "pct": 3.818510765527401e-07
+          }
+        ],
+        "auth_rate_by_entry": [
+          {
+            "label": "Contactless",
+            "auth_rate": 0.9868494136321263,
+            "approved_cnt": 2435871.0,
+            "total_cnt": 2468331.0
+          },
+          {
+            "label": "Chip / Dip",
+            "auth_rate": 0.9826545316647706,
+            "approved_cnt": 129563.0,
+            "total_cnt": 131850.0
+          },
+          {
+            "label": "Swipe",
+            "auth_rate": 0.8665561868686869,
+            "approved_cnt": 10981.0,
+            "total_cnt": 12672.0
+          },
+          {
+            "label": "Other",
+            "auth_rate": 0.9337016574585635,
+            "approved_cnt": 169.0,
+            "total_cnt": 181.0
+          },
+          {
+            "label": "Key entered",
+            "auth_rate": 0.5492957746478874,
+            "approved_cnt": 39.0,
+            "total_cnt": 71.0
           }
         ],
         "decline_reasons": [
@@ -589,7 +858,10 @@
           "sales_cnt": 2618822.0,
           "sales_fee": 624314.95,
           "return_amt": 30179.28,
-          "return_cnt": 3332.0
+          "return_cnt": 3332.0,
+          "decline_amt": 459586.0,
+          "surcharged_amt": 226707.1,
+          "surcharged_cnt": 16522.0
         }
       },
       {
@@ -705,6 +977,60 @@
                 "value": 0.019443125354964542
               }
             ]
+          },
+          "decline_volume": {
+            "value": 383643.0,
+            "delta": -75943.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 525652.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 459586.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 383643.0
+              }
+            ]
+          },
+          "ic_fee": {
+            "value": 550568.26,
+            "delta": -73746.68999999994,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 734074.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 624314.95
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 550568.26
+              }
+            ]
+          },
+          "downgrade_rate": {
+            "value": 0.007265752964537638,
+            "delta": 0.000268065891286356,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.007466982135609814
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.006997687073251282
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.007265752964537638
+              }
+            ]
           }
         },
         "entry_method_mix": [
@@ -754,6 +1080,80 @@
             "label": "Amex",
             "count": 52799,
             "pct": 0.022724181741807088
+          }
+        ],
+        "wallet_mix": [
+          {
+            "label": "Card / Other",
+            "count": 1378805,
+            "pct": 0.593424409676553
+          },
+          {
+            "label": "Apple Pay",
+            "count": 884901,
+            "pct": 0.38085287879518237
+          },
+          {
+            "label": "Android Pay (Google)",
+            "count": 46046,
+            "pct": 0.01981775549694595
+          },
+          {
+            "label": "Samsung Pay",
+            "count": 13615,
+            "pct": 0.005859765041283045
+          },
+          {
+            "label": "Garmin Pay",
+            "count": 78,
+            "pct": 3.3570449740732834e-05
+          },
+          {
+            "label": "Fitbit",
+            "count": 16,
+            "pct": 6.886246100663146e-06
+          },
+          {
+            "label": "Bronco",
+            "count": 9,
+            "pct": 3.873513431623019e-06
+          },
+          {
+            "label": "Samsung Electronics Co., Ltd",
+            "count": 2,
+            "pct": 8.607807625828932e-07
+          }
+        ],
+        "auth_rate_by_entry": [
+          {
+            "label": "Contactless",
+            "auth_rate": 0.9879294914233856,
+            "approved_cnt": 2205519.0,
+            "total_cnt": 2232466.0
+          },
+          {
+            "label": "Chip / Dip",
+            "auth_rate": 0.9824872097599371,
+            "approved_cnt": 114839.0,
+            "total_cnt": 116886.0
+          },
+          {
+            "label": "Swipe",
+            "auth_rate": 0.8709108544220087,
+            "approved_cnt": 9877.0,
+            "total_cnt": 11341.0
+          },
+          {
+            "label": "Other",
+            "auth_rate": 0.952054794520548,
+            "approved_cnt": 139.0,
+            "total_cnt": 146.0
+          },
+          {
+            "label": "Key entered",
+            "auth_rate": 0.4714285714285714,
+            "approved_cnt": 33.0,
+            "total_cnt": 70.0
           }
         ],
         "decline_reasons": [
@@ -885,7 +1285,10 @@
           "sales_cnt": 2323472.0,
           "sales_fee": 550568.26,
           "return_amt": 27070.949999999993,
-          "return_cnt": 2931.0
+          "return_cnt": 2931.0,
+          "decline_amt": 383643.0,
+          "surcharged_amt": 205743.30999999997,
+          "surcharged_cnt": 15122.0
         }
       }
     ],
@@ -1000,6 +1403,60 @@
               "value": 0.019443125354964542
             }
           ]
+        },
+        "decline_volume": {
+          "value": 1368881.0,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 525652.0
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 459586.0
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 383643.0
+            }
+          ]
+        },
+        "ic_fee": {
+          "value": 1908957.21,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 734074.0
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 624314.95
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 550568.26
+            }
+          ]
+        },
+        "downgrade_rate": {
+          "value": 0.007254950933261679,
+          "delta": null,
+          "history": [
+            {
+              "week_start": "2026-07-20",
+              "value": 0.007466982135609814
+            },
+            {
+              "week_start": "2026-07-27",
+              "value": 0.006997687073251282
+            },
+            {
+              "week_start": "2026-08-03",
+              "value": 0.007265752964537638
+            }
+          ]
         }
       },
       "entry_method_mix": [
@@ -1049,6 +1506,85 @@
           "label": "Amex",
           "count": 183910,
           "pct": 0.02288043117874592
+        }
+      ],
+      "wallet_mix": [
+        {
+          "label": "Card / Other",
+          "count": 4782909,
+          "pct": 0.5950466000147053
+        },
+        {
+          "label": "Apple Pay",
+          "count": 3052004,
+          "pct": 0.3797029388247363
+        },
+        {
+          "label": "Android Pay (Google)",
+          "count": 156536,
+          "pct": 0.019474803844250835
+        },
+        {
+          "label": "Samsung Pay",
+          "count": 46037,
+          "pct": 0.005727510250535185
+        },
+        {
+          "label": "Garmin Pay",
+          "count": 277,
+          "pct": 3.446185327884628e-05
+        },
+        {
+          "label": "Fitbit",
+          "count": 69,
+          "pct": 8.584360564044741e-06
+        },
+        {
+          "label": "Bronco",
+          "count": 34,
+          "pct": 4.229974770688713e-06
+        },
+        {
+          "label": "Samsung Electronics Co., Ltd",
+          "count": 5,
+          "pct": 6.220551133365755e-07
+        },
+        {
+          "label": "Deutscher Sparkassen- Und Giroverband",
+          "count": 2,
+          "pct": 2.488220453346302e-07
+        }
+      ],
+      "auth_rate_by_entry": [
+        {
+          "label": "Contactless",
+          "auth_rate": 0.9874020499871233,
+          "approved_cnt": 7549290.0,
+          "total_cnt": 7645609.0
+        },
+        {
+          "label": "Chip / Dip",
+          "auth_rate": 0.9825749246407119,
+          "approved_cnt": 401261.0,
+          "total_cnt": 408377.0
+        },
+        {
+          "label": "Swipe",
+          "auth_rate": 0.8675857566169454,
+          "approved_cnt": 34549.0,
+          "total_cnt": 39822.0
+        },
+        {
+          "label": "Other",
+          "auth_rate": 0.9362934362934363,
+          "approved_cnt": 485.0,
+          "total_cnt": 518.0
+        },
+        {
+          "label": "Key entered",
+          "auth_rate": 0.5294117647058824,
+          "approved_cnt": 126.0,
+          "total_cnt": 238.0
         }
       ],
       "decline_reasons": [

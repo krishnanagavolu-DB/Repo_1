@@ -94,11 +94,14 @@
           <article class="kpi-card"><div class="label">Sales volume</div><div class="kpi-value">$••.•M</div></article>
           <article class="kpi-card"><div class="label">Transaction volume</div><div class="kpi-value">•.••M</div></article>
           <article class="kpi-card"><div class="label">IC rate</div><div class="kpi-value">•.••%</div></article>
+          <article class="kpi-card"><div class="label">Decline $</div><div class="kpi-value">$•••K</div></article>
+          <article class="kpi-card"><div class="label">IC fee $</div><div class="kpi-value">$•••K</div></article>
+          <article class="kpi-card"><div class="label">Downgrade rate</div><div class="kpi-value">•.••%</div></article>
         </section>
 
         <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
 
-        <section class="charts-2">
+        <section class="charts-3">
           <article class="panel">
             <h3>Entry method mix</h3>
             <div class="mix-body">
@@ -113,11 +116,24 @@
               <table class="mix-legend" id="legend-payment"></table>
             </div>
           </article>
+          <article class="panel">
+            <h3>Wallet mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-wallet"></canvas></div>
+              <table class="mix-legend" id="legend-wallet"></table>
+            </div>
+          </article>
         </section>
 
-        <section class="panel declines">
-          <h3>Decline reasons</h3>
-          <div class="chart-wrap"><canvas id="chart-declines"></canvas></div>
+        <section class="charts-2">
+          <article class="panel declines">
+            <h3>Auth rate by entry method</h3>
+            <div class="chart-wrap"><canvas id="chart-auth-entry"></canvas></div>
+          </article>
+          <article class="panel declines">
+            <h3>Decline reasons</h3>
+            <div class="chart-wrap"><canvas id="chart-declines"></canvas></div>
+          </article>
         </section>
 
         <section class="coming" id="coming-soon">

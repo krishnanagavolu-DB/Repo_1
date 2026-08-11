@@ -44,6 +44,25 @@ body {
   min-height: 100vh;
 }
 
+.preview-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding: 12px 28px;
+  background: var(--yellow);
+  color: var(--dark);
+  font-size: 13px;
+  line-height: 1.35;
+  border-bottom: 1px solid #e6c900;
+}
+
+.preview-banner strong {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .topbar {
   background: var(--panel);
   padding: 22px 28px 0;

@@ -34,6 +34,7 @@ jobs:
       - name: Certify Worldpay data before publish
         run: |
           pytest -q
+          node tests/chatbot_smoke.js
           python3 scripts/validate_worldpay.py \
             --raw data/raw \
             --dashboard data/processed/dashboard.json \

@@ -733,41 +733,41 @@ function appendMessage(role, text) {
 
 function suggestedFollowUps() {
   const commonFormats = [
-    { label: "Would you like a table?", question: "Show that as a table" },
-    { label: "Would a visual help?", question: "Show that as visual bars" },
+    { label: "Want to see this in a quick table?", question: "Show that as a table" },
+    { label: "Would a visual comparison help?", question: "Show that as visual bars" },
   ];
   const byTopic = {
     auth_entry: [
-      { label: "Do you know why Key entered is lower?", question: "What is key entered?" },
-      { label: "Would you like entry rates as bars?", question: "Show that as visual bars" },
+      { label: "Curious why keyed transactions approve less often?", question: "What is key entered?" },
+      { label: "Want to compare entry methods side by side?", question: "Show that as visual bars" },
     ],
     declines: [
-      { label: "Would you like decline percentages?", question: "Show decline reasons as percentages" },
-      { label: "Do you know the decline dollars?", question: "What percent are decline dollars of sales?" },
+      { label: "Want to see each decline reason as a percentage?", question: "Show decline reasons as percentages" },
+      { label: "How much sales volume sits behind those declines?", question: "What percent are decline dollars of sales?" },
     ],
     trend: [
-      { label: "Would you like the trend as a table?", question: "Show that as a table" },
-      { label: "Do you know what needs attention?", question: "Which metrics need attention?" },
+      { label: "Want the week-by-week numbers in a table?", question: "Show that as a table" },
+      { label: "Which movement deserves leadership’s attention?", question: "Which metrics need attention?" },
     ],
     comparison: [
-      { label: "Would you like an executive summary?", question: "Summarize that for an executive" },
-      { label: "Do you know the auth trend?", question: "Explain the auth rate trend" },
+      { label: "Want the quick leadership takeaway?", question: "Summarize that for an executive" },
+      { label: "What story is the auth-rate trend telling?", question: "Explain the auth rate trend" },
     ],
     mix: [
-      { label: "Would you like transaction counts?", question: "Show that as a table" },
-      { label: "Do you know the wallet mix?", question: "Show wallet mix" },
+      { label: "Want the transaction counts behind the percentages?", question: "Show that as a table" },
+      { label: "Which wallets are guests reaching for?", question: "Show wallet mix" },
     ],
     benchmark: [
-      { label: "Do you know what competitors disclose?", question: "Compare us with Subway, Dunkin, and 7 Brew" },
-      { label: "Would you like the source caveats?", question: "What makes the benchmark directional?" },
+      { label: "What do our competitors actually disclose?", question: "Compare us with Subway, Dunkin, and 7 Brew" },
+      { label: "How confidently can we use this benchmark?", question: "What makes the benchmark directional?" },
     ],
     competitor: [
-      { label: "Would you like the QSR benchmark?", question: "How does our auth rate compare with industry benchmarks?" },
-      { label: "Do you know why direct comparison is limited?", question: "Which competitor payment KPIs are public?" },
+      { label: "How does our auth rate stack up to QSR context?", question: "How does our auth rate compare with industry benchmarks?" },
+      { label: "Which competitor payment metrics are truly public?", question: "Which competitor payment KPIs are public?" },
     ],
     quality: [
-      { label: "Do you know what gets checked?", question: "What data sanity checks run before publish?" },
-      { label: "Would you like this week's trend?", question: "Compare this week with the prior week" },
+      { label: "What gets checked before these numbers go live?", question: "What data sanity checks run before publish?" },
+      { label: "How did this week move versus last week?", question: "Compare this week with the prior week" },
     ],
     kpi: commonFormats,
   };
@@ -819,7 +819,7 @@ async function initChatbot() {
 
   appendMessage(
     "bot",
-    "Ask me to **explain trends**, **compare weeks**, reformat results, check **industry context**, research public competitor facts, or explain this week's **data certification**."
+    "Hey there—let’s make these numbers useful. I can **explain trends**, **compare weeks**, reformat results, add **industry context**, research public competitor facts, or walk through this week’s **data certification**."
   );
   appendFollowUps(input);
 }

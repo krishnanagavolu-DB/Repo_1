@@ -34,10 +34,19 @@ _ENTRY = {
 
 
 def normalize_wallet(value: object) -> str:
-    if value is None:
-        return "Card / Other"
+    try:
+        import math
+
+        if value is None:
+            return "Card / Other"
+        # pandas / numpy NaN
+        if isinstance(value, float) and math.isnan(value):
+            return "Card / Other"
+    except Exception:
+        if value is None:
+            return "Card / Other"
     s = str(value).strip()
-    if s == "" or s == ".":
+    if s == "" or s == "." or s.lower() in {"nan", "none", "null"}:
         return "Card / Other"
     if re.fullmatch(r"\d+", s):
         return "Other wallet"

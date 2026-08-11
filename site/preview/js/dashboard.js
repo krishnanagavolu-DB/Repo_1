@@ -18,6 +18,7 @@ window.KPI_ORDER = [
     label: "Returns as % of sales",
     format: (v) => pct(v, 2),
     formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+    invertDelta: true,
   },
   {
     key: "sales_volume",
@@ -36,6 +37,28 @@ window.KPI_ORDER = [
     label: "IC rate",
     format: (v) => pct(v, 2),
     formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+    invertDelta: true,
+  },
+  {
+    key: "decline_volume",
+    label: "Decline $",
+    format: (v) => compactMoney(v),
+    formatDelta: (d) => compactMoney(d, true),
+    invertDelta: true,
+  },
+  {
+    key: "ic_fee",
+    label: "IC fee $",
+    format: (v) => compactMoney(v),
+    formatDelta: (d) => compactMoney(d, true),
+    invertDelta: true,
+  },
+  {
+    key: "downgrade_rate",
+    label: "Downgrade rate",
+    format: (v) => pct(v, 2),
+    formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+    invertDelta: true,
   },
 ];
 
@@ -49,6 +72,8 @@ const charts = {
   trends: {},
   entry: null,
   payment: null,
+  wallet: null,
+  authEntry: null,
   declines: null,
 };
 
@@ -104,9 +129,11 @@ function compactCount(value, withSign = false) {
   return text;
 }
 
-function deltaClass(delta) {
+function deltaClass(delta, invert = false) {
   if (delta === null || delta === undefined || Number(delta) === 0) return "flat";
-  return Number(delta) > 0 ? "up" : "down";
+  const up = Number(delta) > 0;
+  if (invert) return up ? "down" : "up";
+  return up ? "up" : "down";
 }
 
 function deltaText(meta, kpiObj) {
@@ -147,13 +174,14 @@ function renderKpis(period) {
 
   for (const meta of KPI_ORDER) {
     const kpi = period.kpis[meta.key];
+    if (!kpi) continue;
     const card = document.createElement("article");
     card.className = "kpi-card";
     card.innerHTML = `
       <div class="label">${meta.label}</div>
       <div class="kpi-main">
         <div class="kpi-value">${meta.format(kpi.value)}</div>
-        <div class="kpi-delta ${deltaClass(kpi.delta)}">${deltaText(meta, kpi)}</div>
+        <div class="kpi-delta ${deltaClass(kpi.delta, meta.invertDelta)}">${deltaText(meta, kpi)}</div>
       </div>
       <div class="kpi-trend">
         <div class="trend-label">4-week trend</div>
@@ -165,6 +193,7 @@ function renderKpis(period) {
 
   for (const meta of KPI_ORDER) {
     const kpi = period.kpis[meta.key];
+    if (!kpi) continue;
     const history = (kpi.history || []).slice(-4);
     const ctx = document.getElementById(`trend-${meta.key}`);
     if (charts.trends[meta.key]) {
@@ -172,7 +201,8 @@ function renderKpis(period) {
     }
     const last = history.length ? history[history.length - 1].value : kpi.value;
     const prev = history.length > 1 ? history[history.length - 2].value : last;
-    const endColor = last < prev ? "#D7282F" : "#005F98";
+    const improved = meta.invertDelta ? last < prev : last > prev;
+    const endColor = improved ? "#005F98" : last === prev ? "#005F98" : "#D7282F";
     charts.trends[meta.key] = new Chart(ctx, {
       type: "line",
       data: {
@@ -206,12 +236,13 @@ function renderKpis(period) {
 }
 
 function renderMix(canvasId, legendId, items, chartKey) {
-  const labels = items.map((i) => i.label);
-  const values = items.map((i) => i.pct);
+  const list = items || [];
+  const labels = list.map((i) => i.label);
+  const values = list.map((i) => i.pct);
   const colors = labels.map((_, idx) => MIX_COLORS[idx % MIX_COLORS.length]);
 
   const legend = document.getElementById(legendId);
-  legend.innerHTML = items
+  legend.innerHTML = list
     .map(
       (item, idx) => `
       <tr>
@@ -243,8 +274,54 @@ function renderMix(canvasId, legendId, items, chartKey) {
   });
 }
 
+function renderAuthByEntry(items) {
+  const rows = (items || []).slice(0, 6);
+  if (charts.authEntry) charts.authEntry.destroy();
+  charts.authEntry = new Chart(document.getElementById("chart-auth-entry"), {
+    type: "bar",
+    data: {
+      labels: rows.map((i) => i.label),
+      datasets: [
+        {
+          data: rows.map((i) => i.auth_rate * 100),
+          backgroundColor: ["#005F98", "#132550", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${Number(ctx.raw).toFixed(2)}%`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 100,
+          grid: { color: "#eef2f6" },
+          ticks: {
+            color: "#69788b",
+            callback: (v) => `${v}%`,
+          },
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: "#021521" },
+        },
+      },
+    },
+  });
+}
+
 function renderDeclines(items) {
-  const top = items.slice(0, 8);
+  const top = (items || []).slice(0, 8);
   if (charts.declines) charts.declines.destroy();
   charts.declines = new Chart(document.getElementById("chart-declines"), {
     type: "bar",
@@ -284,6 +361,8 @@ function renderPeriod(data, periodId) {
   renderKpis(period);
   renderMix("chart-entry", "legend-entry", period.entry_method_mix || [], "entry");
   renderMix("chart-payment", "legend-payment", period.payment_type_mix || [], "payment");
+  renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet");
+  renderAuthByEntry(period.auth_rate_by_entry || []);
   renderDeclines(period.decline_reasons || []);
 }
 

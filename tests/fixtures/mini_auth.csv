@@ -2,3 +2,5 @@ Network,Entry Mode,Mobile Wallet,Auth Response cd,Auth Response,Auth Request Cnt
 VISA,07,APPLE PAY,00,Approved or completed successfully,90,900
 VISA,07,,05,Do not honor,10,100
 MC,05,,00,Approved or completed successfully,50,500
+VISA,90,,05,Do not honor,5,40
+VISA,01,,00,Approved or completed successfully,5,50

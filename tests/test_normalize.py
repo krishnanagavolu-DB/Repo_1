@@ -12,6 +12,7 @@ def test_wallet_casing_and_blanks():
     assert normalize_wallet("Apple Pay") == "Apple Pay"
     assert normalize_wallet(None) == "Card / Other"
     assert normalize_wallet(".") == "Card / Other"
+    assert normalize_wallet(float("nan")) == "Card / Other"
     assert normalize_wallet("40010080419") == "Other wallet"
 
 

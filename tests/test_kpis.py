@@ -16,12 +16,15 @@ def _frames():
 def test_auth_rate_and_aov_and_ic():
     auth, ix = _frames()
     week = compute_week_kpis(auth, ix, "2026-08-03")
-    assert week["kpis"]["auth_rate"] == 140 / 150
-    assert round(week["kpis"]["aov"], 4) == round(1400 / 100, 4)
-    assert week["kpis"]["sales_volume"] == 1400
-    assert week["kpis"]["transaction_volume"] == 100
-    assert week["kpis"]["returns_pct_of_sales"] == 10 / 1400
-    assert week["kpis"]["ic_rate"] == 30 / 1400
+    assert week["kpis"]["auth_rate"] == 145 / 160
+    assert round(week["kpis"]["aov"], 4) == round(1450 / 105, 4)
+    assert week["kpis"]["sales_volume"] == 1450
+    assert week["kpis"]["transaction_volume"] == 105
+    assert week["kpis"]["returns_pct_of_sales"] == 10 / 1450
+    assert week["kpis"]["ic_rate"] == 32 / 1450
+    assert week["kpis"]["decline_volume"] == 140
+    assert week["kpis"]["ic_fee"] == 32
+    assert week["kpis"]["downgrade_rate"] == 50 / 1450
 
 
 def test_mixes_and_declines():
@@ -29,7 +32,11 @@ def test_mixes_and_declines():
     week = compute_week_kpis(auth, ix, "2026-08-03")
     assert week["entry_method_mix"][0]["label"] == "Contactless"
     assert week["payment_type_mix"][0]["label"] == "Visa"
+    assert week["wallet_mix"][0]["label"] == "Apple Pay"
     assert any(d["label"] == "Do not honor" for d in week["decline_reasons"])
+    assert any(x["label"] == "Contactless" for x in week["auth_rate_by_entry"])
+    contactless = next(x for x in week["auth_rate_by_entry"] if x["label"] == "Contactless")
+    assert contactless["auth_rate"] == 90 / 100
 
 
 def test_payload_periods_and_ytd():

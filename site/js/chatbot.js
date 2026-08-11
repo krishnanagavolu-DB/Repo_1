@@ -32,6 +32,31 @@ const PAYMENT_DEFINITIONS = [
     body: "Interchange fees divided by sales dollars for SALE transactions. This is interchange-only, not the full cost of acceptance.",
   },
   {
+    terms: ["decline $", "decline dollars", "decline volume", "declined dollars"],
+    title: "Decline $",
+    body: "Total authorization dollars that were not approved (response code not 00). Puts a dollar figure on declined tickets.",
+  },
+  {
+    terms: ["ic fee", "interchange fee", "ic fee $"],
+    title: "IC fee $",
+    body: "Total interchange fees in dollars for SALE transactions in the period.",
+  },
+  {
+    terms: ["downgrade rate", "downgrade", "surcharge rate"],
+    title: "Downgrade rate",
+    body: "Share of sales dollars that carried a Worldpay surcharge / downgrade reason (for example missing Level 2 data).",
+  },
+  {
+    terms: ["wallet mix", "apple pay", "google pay", "samsung pay", "wallet"],
+    title: "Wallet mix",
+    body: "Share of sales transactions by mobile wallet (Apple Pay, Google Pay, Samsung Pay, etc.) versus card / other.",
+  },
+  {
+    terms: ["auth rate by entry", "entry method auth"],
+    title: "Auth rate by entry method",
+    body: "Approval rate broken out by how the card was presented (Contactless, Chip/Dip, Swipe, Key entered).",
+  },
+  {
     terms: ["entry method", "entry mode", "contactless", "chip", "dip", "swipe"],
     title: "Entry method",
     body: "How the card was presented: Contactless (tap), Chip/Dip, Swipe (magstripe), or Key entered.",
@@ -150,6 +175,9 @@ function detectKpiKey(q) {
       needles: ["transaction volume", "txn volume", "transaction count", "how many transactions"],
     },
     { key: "ic_rate", needles: ["ic rate", "interchange rate", "interchange %"] },
+    { key: "decline_volume", needles: ["decline $", "decline dollars", "decline volume", "declined dollars"] },
+    { key: "ic_fee", needles: ["ic fee", "interchange fee"] },
+    { key: "downgrade_rate", needles: ["downgrade rate", "downgrade", "surcharge rate"] },
   ];
   for (const item of map) {
     if (item.needles.some((n) => q.includes(n))) return item.key;
@@ -204,8 +232,13 @@ function answerKpi(key) {
 function answerMix(kind) {
   const period = currentPeriod();
   if (!period) return "No data loaded yet.";
-  const items = kind === "entry" ? period.entry_method_mix : period.payment_type_mix;
-  const title = kind === "entry" ? "Entry method mix" : "Payment type mix";
+  const map = {
+    entry: ["entry_method_mix", "Entry method mix"],
+    payment: ["payment_type_mix", "Payment type mix"],
+    wallet: ["wallet_mix", "Wallet mix"],
+  };
+  const [field, title] = map[kind] || map.entry;
+  const items = period[field];
   const lines = (items || [])
     .slice(0, 6)
     .map((i) => `• ${i.label}: ${(i.pct * 100).toFixed(1)}%`)
@@ -257,12 +290,26 @@ function answerQuestion(raw) {
     return answerDeclines();
   }
 
-  if (/\b(entry method mix|entry method)\b/.test(q)) {
+  if (/\b(entry method mix|entry method)\b/.test(q) && !/\bauth rate by entry\b/.test(q)) {
     return answerMix("entry");
   }
 
   if (/\b(payment type mix|payment type|card brand)\b/.test(q)) {
     return answerMix("payment");
+  }
+
+  if (/\b(wallet mix|apple pay|google pay|wallet)\b/.test(q)) {
+    return answerMix("wallet");
+  }
+
+  if (/\bauth rate by entry\b/.test(q)) {
+    const period = currentPeriod();
+    if (!period) return "No data loaded yet.";
+    const lines = (period.auth_rate_by_entry || [])
+      .slice(0, 6)
+      .map((i) => `• ${i.label}: ${(i.auth_rate * 100).toFixed(2)}%`)
+      .join("\n");
+    return `**Auth rate by entry method** for **${period.label}**:\n${lines}`;
   }
 
   if (kpiKey) {

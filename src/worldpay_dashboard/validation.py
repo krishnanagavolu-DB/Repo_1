@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import math
+import re
 from dataclasses import asdict, dataclass
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,7 @@ IX_REQUIRED = {
 
 AUTH_MEASURES = {"Auth Request Cnt", "Authorization"}
 IX_MEASURES = {"Transaction Cnt", "Transaction Amt", "Interchange Fee"}
+_REPORT_STAMP_RE = re.compile(r"(20\d{6})")
 
 
 @dataclass
@@ -203,12 +205,24 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _report_stamp(path: Path) -> str | None:
+    match = _REPORT_STAMP_RE.search(path.name)
+    return match.group(1) if match else None
+
+
+def _week_from_delivery_stamp(stamp: str) -> str:
+    delivery = date(int(stamp[:4]), int(stamp[4:6]), int(stamp[6:8]))
+    monday = delivery - timedelta(days=delivery.weekday())
+    return (monday - timedelta(days=7)).isoformat()
+
+
 def validate_discovered_weeks(
     discovered: list[dict[str, Any]],
     dashboard_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     checks: list[Check] = []
     summaries: list[dict[str, Any]] = []
+    amex_zero_fee_weeks: list[str] = []
 
     starts = [date.fromisoformat(item["week_start"]) for item in discovered]
     if starts != sorted(starts):
@@ -238,6 +252,33 @@ def validate_discovered_weeks(
 
     for item in discovered:
         week = item["week_start"]
+        auth_stamp = _report_stamp(item["auth"])
+        ix_stamp = _report_stamp(item["interchange"])
+        if not auth_stamp or not ix_stamp:
+            _add(
+                checks,
+                "error",
+                "missing_delivery_stamp",
+                "Auth and Interchange filenames must contain an 8-digit delivery stamp",
+                week,
+            )
+        elif auth_stamp != ix_stamp:
+            _add(
+                checks,
+                "error",
+                "delivery_stamp_mismatch",
+                f"Auth delivery {auth_stamp} does not match Interchange delivery {ix_stamp}",
+                week,
+            )
+        elif _week_from_delivery_stamp(auth_stamp) != week:
+            _add(
+                checks,
+                "error",
+                "folder_stamp_mismatch",
+                f"Delivery stamp {auth_stamp} maps to {_week_from_delivery_stamp(auth_stamp)}, not {week}",
+                week,
+            )
+
         auth = pd.read_excel(item["auth"])
         ix = pd.read_excel(item["interchange"])
         auth_ok = _schema_check(auth, AUTH_REQUIRED, "Auth", week, checks)
@@ -275,6 +316,26 @@ def validate_discovered_weeks(
             _add(checks, "error", "zero_auth_total", "Auth request total is zero", week)
         if approved_count > auth_total:
             _add(checks, "error", "approval_exceeds_total", "Approved auth count exceeds total", week)
+        decline_mask = ~approved_mask
+        decline_count = float(auth.loc[decline_mask, "Auth Request Cnt"].sum())
+        response_text = auth.loc[decline_mask, "Auth Response"].astype(str).str.strip()
+        unlabeled_mask = response_text.isin(["", ".", "nan", "None", "NaN"])
+        unlabeled_decline_count = float(
+            auth.loc[response_text.index[unlabeled_mask], "Auth Request Cnt"].sum()
+        )
+        unlabeled_share = (
+            unlabeled_decline_count / decline_count if decline_count else 0
+        )
+        if unlabeled_share > 0.05:
+            _add(
+                checks,
+                "warning",
+                "unlabeled_declines",
+                f"{unlabeled_share:.1%} of declined requests have blank/unspecified reason text",
+                week,
+                unlabeled_count=unlabeled_decline_count,
+                decline_count=decline_count,
+            )
 
         tx = ix["Transaction"].astype(str).str.strip().str.upper()
         unknown_tx = sorted(set(tx) - {"SALE", "RETURN"})
@@ -294,6 +355,13 @@ def validate_discovered_weeks(
         return_amount = float(returns["Transaction Amt"].sum())
         if sales_count <= 0 or sales_amount <= 0:
             _add(checks, "error", "zero_sales", "Sales count/amount must be positive", week)
+        card_type = sales["Card Type"].astype(str).str.strip().str.upper()
+        amex = sales.loc[card_type == "AMEX"]
+        if (
+            float(amex["Transaction Amt"].sum()) > 0
+            and abs(float(amex["Interchange Fee"].sum())) < 1e-9
+        ):
+            amex_zero_fee_weeks.append(week)
 
         count_ratio = sales_count / approved_count if approved_count else 0
         amount_ratio = sales_amount / approved_amount if approved_amount else 0
@@ -335,10 +403,10 @@ def validate_discovered_weeks(
     for previous, current in zip(summaries, summaries[1:]):
         week = current["week_start"]
         for field, threshold in [
-            ("sales_amt", 0.40),
-            ("sales_cnt", 0.40),
-            ("approved_auth_amt", 0.40),
-            ("auth_total_cnt", 0.40),
+            ("sales_amt", 0.15),
+            ("sales_cnt", 0.15),
+            ("approved_auth_amt", 0.15),
+            ("auth_total_cnt", 0.15),
         ]:
             prior = previous[field]
             change = (current[field] - prior) / prior if prior else 0
@@ -361,6 +429,34 @@ def validate_discovered_weeks(
                 f"Auth rate changed {auth_rate_change:+.2%} week over week",
                 week,
             )
+
+    if len(summaries) >= 3:
+        first = summaries[0]
+        latest = summaries[-1]
+        sales_change = (
+            (latest["sales_amt"] - first["sales_amt"]) / first["sales_amt"]
+            if first["sales_amt"]
+            else 0
+        )
+        if abs(sales_change) > 0.20:
+            _add(
+                checks,
+                "warning",
+                "multiweek_sales_trend",
+                f"Sales changed {sales_change:+.1%} from first to latest loaded week",
+                latest["week_start"],
+                first_week=first["week_start"],
+                change=sales_change,
+            )
+
+    if amex_zero_fee_weeks:
+        _add(
+            checks,
+            "warning",
+            "amex_fee_blind_spot",
+            "Amex has sales volume but $0 interchange fee in the source; blended IC rate understates full cost",
+            affected_weeks=amex_zero_fee_weeks,
+        )
 
     paths = [path for path in (dashboard_paths or []) if path.exists()]
     if paths:

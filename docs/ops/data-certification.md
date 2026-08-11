@@ -21,6 +21,7 @@ This does not “fix” suspicious data automatically. It stops or warns, so a h
 ## Hard failures (publish is blocked)
 
 - Missing/ambiguous Auth or Interchange file
+- Missing/mismatched delivery stamps or folder week does not match the report delivery
 - Week folder is not a Monday or is duplicated
 - Missing required column / empty file
 - Invalid, infinite, negative, or fractional measures
@@ -37,8 +38,11 @@ This does not “fix” suspicious data automatically. It stops or warns, so a h
 - Multiple rows at the same dimensional grain
 - Unexpected transaction type
 - Auth-to-sales count/dollar ratio outside 0.80–1.20
-- Sales, transaction, approved-dollar, or attempt volume moves more than 40% week over week
+- Sales, transaction, approved-dollar, or attempt volume moves more than 15% week over week
 - Auth rate moves more than 2 percentage points week over week
+- More than 5% of declined requests have no readable reason
+- Sales changes more than 20% from the first to latest loaded week
+- Amex has sales but $0 interchange fee (known cost-coverage caveat)
 
 Warnings can represent a real holiday, promotion, outage, or report correction. The owner should document why the movement is credible before proceeding.
 

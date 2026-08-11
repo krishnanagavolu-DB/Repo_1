@@ -56,8 +56,8 @@ def _write_week(root: Path, week: str, duplicate_auth: bool = False) -> dict:
             },
         ]
     )
-    auth_path = folder / "Auth.xlsx"
-    ix_path = folder / "Interchange.xlsx"
+    auth_path = folder / "Auth_20260810_120000.xlsx"
+    ix_path = folder / "Interchange_20260810_120000.xlsx"
     auth.to_excel(auth_path, index=False)
     ix.to_excel(ix_path, index=False)
     return {"week_start": week, "auth": auth_path, "interchange": ix_path}

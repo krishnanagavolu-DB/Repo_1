@@ -1,10 +1,94 @@
 {
-  "status": "passed",
+  "status": "passed_with_warnings",
   "certified": true,
   "error_count": 0,
-  "warning_count": 0,
+  "warning_count": 8,
   "weeks_checked": 3,
-  "checks": [],
+  "checks": [
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.5% of declined requests have blank/unspecified reason text",
+      "week": "2026-07-20",
+      "details": {
+        "unlabeled_count": 4376.0,
+        "decline_count": 41869.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.2% of declined requests have blank/unspecified reason text",
+      "week": "2026-07-27",
+      "details": {
+        "unlabeled_count": 3730.0,
+        "decline_count": 36482.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "11.0% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-03",
+      "details": {
+        "unlabeled_count": 3354.0,
+        "decline_count": 30502.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "sales_cnt changed -15.4% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "sales_cnt",
+        "change": -0.15401222194620134
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "approved_auth_amt changed -15.5% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "approved_auth_amt",
+        "change": -0.15495296503811842
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "auth_total_cnt changed -16.3% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "auth_total_cnt",
+        "change": -0.16261396228228997
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "multiweek_sales_trend",
+      "message": "Sales changed -25.2% from first to latest loaded week",
+      "week": "2026-08-03",
+      "details": {
+        "first_week": "2026-07-20",
+        "change": -0.25218574876655064
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "amex_fee_blind_spot",
+      "message": "Amex has sales volume but $0 interchange fee in the source; blended IC rate understates full cost",
+      "week": null,
+      "details": {
+        "affected_weeks": [
+          "2026-07-20",
+          "2026-07-27",
+          "2026-08-03"
+        ]
+      }
+    }
+  ],
   "week_summaries": [
     {
       "week_start": "2026-07-20",

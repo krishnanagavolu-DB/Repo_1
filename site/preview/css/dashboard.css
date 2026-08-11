@@ -554,8 +554,8 @@ body.auth-unlocked .auth-gate {
 
 .auth-mark img {
   display: block;
-  width: 96px;
-  height: 96px;
+  width: 180px;
+  height: auto;
 }
 
 .auth-eyebrow {

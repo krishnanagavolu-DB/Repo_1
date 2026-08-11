@@ -622,10 +622,11 @@ function answerIndustryBenchmark(q) {
   const authRate = period?.kpis?.auth_rate?.value;
   const benchmarks = benchmarkData.payment_benchmarks || [];
   if (/\b(auth|approval|authorization)\b/.test(q) || !detectKpiKey(q)) {
-    const restaurant = benchmarks.find((item) => item.segment?.includes("Restaurants"));
+    const qsr = benchmarks.find((item) => item.metric === "QSR authorization decline rate");
+    const visa = benchmarks.find((item) => item.metric === "Card-present approval rate");
     const worldpay = benchmarks.find((item) => item.source?.publisher === "Worldpay");
     const current = authRate === undefined ? "" : `Dutch Bros In Shop is **${pct(authRate)}** for ${period.label}. `;
-    return `**Directional authorization context**\n${current}A provider-published in-store restaurant range is **${pct(restaurant.range_low, 0)}–${pct(restaurant.range_high, 0)}**; Worldpay describes **97%+** as best-in-class for select verticals.\n\nThis suggests current performance is strong, but it is **not an apples-to-apples QSR target**—definitions, issuer mix, retries, and merchant mix differ.\n\nSources: ${sourceLink(restaurant.source)} · ${sourceLink(worldpay.source)}\nResearch updated: ${benchmarkData.updated_at}.`;
+    return `**Directional authorization context**\n${current}Equifax/Kount reported a **4.06% authorization decline rate** for its QSR merchant cohort; Visa published **96% card-present approval** for its cited U.S. VisaNet period; Worldpay describes **97%+** as best-in-class for select verticals.\n\nCurrent performance looks strong directionally, but these are **not apples-to-apples targets**—channel, network, issuer mix, retries, de-duplication, and definitions differ.\n\nSources: ${sourceLink(qsr.source)} · ${sourceLink(visa.source)} · ${sourceLink(worldpay.source)}\nResearch updated: ${benchmarkData.updated_at}.`;
   }
   return "The public benchmark library currently has defensible context for authorization rate, not for interchange, downgrade, returns, AOV, or wallet mix. I won’t invent a standard where comparable definitions are unavailable.";
 }

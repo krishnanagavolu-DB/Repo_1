@@ -1,20 +1,38 @@
 {
   "updated_at": "2026-08-11",
   "methodology": "Curated public research. Benchmarks are directional context, not contractual targets. Competitors do not publicly disclose comparable payment authorization, decline, interchange, downgrade, wallet, or entry-method metrics.",
+  "comparison_policy": {
+    "allow_peer_payment_kpi_comparison": false,
+    "default_chatbot_stance": "Use cited industry or vendor-cohort ranges with channel and definition caveats; never infer competitor payment KPIs from footprint, sales, or AUV."
+  },
   "payment_benchmarks": [
     {
-      "metric": "In-store restaurant approval rate",
-      "range_low": 0.94,
-      "range_high": 0.97,
-      "segment": "Restaurants, in-store POS",
+      "metric": "QSR authorization decline rate",
+      "value": 0.0406,
+      "metric_direction": "lower_is_better",
+      "segment": "Equifax/Kount QSR merchant cohort",
       "confidence": "directional",
       "source": {
-        "publisher": "Micros Integrated Payments",
-        "title": "Boost Restaurant Payment Approval Rates & Recover Revenue",
-        "url": "https://microsintegratedpayments.com/blog/payment-approval-rates/",
-        "accessed": "2026-08-11"
+        "publisher": "Equifax / Kount",
+        "title": "Fraud Prevention Excellence in Quick Service Restaurants",
+        "url": "https://assets.equifax.com/marketing/US/assets/fraud-prevention-in-quick-service-restaurants.pdf",
+        "published": "2024"
       },
-      "caveat": "Provider-published benchmark; merchant mix and authorization definitions can differ."
+      "caveat": "Vendor client cohort, likely digital/mobile-heavy; its decline definition and retry/session treatment do not align directly with Dutch Bros in-shop approve-code math."
+    },
+    {
+      "metric": "Card-present approval rate",
+      "value": 0.96,
+      "metric_direction": "higher_is_better",
+      "segment": "U.S. VisaNet card-present",
+      "confidence": "directional",
+      "source": {
+        "publisher": "Visa Acceptance Solutions",
+        "title": "AI is Increasing Revenue and Authorization Rates",
+        "url": "https://www.visaacceptance.com/en-us/blog/article/2024/ai-increasing-revenue.html",
+        "published": "2024"
+      },
+      "caveat": "VisaNet only; 2021–2022 underlying period; not restaurant-MCC or all-card-network specific."
     },
     {
       "metric": "Best-in-class authorization rate",

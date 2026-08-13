@@ -1,0 +1,16 @@
+---
+description: Interaction default for this repo - grill the request before building it.
+alwaysApply: true
+---
+
+# Grill first
+
+Before creative work in this repo — a new metric, a chart, a page change, an ingest or
+automation change — do not run the `brainstorming` skill. Use the `grill` skill in
+`.cursor/skills/grill/SKILL.md` instead.
+
+The repo owner has asked to be challenged rather than walked through a collaborative
+design ceremony: a few sharp questions up front, no spec document or approval gate
+unless the change is genuinely large.
+
+Typing `/brainstorm` still switches to the collaborative mode when something warrants it.

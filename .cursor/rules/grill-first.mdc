@@ -10,7 +10,8 @@ automation change — do not run the `brainstorming` skill. Use the `grill` skil
 `.cursor/skills/grill/SKILL.md` instead.
 
 The repo owner has asked to be challenged rather than walked through a collaborative
-design ceremony: a few sharp questions up front, no spec document or approval gate
-unless the change is genuinely large.
+design ceremony: a few sharp questions up front, then a quick "here's what I'm building"
+and a thumbs-up before any code. Keep it fast, but do not skip the approval — and never
+promote anything to the leadership page without it going through preview first.
 
 Typing `/brainstorm` still switches to the collaborative mode when something warrants it.

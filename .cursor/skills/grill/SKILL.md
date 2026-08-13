@@ -52,9 +52,26 @@ Adapt these to the request. They are the questions that usually matter here.
 ## After the questions
 
 Write a short "here's what I'm building" — a few lines, plus what you are deliberately
-not doing — then start. No spec document and no approval gate unless the change touches
-the ingest contract, the certification rules, or what leadership sees on the published
-page. Those deserve a written design first.
+not doing — and **wait for a yes before building.** The gate is fast, not skipped: a
+couple of lines and a thumbs-up, not a spec document. The only time you need a written
+design first is when the change touches the ingest contract or the certification rules;
+those deserve a spec before code.
+
+## Preview before prod — always
+
+Nothing reaches leadership without being seen on preview first. This is the most
+important gate in the repo, so treat it as non-negotiable. See
+`docs/ops/preview-workflow.md`.
+
+1. Build UI, chat, and design changes under `site/preview/` **only**. Do not touch
+   `site/index.html` or the other leadership files at the root of `site/`.
+2. Open a PR, review at the preview link, and get sign-off there.
+3. Promote to the leadership homepage **only** when the user explicitly says "promote"
+   (or "publish to leadership"), and do it as a separate PR that copies the approved
+   preview files up.
+
+If a request would edit a leadership file directly, stop and route it through preview
+instead — unless the user has explicitly said to promote.
 
 ## When nobody is there to answer
 

@@ -30,7 +30,7 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
    - `site/data/dashboard.json` (leadership homepage)
    - `site/preview/data/dashboard.json` (preview page, if present)
 4. Certification checks the output copies and writes `data/processed/validation_report.json`.
-5. Push / merge to `main` triggers GitHub Pages deploy; CI runs the certification again and blocks bad data.
+5. A certified data-only commit pushes directly to `main`; GitHub Pages deploys it and CI certifies it again.
 6. Leadership opens the **same Pages URL** — no new link needed.
    Preview UI work stays at `/preview/` until promoted (see `docs/ops/preview-workflow.md`).
 
@@ -78,18 +78,18 @@ that talks to Microsoft Graph / SharePoint.
 2. **Trigger → Scheduled**
 3. Set cron to: `CRON_TZ=America/Los_Angeles 0 11 * * 1`  
    (Monday 11:00 AM Pacific; Cursor cron is UTC unless `CRON_TZ` is set)
-4. **Attach this repository** (`krishnanagavolu-DB/Repo_1`) so the agent can open a PR
-5. Enable tools: **the SharePoint MCP** + **pull request creation**
+4. **Attach this repository** (`krishnanagavolu-DB/Repo_1`) with write access
+5. Enable tools: **the SharePoint MCP** + **repository write access**
 6. Paste the **Agent prompt** below into the automation
 7. Save / activate
-8. Click **Run now** once to prove it can download Auth + Interchange and open a data PR
+8. Click **Run now** once to prove it can download, certify, and publish Auth + Interchange
 
 Optional: after it exists, store the automation UUID in `config/sharepoint-source.json`
 under `refresh_schedule.automation_id` so agents can look it up with `get-automation`.
 
 ### C. After that, weekly ops is hands-off
-Michelle drops the two Excels → Monday 11 AM Pacific Automation runs → PR opens →
-merge to `main` → GitHub Pages updates the same leadership URL.
+Michelle drops the two Excels → Monday 11 AM Pacific Automation runs → certification
+passes → data pushes to `main` → GitHub Pages updates the same leadership URL.
 
 ## Agent prompt (paste into the automation)
 
@@ -124,7 +124,8 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
 5. If validation has any ERROR, do NOT publish. If it has WARNING, review and
    explain the movement before publishing. Never suppress a check just to make CI green.
 
-6. Commit, push a branch cursor/data-week-YYYY-MM-DD-8ee2, and open/update a PR into main:
+6. This is a certified data-only refresh. Commit directly to main and push so
+   GitHub Pages deploys without requiring a person to merge a PR:
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json
@@ -132,6 +133,13 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
    - data/processed/validation_report.json
 
 Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
+
+Before pushing, run `git pull --rebase origin main`. Then push with
+`git push origin main`. If the push is rejected because main changed, pull/rebase,
+rerun certification, and retry once. Never force-push.
+
+Do not open a PR for a certified weekly data-only refresh. PRs remain required for
+code, UI, formulas, validation rules, or automation configuration changes.
 
 If SharePoint auth fails or only one file is present, stop, leave the live dashboard
 unchanged, and report the failure clearly.

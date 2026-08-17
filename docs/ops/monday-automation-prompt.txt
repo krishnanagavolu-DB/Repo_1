@@ -28,7 +28,8 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
 5. If validation has any ERROR, do NOT publish. If it has WARNING, review and
    explain the movement before publishing. Never suppress a check just to make CI green.
 
-6. Commit, push a branch cursor/data-week-YYYY-MM-DD-8ee2, and open/update a PR into main:
+6. This is a certified data-only refresh. Commit directly to main and push so
+   GitHub Pages deploys without requiring a person to merge a PR:
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json
@@ -36,6 +37,13 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
    - data/processed/validation_report.json
 
 Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
+
+Before pushing, run `git pull --rebase origin main`. Then push with
+`git push origin main`. If the push is rejected because main changed, pull/rebase,
+rerun certification, and retry once. Never force-push.
+
+Do not open a PR for a certified weekly data-only refresh. PRs remain required for
+code, UI, formulas, validation rules, or automation configuration changes.
 
 If SharePoint auth fails or only one file is present, stop, leave the live dashboard
 unchanged, and report the failure clearly.

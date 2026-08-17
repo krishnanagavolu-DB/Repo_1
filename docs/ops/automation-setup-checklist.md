@@ -35,17 +35,17 @@ CRON_TZ=America/Los_Angeles 0 11 * * 1
 ```
 
 5. Repository: attach **Repo_1** (`krishnanagavolu-DB/Repo_1`)
-6. Tools: turn ON the SharePoint MCP + pull request creation
+6. Tools: turn ON the SharePoint MCP + repository write access
 7. Prompt: open `docs/ops/monday-automation-prompt.txt` and paste the **entire** file
 8. Save / Activate
 9. Click **Run now** once
 
 ### Click 3 — Tell the agent
 Reply in chat with either:
-- **“Run now succeeded”** (and the PR link if shown), or
+- **“Run now succeeded”**, or
 - paste any error text / screenshot description
 
-The agent will verify the PR, fix anything that failed, and finish the ingest.
+The agent will verify the production dashboard, fix anything that failed, and finish the ingest.
 
 ---
 
@@ -53,4 +53,4 @@ The agent will verify the PR, fix anything that failed, and finish the ingest.
 - Do not change the cron string
 - Do not change the SharePoint folder URL
 - Do not edit ingest scripts
-- Do not merge a data PR until the agent says it passed certification
+- Do not manually publish files; certification and publication happen together

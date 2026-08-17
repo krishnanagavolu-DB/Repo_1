@@ -54,7 +54,7 @@ const checks = [
   ["Is this data certified?", /Certified for publish: \*\*Yes\*\*/],
   ["Show decline reasons", new RegExp(escapeRegExp(formattedTopDeclineCount))],
   ["Show that as visual bars", /█/],
-  ["Show wallet mix", /Card \/ Other/],
+  ["Show wallet mix", /Physical Card/],
   ["Show that as a table", /table view/],
 ];
 

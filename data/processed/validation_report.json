@@ -2,8 +2,8 @@
   "status": "passed_with_warnings",
   "certified": true,
   "error_count": 0,
-  "warning_count": 8,
-  "weeks_checked": 3,
+  "warning_count": 9,
+  "weeks_checked": 4,
   "checks": [
     {
       "severity": "warning",
@@ -33,6 +33,16 @@
       "details": {
         "unlabeled_count": 3354.0,
         "decline_count": 30502.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.2% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-10",
+      "details": {
+        "unlabeled_count": 3261.0,
+        "decline_count": 31901.0
       }
     },
     {
@@ -68,11 +78,11 @@
     {
       "severity": "warning",
       "code": "multiweek_sales_trend",
-      "message": "Sales changed -25.2% from first to latest loaded week",
-      "week": "2026-08-03",
+      "message": "Sales changed -25.5% from first to latest loaded week",
+      "week": "2026-08-10",
       "details": {
         "first_week": "2026-07-20",
-        "change": -0.25218574876655064
+        "change": -0.25541370280721304
       }
     },
     {
@@ -84,7 +94,8 @@
         "affected_weeks": [
           "2026-07-20",
           "2026-07-27",
-          "2026-08-03"
+          "2026-08-03",
+          "2026-08-10"
         ]
       }
     }
@@ -134,6 +145,21 @@
       "interchange_fee": 550568.26,
       "auth_to_sales_count_ratio": 0.9970241249704451,
       "auth_to_sales_amount_ratio": 0.999268147947185
+    },
+    {
+      "week_start": "2026-08-10",
+      "auth_rows": 302,
+      "interchange_rows": 563,
+      "auth_total_cnt": 2348200.0,
+      "auth_approved_cnt": 2316299.0,
+      "auth_rate": 0.9864147006217528,
+      "approved_auth_amt": 28142374.0,
+      "sales_cnt": 2318150.0,
+      "sales_amt": 28194629.82,
+      "return_amt": 28325.049999999996,
+      "interchange_fee": 549128.2,
+      "auth_to_sales_count_ratio": 1.000799119630065,
+      "auth_to_sales_amount_ratio": 1.0018568376640862
     }
   ]
 }

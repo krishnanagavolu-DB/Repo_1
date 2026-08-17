@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - "site/**"
+      - "tests/**"
+      - "src/**"
+      - "scripts/**"
+      - "requirements.txt"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 

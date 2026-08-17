@@ -36,6 +36,12 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
 
 ## One-time setup (you must click this — agents cannot create Automations)
 
+**Shortest path for a non-developer:** follow
+[`docs/ops/automation-setup-checklist.md`](automation-setup-checklist.md)
+(copy/paste only — do not invent settings).  
+Prompt file to paste: [`monday-automation-prompt.txt`](monday-automation-prompt.txt).  
+If Microsoft blocks sign-in: forward [`it-sharepoint-access-request.md`](it-sharepoint-access-request.md) to Tech Help.
+
 ### GitHub Pages
 1. Repo **Settings → Pages → Source: GitHub Actions**
 2. Private repo Pages requires **GitHub Pro** (or org Team+)

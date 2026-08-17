@@ -40,8 +40,26 @@ git add data site/data/dashboard.json && git commit -m "data: refresh Worldpay d
 pytest -v
 ```
 
+## NSO First Tamper Check reminders
+
+Daily decision engine for upcoming shop openings (Outlook drafts for approval — nothing auto-sends in v1).
+
+```bash
+python3 scripts/run_nso_reminders.py --dry-run \
+  --grid tests/fixtures/nso/sample_grid.xlsx \
+  --send-log tests/fixtures/nso/sample_send_log.xlsx \
+  --cache tests/fixtures/nso/sample_email_cache.xlsx \
+  --out /tmp/nso-dry-run
+```
+
+Ops runbook: [`docs/ops/nso-daily-automation.md`](docs/ops/nso-daily-automation.md)  
+Config: [`config/nso-source.json`](config/nso-source.json) · email templates: [`config/nso-email-templates/`](config/nso-email-templates/)
+
 ## Docs
 
 - Design: `docs/superpowers/specs/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard-design.md`
 - Plan: `docs/superpowers/plans/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard.md`
 - Monday ops: `docs/ops/monday-automation.md`
+- NSO design: `docs/superpowers/specs/2026-08-17-nso-tamper-check-reminders-design.md`
+- NSO plan: `docs/superpowers/plans/2026-08-17-nso-tamper-check-reminders.md`
+- NSO daily ops: `docs/ops/nso-daily-automation.md`

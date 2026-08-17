@@ -1,5 +1,7 @@
 /* Smarter data-only assistant: deterministic answers from dashboard.json. */
 
+/* Scoped so these helpers cannot overwrite the dashboard's formatters. */
+(function () {
 const PAYMENT_DEFINITIONS = [
   {
     terms: ["auth rate", "authorization rate", "approval rate"],
@@ -59,7 +61,7 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["wallet mix", "mobile wallet"],
     title: "Wallet mix",
-    body: "Share of sales transactions by mobile wallet versus Card / Other.",
+    body: "Share of sales transactions by mobile wallet versus physical card.",
   },
   {
     terms: ["ytd", "year to date"],
@@ -160,7 +162,7 @@ function pct(value, digits = 2) {
 
 function signed(value, digits = 2) {
   const n = Number(value || 0);
-  return `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n).toFixed(digits)}`;
+  return `${n > 0 ? "+" : n < 0 ? "-" : ""}${Math.abs(n).toFixed(digits)}`;
 }
 
 function sentenceDirection(delta, inverse = false) {
@@ -417,10 +419,19 @@ function mixConfig(kind) {
   }[kind];
 }
 
+/** Keep chat wording identical to the chart legend. */
+function mixLabel(label) {
+  return typeof window.__mixLabel === "function" ? window.__mixLabel(label) : label;
+}
+
 function findMixItem(items, q) {
   return (items || []).find((item) => {
-    const label = normalize(item.label);
-    return q.includes(label) || label.split(" ").filter((w) => w.length > 3).every((w) => q.includes(w));
+    const candidates = [normalize(item.label), normalize(mixLabel(item.label))];
+    return candidates.some(
+      (label) =>
+        q.includes(label) ||
+        label.split(" ").filter((w) => w.length > 3).every((w) => q.includes(w))
+    );
   });
 }
 
@@ -435,24 +446,24 @@ function answerMix(kind, q, forceCounts = false) {
   const selected = findMixItem(items, q);
   if (selected) {
     rememberView(
-      `${selected.label} share`,
+      `${mixLabel(selected.label)} share`,
       [
-        { label: selected.label, value: Number(selected.count), display: count(selected.count) },
+        { label: mixLabel(selected.label), value: Number(selected.count), display: count(selected.count) },
         { label: "All other", value: Math.max(0, items.reduce((sum, item) => sum + Number(item.count || 0), 0) - Number(selected.count)), display: count(Math.max(0, items.reduce((sum, item) => sum + Number(item.count || 0), 0) - Number(selected.count))) },
       ],
-      `${selected.label}: ${pct(selected.pct, 1)}.`
+      `${mixLabel(selected.label)}: ${pct(selected.pct, 1)}.`
     );
-    return `For **${period.label}**, **${selected.label}** represents **${pct(selected.pct, 1)}** of ${config.title.toLowerCase()} — **${count(selected.count)} transactions**.`;
+    return `For **${period.label}**, **${mixLabel(selected.label)}** represents **${pct(selected.pct, 1)}** of ${config.title.toLowerCase()} — **${count(selected.count)} transactions**.`;
   }
 
   const total = items.reduce((sum, i) => sum + Number(i.count || 0), 0);
   const lines = items.slice(0, 8).map((item) =>
-    `• ${item.label}: **${pct(item.pct, 1)}**${forceCounts ? ` (${count(item.count)})` : ""}`
+    `• ${mixLabel(item.label)}: **${pct(item.pct, 1)}**${forceCounts ? ` (${count(item.count)})` : ""}`
   );
   rememberView(
     `${config.title} — ${period.label}`,
     items.slice(0, 8).map((item) => ({
-      label: item.label,
+      label: mixLabel(item.label),
       value: Number(item.count),
       display: pct(item.pct, 1),
       secondary: `${count(item.count)} transactions`,
@@ -838,3 +849,4 @@ function startChatbotWhenUnlocked() {
 
 window.__paymentsChat = { answerQuestion, normalize, chatContext };
 document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);
+})();

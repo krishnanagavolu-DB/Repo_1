@@ -6,11 +6,11 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=20260811i" />
+    <link rel="stylesheet" href="css/dashboard.css?v=20260817a" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=20260811i" defer></script>
-    <script src="js/dashboard.js?v=20260811i" defer></script>
-    <script src="js/chatbot.js?v=20260811i" defer></script>
+    <script src="js/auth-gate.js?v=20260817a" defer></script>
+    <script src="js/dashboard.js?v=20260817a" defer></script>
+    <script src="js/chatbot.js?v=20260817a" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -62,22 +62,40 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
-          <div class="tab active" aria-current="page">
-            <strong>In Shop</strong>
-            <span>Worldpay</span>
-          </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Olo Pay</strong>
-            <span>Coming soon</span>
-          </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Gift Cards</strong>
-            <span>Coming soon</span>
-          </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Other</strong>
-            <span>Coming soon</span>
-          </div>
+          <button type="button" class="tab active" aria-current="page">Worldpay</button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Olo Pay
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Gift Cards
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Other
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
         </nav>
       </header>
 
@@ -112,6 +130,17 @@
           <article class="panel bar-panel">
             <h3>Decline reasons</h3>
             <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
+            <table class="mix-legend decline-legend">
+              <thead>
+                <tr>
+                  <th scope="col">Reason</th>
+                  <th scope="col">Requests</th>
+                  <th scope="col">Share</th>
+                </tr>
+              </thead>
+              <tbody id="legend-declines"></tbody>
+            </table>
+            <p class="panel-note">Share of declines that carry a reason code from Worldpay.</p>
           </article>
           <article class="panel bar-panel">
             <h3>Auth rate by entry method</h3>

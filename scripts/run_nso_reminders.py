@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-from nso_reminders.config import load_nso_config
-from nso_reminders.pipeline import run_dry_run
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from nso_reminders.config import load_nso_config  # noqa: E402
+from nso_reminders.pipeline import run_dry_run  # noqa: E402
 
 
 def main() -> None:

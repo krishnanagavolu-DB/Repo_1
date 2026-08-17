@@ -1,0 +1,41 @@
+Refresh the Dutch Bros In Shop · Worldpay Executive KPI Dashboard.
+
+SharePoint source of truth (do not use another folder):
+https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Worldpay/WP%20Weekly%20Reports?d=w23de4595d91f489fa3c825c6b52e4fcd&csf=1&web=1&e=uSIZpB
+
+Path: sites/CoreShopTech/Shared Documents/General/Payment Systems/Reports/Worldpay/WP Weekly Reports
+Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
+
+1. List the SharePoint folder. Download this week's newest Auth Summary and
+   Interchange Excels (must be a matching pair for the same prior week).
+
+2. Determine prior week Monday (Mon–Sun week the reports cover). Create
+   data/raw/{YYYY-MM-DD}/ and save both files there with clear names containing
+   Auth and Interchange. Skip if that week folder already exists with both files.
+
+3. Run:
+   python3 scripts/ingest_worldpay.py --raw data/raw --out data/processed/dashboard.json \
+     --site-copy site/data/dashboard.json \
+     --site-copy site/preview/data/dashboard.json
+
+4. Certify the final outputs:
+   python3 scripts/validate_worldpay.py \
+     --raw data/raw \
+     --dashboard data/processed/dashboard.json \
+     --dashboard site/data/dashboard.json \
+     --dashboard site/preview/data/dashboard.json
+
+5. If validation has any ERROR, do NOT publish. If it has WARNING, review and
+   explain the movement before publishing. Never suppress a check just to make CI green.
+
+6. Commit, push a branch cursor/data-week-YYYY-MM-DD-8ee2, and open/update a PR into main:
+   - data/raw/{week}/
+   - data/processed/dashboard.json
+   - site/data/dashboard.json
+   - site/preview/data/dashboard.json (if preview folder exists)
+   - data/processed/validation_report.json
+
+Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
+
+If SharePoint auth fails or only one file is present, stop, leave the live dashboard
+unchanged, and report the failure clearly.

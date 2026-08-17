@@ -41,22 +41,49 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
 2. Private repo Pages requires **GitHub Pro** (or org Team+)
 3. After first deploy, share the Pages URL with leadership
 
-### Cursor Automation
+### Why your browser login is not enough
+Signing into SharePoint on your laptop only authenticates **your browser**.
+Cursor Automations run on Cursor’s cloud machines. They need a **separate**
+SharePoint connection (MCP + Microsoft sign-in, or an IT app registration).
+
+Cursor has **no built-in SharePoint button**. File access is via an MCP server
+that talks to Microsoft Graph / SharePoint.
+
+### A. Connect SharePoint once (required)
+
+1. In Cursor: **Dashboard → Integrations & MCP** (team admin if this is a team setup)
+2. Add a **SharePoint / Microsoft 365 / Graph MCP** (Marketplace or IT-provided HTTP MCP)
+3. Complete the **Microsoft OAuth** sign-in when prompted (use your `@dutchbros.com` account)
+4. Confirm the MCP can list the WP Weekly Reports folder before relying on Monday
+
+**If this must run unattended for the team** (not only while you are online):
+- Set the Automation permission to **Team Owned**
+- Re-authenticate the SharePoint MCP for the **team automations service account**
+  (a personal OAuth login will not keep working after you promote it to Team Owned)
+
+**If Conditional Access / MFA blocks the cloud sign-in**, ask Tech Help / IT for:
+- Read-only access to `…/Worldpay/WP Weekly Reports` for a service account **or**
+- An Entra **app registration** with Sites.Selected (or equivalent) on that library
+- Approval for Cursor / the MCP’s Entra app under Conditional Access
+
+### B. Create the Monday Automation (one-time click)
+
 1. Open [cursor.com/automations/new](https://cursor.com/automations/new)
 2. **Trigger → Scheduled**
 3. Set cron to: `CRON_TZ=America/Los_Angeles 0 11 * * 1`  
    (Monday 11:00 AM Pacific; Cursor cron is UTC unless `CRON_TZ` is set)
-4. **Attach this repository** (`krishnanagavolu-db/repo_1`) so the agent can commit/PR
-5. Enable tools needed for SharePoint / Microsoft Graph access (OAuth first)
+4. **Attach this repository** (`krishnanagavolu-DB/Repo_1`) so the agent can open a PR
+5. Enable tools: **the SharePoint MCP** + **pull request creation**
 6. Paste the **Agent prompt** below into the automation
 7. Save / activate
+8. Click **Run now** once to prove it can download Auth + Interchange and open a data PR
 
-Optional: after it exists, store the automation UUID in `config/sharepoint-source.json` under `refresh_schedule.automation_id` so agents can look it up with `get-automation`.
+Optional: after it exists, store the automation UUID in `config/sharepoint-source.json`
+under `refresh_schedule.automation_id` so agents can look it up with `get-automation`.
 
-### SharePoint auth
-1. Prefer **your Dutch Bros Microsoft login (OAuth)** when the automation first runs
-2. If Conditional Access blocks Cursor cloud IPs, ask IT for an **app registration** with read-only access to the WP Weekly Reports folder
-3. Store secrets in Cursor automation secrets if using app credentials
+### C. After that, weekly ops is hands-off
+Michelle drops the two Excels → Monday 11 AM Pacific Automation runs → PR opens →
+merge to `main` → GitHub Pages updates the same leadership URL.
 
 ## Agent prompt (paste into the automation)
 

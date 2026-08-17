@@ -52,4 +52,5 @@ jobs:
         with:
           path: site
       - id: deployment
+        # A new main push automatically retries transient GitHub Pages API failures.
         uses: actions/deploy-pages@v4

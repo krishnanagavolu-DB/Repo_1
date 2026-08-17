@@ -1,0 +1,24 @@
+{
+  "portal_projected_openings_url": "https://portal.dutchbros.com/directory/projected-openings",
+  "portal_crew_search_url": "https://portal.dutchbros.com/crew/search",
+  "sharepoint": {
+    "daily_downloads": {
+      "path": "sites/CoreShopTech/Shared Documents/General/Payment Systems/Reports/NSO Reporting/NSO Daily Downloads",
+      "url": "https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/NSO%20Reporting/NSO%20Daily%20Downloads?d=wf930162a74cf43db9e1f42a1efa0dc4f&csf=1&web=1&e=x5uZKh"
+    },
+    "working_files": {
+      "path": "sites/CoreShopTech/Shared Documents/General/Payment Systems/Reports/NSO Reporting/NSO Working Files",
+      "url": "https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/NSO%20Reporting/NSO%20Working%20Files?d=wb7c199da29424da6af0b3e84fa53221b&csf=1&web=1&e=kHqRYQ"
+    }
+  },
+  "thresholds": {
+    "first_reminder_days": 4,
+    "second_reminder_days": 2,
+    "retention_days": 14
+  },
+  "email": {
+    "cc": [],
+    "templates_dir": "config/nso-email-templates"
+  },
+  "timezone": "America/Los_Angeles"
+}

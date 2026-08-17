@@ -23,7 +23,8 @@ Open `http://localhost:8080`.
 
 ## Weekly update
 
-Drop files in SharePoint `…/Worldpay/WP Weekly Reports`, then let the Monday Cursor Automation run (see [`docs/ops/monday-automation.md`](docs/ops/monday-automation.md)).
+Drop files in SharePoint [WP Weekly Reports](https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Worldpay/WP%20Weekly%20Reports?d=w23de4595d91f489fa3c825c6b52e4fcd&csf=1&web=1&e=uSIZpB).  
+Monday **11:00 AM Pacific** Cursor Automation refreshes the dashboard (see [`docs/ops/monday-automation.md`](docs/ops/monday-automation.md); source config in [`config/sharepoint-source.json`](config/sharepoint-source.json)).
 
 Manual:
 

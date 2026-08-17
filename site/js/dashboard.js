@@ -11,6 +11,10 @@ window.KPI_SECTIONS = [
         label: "Auth rate",
         format: (v) => pct(v, 2),
         formatDelta: (d) => `${signed(d * 100, 2)} pts`,
+        subValue: (period) => {
+          const attempts = periodTotal(period, "auth_total_cnt");
+          return attempts ? `(${compactCount(attempts)} attempts)` : "";
+        },
         why: "Approval health — small drops mean lost tickets now",
       },
       {
@@ -114,11 +118,22 @@ function pct(value, digits = 2) {
   return `${(Number(value) * 100).toFixed(digits)}%`;
 }
 
+/**
+ * Share values in aligned legend columns always render at one decimal so the
+ * column stays flush. Non-zero values that would round away are shown as <0.1%.
+ */
+function mixPct(value) {
+  const share = Number(value) * 100;
+  if (!Number.isFinite(share)) return "0.0%";
+  if (share > 0 && share < 0.05) return "<0.1%";
+  return `${share.toFixed(1)}%`;
+}
+
 function signed(value, digits = 2) {
   const n = Number(value);
   const abs = Math.abs(n).toFixed(digits);
   if (n > 0) return `+${abs}`;
-  if (n < 0) return `−${abs}`;
+  if (n < 0) return `-${abs}`;
   return abs;
 }
 
@@ -132,7 +147,7 @@ function money(value, digits = 2, withSign = false) {
   });
   if (!withSign) return abs;
   if (n > 0) return `+${abs}`;
-  if (n < 0) return `−${abs.replace("-", "")}`;
+  if (n < 0) return `-${abs.replace("-", "")}`;
   return abs;
 }
 
@@ -143,9 +158,9 @@ function compactMoney(value, withSign = false) {
   if (abs >= 1_000_000) text = `$${(abs / 1_000_000).toFixed(1)}M`;
   else if (abs >= 1_000) text = `$${(abs / 1_000).toFixed(1)}K`;
   else text = `$${abs.toFixed(0)}`;
-  if (!withSign) return n < 0 && !text.startsWith("-") ? `−${text}` : text;
+  if (!withSign) return n < 0 ? `-${text}` : text;
   if (n > 0) return `+${text}`;
-  if (n < 0) return `−${text.replace("−", "").replace("-", "")}`;
+  if (n < 0) return `-${text}`;
   return text;
 }
 
@@ -156,24 +171,64 @@ function compactCount(value, withSign = false) {
   if (abs >= 1_000_000) text = `${(abs / 1_000_000).toFixed(2)}M`;
   else if (abs >= 1_000) text = `${(abs / 1_000).toFixed(0)}K`;
   else text = abs.toFixed(0);
-  if (!withSign) return text;
+  if (!withSign) return n < 0 ? `-${text}` : text;
   if (n > 0) return `+${text}`;
-  if (n < 0) return `−${text}`;
+  if (n < 0) return `-${text}`;
   return text;
 }
 
-function deltaClass(delta, invert = false) {
-  if (delta === null || delta === undefined || Number(delta) === 0) return "flat";
-  const up = Number(delta) > 0;
-  if (invert) return up ? "down" : "up";
-  return up ? "up" : "down";
+/**
+ * True when a formatted delta carries no magnitude at display precision, so a
+ * movement of 0.0004 pts is not dressed up as a green gain of "+0.00 pts".
+ */
+function isZeroAtDisplayPrecision(text) {
+  const digits = String(text).replace(/[^0-9]/g, "");
+  return digits.length > 0 && /^0+$/.test(digits);
 }
 
-function deltaText(meta, kpiObj) {
+function stripSign(text) {
+  return String(text).replace(/^[+-]\s*/, "");
+}
+
+function deltaDisplay(meta, kpiObj) {
   const delta = kpiObj.delta;
-  if (delta === null || delta === undefined) return "—";
-  const arrow = Number(delta) > 0 ? "▲" : Number(delta) < 0 ? "▼" : "•";
-  return `${arrow} ${meta.formatDelta(delta)}`;
+  if (delta === null || delta === undefined) {
+    return { text: "—", className: "flat" };
+  }
+  const formatted = meta.formatDelta(delta);
+  if (isZeroAtDisplayPrecision(formatted)) {
+    return { text: `— ${stripSign(formatted)}`, className: "flat" };
+  }
+  const up = Number(delta) > 0;
+  const improved = meta.invertDelta ? !up : up;
+  return {
+    text: `${up ? "▲" : "▼"} ${formatted}`,
+    className: improved ? "up" : "down",
+  };
+}
+
+/** Display-only rename so the real card bucket is not confused with grouped "Other". */
+const MIX_LABEL_OVERRIDES = { "Card / Other": "Physical Card" };
+
+function mixLabel(label) {
+  return MIX_LABEL_OVERRIDES[label] || label;
+}
+
+window.__mixLabel = mixLabel;
+
+window.__dashboardFormat = {
+  mixPct,
+  signed,
+  money,
+  compactMoney,
+  compactCount,
+  deltaDisplay,
+  mixLabel,
+};
+
+function periodTotal(period, field) {
+  const value = Number(period?.totals?.[field]);
+  return Number.isFinite(value) ? value : null;
 }
 
 function populatePeriodSelect(data) {
@@ -224,11 +279,16 @@ function renderKpis(period) {
       const card = document.createElement("article");
       card.className = "kpi-card";
       card.title = meta.why || "";
+      const delta = deltaDisplay(meta, kpi);
+      const subValue = meta.subValue ? meta.subValue(period) : "";
       card.innerHTML = `
         <div class="label">${meta.label}</div>
         <div class="kpi-main">
-          <div class="kpi-value">${meta.format(kpi.value)}</div>
-          <div class="kpi-delta ${deltaClass(kpi.delta, meta.invertDelta)}">${deltaText(meta, kpi)}</div>
+          <div>
+            <div class="kpi-value">${meta.format(kpi.value)}</div>
+            ${subValue ? `<div class="kpi-subvalue">${subValue}</div>` : ""}
+          </div>
+          <div class="kpi-delta ${delta.className}">${delta.text}</div>
         </div>
         <div class="kpi-why">${meta.why || ""}</div>
         <div class="kpi-trend">
@@ -254,12 +314,16 @@ function renderKpis(period) {
     const prev = history.length > 1 ? history[history.length - 2].value : last;
     const improved = meta.invertDelta ? last < prev : last > prev;
     const endColor = improved ? "#005F98" : last === prev ? "#005F98" : "#D7282F";
+    const average = history.length
+      ? history.reduce((sum, h) => sum + Number(h.value), 0) / history.length
+      : null;
     charts.trends[meta.key] = new Chart(ctx, {
       type: "line",
       data: {
         labels: history.map((h) => h.week_start),
         datasets: [
           {
+            label: "Weekly value",
             data: history.map((h) => h.value),
             borderColor: "#005F98",
             backgroundColor: "transparent",
@@ -270,12 +334,29 @@ function renderKpis(period) {
             ),
             tension: 0.25,
           },
+          {
+            label: "4-week average",
+            data: history.map(() => average),
+            borderColor: "#c3d0dd",
+            borderWidth: 1,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false,
+            tension: 0,
+          },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { enabled: true } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            filter: (item) => item.datasetIndex === 0,
+          },
+        },
         scales: {
           x: { display: false },
           y: { display: false },
@@ -342,19 +423,18 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
     return;
   }
 
-  const labels = list.map((i) => i.label);
+  const labels = list.map((i) => mixLabel(i.label));
   const values = list.map((i) => i.pct);
   const colors = labels.map((_, idx) => MIX_COLORS[idx % MIX_COLORS.length]);
 
   legend.innerHTML = list
     .map((item, idx) => {
-      const digits = item.detail?.length ? (item.pct < 0.001 ? 3 : 2) : 1;
       return `
       <tr>
-        <td><span style="color:${colors[idx]}">●</span> ${item.label}${
+        <td><span style="color:${colors[idx]}">●</span> ${mixLabel(item.label)}${
           item.detail?.length ? ` <span class="mix-hint">(${item.detail.length})</span>` : ""
         }</td>
-        <td>${pct(item.pct, digits)}</td>
+        <td>${mixPct(item.pct)}</td>
       </tr>`;
     })
     .join("");
@@ -382,18 +462,18 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
           callbacks: {
             title(tooltipItems) {
               const item = list[tooltipItems[0]?.dataIndex];
-              return item?.label || "";
+              return item ? mixLabel(item.label) : "";
             },
             label(ctx) {
               const item = list[ctx.dataIndex];
               if (!item) return "";
               if (item.detail?.length) {
                 return [
-                  `Combined ${pct(item.pct, 1)}`,
-                  ...item.detail.map((d) => `${d.label}: ${pct(d.pct, 2)}`),
+                  `Combined ${mixPct(item.pct)}`,
+                  ...item.detail.map((d) => `${mixLabel(d.label)}: ${pct(d.pct, 3)}`),
                 ];
               }
-              return pct(item.pct, 1);
+              return mixPct(item.pct);
             },
           },
         },
@@ -454,10 +534,38 @@ function renderAuthByEntry(items) {
   });
 }
 
+/** Text list beside the decline chart so the panel stays readable without canvas. */
+function renderDeclineList(items) {
+  const list = document.getElementById("legend-declines");
+  if (!list) return;
+  const rows = (items || []).slice(0, 8);
+  if (!rows.length) {
+    list.innerHTML = `<tr><td colspan="3">No declines recorded for this period</td></tr>`;
+    return;
+  }
+  const labelledTotal = (items || []).reduce((sum, i) => sum + Number(i.count || 0), 0);
+  list.innerHTML = rows
+    .map(
+      (item) => `
+      <tr>
+        <td>${item.label}</td>
+        <td>${Number(item.count).toLocaleString("en-US")}</td>
+        <td>${labelledTotal ? mixPct(Number(item.count) / labelledTotal) : "0.0%"}</td>
+      </tr>`
+    )
+    .join("");
+}
+
 function renderDeclines(items) {
+  const canvas = document.getElementById("chart-declines");
+  if (!canvas) return;
   const top = (items || []).slice(0, 8);
   if (charts.declines) charts.declines.destroy();
-  charts.declines = new Chart(document.getElementById("chart-declines"), {
+  if (!top.length) {
+    charts.declines = null;
+    return;
+  }
+  charts.declines = new Chart(canvas, {
     type: "bar",
     data: {
       labels: top.map((i) => i.label),
@@ -498,14 +606,29 @@ function renderPeriod(data, periodId) {
   renderMix("chart-wallet", "legend-wallet", period.wallet_mix || [], "wallet", { groupUnder: 0.005 });
   renderAuthByEntry(period.auth_rate_by_entry || []);
   renderDeclines(period.decline_reasons || []);
+  renderDeclineList(period.decline_reasons || []);
   resizeChartsSoon();
+}
+
+/** YTD ships without a totals block, so sum the weekly totals for denominators. */
+function withDerivedTotals(data) {
+  const ytd = data?.periods?.ytd;
+  if (ytd && !ytd.totals) {
+    ytd.totals = (data.periods.weeks || []).reduce((acc, week) => {
+      for (const [field, value] of Object.entries(week.totals || {})) {
+        acc[field] = (acc[field] || 0) + Number(value);
+      }
+      return acc;
+    }, {});
+  }
+  return data;
 }
 
 async function loadDashboard() {
   try {
     const res = await fetch("data/dashboard.json", { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed to load dashboard.json (${res.status})`);
-    dashboardData = await res.json();
+    dashboardData = withDerivedTotals(await res.json());
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
     populatePeriodSelect(dashboardData);

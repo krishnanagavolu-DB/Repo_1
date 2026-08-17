@@ -1,7 +1,7 @@
 # NSO First Tamper Check Reminders — Design
 
 **Date:** 2026-08-17  
-**Status:** Awaiting user review before implementation planning  
+**Status:** Approved; implementation plan ready  
 **Audience:** Product / payments ops (New Shop Opening)  
 **Channel (v1):** Daily Cursor Automation + Outlook drafts for human approval
 

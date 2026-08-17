@@ -33,15 +33,26 @@ sandbox.window.__dashboardState = {
 vm.runInContext(fs.readFileSync("site/preview/js/chatbot.js", "utf8"), sandbox);
 
 const ask = sandbox.window.__paymentsChat.answerQuestion;
+const latest = dashboard.periods.weeks.at(-1);
+const applePayCount = latest.wallet_mix.find(({ label }) => label === "Apple Pay").count;
+const topDeclineCount = latest.decline_reasons.at(0).count;
+const formattedApplePayCount = new Intl.NumberFormat("en-US").format(applePayCount);
+const formattedTopDeclineCount = new Intl.NumberFormat("en-US").format(topDeclineCount);
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const checks = [
   ["Explain the auth rate trend", /Best: \*\*98\.71%\*\*/],
   ["Show decline reasons as percentages", /% of declined requests/],
-  ["How many Apple Pay transactions?", /884,901 transactions/],
+  [
+    "How many Apple Pay transactions?",
+    new RegExp(`${escapeRegExp(formattedApplePayCount)} transactions`),
+  ],
   ["What are IC fees per transaction?", /\$0\.24 per sales transaction/],
   ["How does our auth rate compare with industry benchmarks?", /Directional authorization context/],
   ["Compare us with Starbucks, Dunkin, and 7 Brew", /Starbucks Card/],
   ["Is this data certified?", /Certified for publish: \*\*Yes\*\*/],
-  ["Show decline reasons", /20,648/],
+  ["Show decline reasons", new RegExp(escapeRegExp(formattedTopDeclineCount))],
   ["Show that as visual bars", /█/],
   ["Show wallet mix", /Card \/ Other/],
   ["Show that as a table", /table view/],

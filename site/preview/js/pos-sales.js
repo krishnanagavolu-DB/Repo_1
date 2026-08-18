@@ -43,22 +43,56 @@ function sharePct(value) {
   return `${share.toFixed(1)}%`;
 }
 
+const START_KEYS = ["week_start", "week_start_date", "week", "date", "period_start", "start_date"];
+const END_KEYS = ["week_end", "week_end_date", "period_end", "end_date"];
+
+/** "2026-08-10" -> "Aug 10". Returns null for anything that is not an ISO date. */
+function shortDate(iso) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  if (!match) return null;
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[Number(match[2]) - 1];
+  if (!month) return null;
+  return { text: `${month} ${Number(match[3])}`, year: match[1] };
+}
+
 function weekLabel(week) {
   const explicit = firstString(week, ["label", "week_label", "period_label"]);
   if (explicit) return explicit;
-  const start = firstString(week, ["week_start", "week", "date", "period_start", "start_date"]);
-  const end = firstString(week, ["week_end", "period_end", "end_date"]);
+  const start = firstString(week, START_KEYS);
+  const end = firstString(week, END_KEYS);
+  const startPart = shortDate(start);
+  const endPart = shortDate(end);
+  if (startPart && endPart) return `${startPart.text} – ${endPart.text}, ${endPart.year}`;
   if (start && end) return `${start} – ${end}`;
   return start || "Most recent week";
 }
 
 function weekSortKey(week) {
-  return (
-    firstString(week, ["week_start", "week", "date", "period_start", "start_date"]) ||
-    firstString(week, ["week_end", "period_end", "end_date"]) ||
-    ""
-  );
+  return firstString(week, START_KEYS) || firstString(week, END_KEYS) || "";
 }
+
+const AMOUNT_KEYS = [
+  "amount",
+  "amt",
+  "dollar_volume",
+  "sales_amt",
+  "SALES_VOLUME",
+  "sales_volume",
+  "total",
+  "total_amount",
+  "value",
+];
+const PCT_KEYS = [
+  "pct",
+  "percent",
+  "percentage",
+  "share",
+  "pct_of_total",
+  "pct_of_total_sales",
+  "pct_of_sales",
+];
+const TXN_KEYS = ["TRANSACTION_COUNT", "transaction_count", "transaction_cnt", "transactions", "txn_cnt", "count"];
 
 /** Accepts an array of tender rows or a keyed object, and fills in missing shares. */
 function normalizeTenderMix(raw) {
@@ -68,35 +102,21 @@ function normalizeTenderMix(raw) {
       label:
         firstString(item, ["label", "tender", "tender_type", "payment_type", "name", "type"]) ||
         "Unknown",
-      amount: firstNumber(item, [
-        "amount",
-        "amt",
-        "dollar_volume",
-        "sales_amt",
-        "total",
-        "total_amount",
-        "value",
-      ]),
-      pct: firstNumber(item, ["pct", "percent", "percentage", "share", "pct_of_total"]),
+      amount: firstNumber(item, AMOUNT_KEYS),
+      pct: firstNumber(item, PCT_KEYS),
+      transactions: firstNumber(item, TXN_KEYS),
     }));
   } else if (raw && typeof raw === "object") {
     rows = Object.entries(raw).map(([key, item]) => {
       if (item !== null && typeof item === "object") {
         return {
           label: firstString(item, ["label", "tender", "name"]) || key,
-          amount: firstNumber(item, [
-            "amount",
-            "amt",
-            "dollar_volume",
-            "sales_amt",
-            "total",
-            "total_amount",
-            "value",
-          ]),
-          pct: firstNumber(item, ["pct", "percent", "percentage", "share", "pct_of_total"]),
+          amount: firstNumber(item, AMOUNT_KEYS),
+          pct: firstNumber(item, PCT_KEYS),
+          transactions: firstNumber(item, TXN_KEYS),
         };
       }
-      return { label: key, amount: Number(item), pct: null };
+      return { label: key, amount: Number(item), pct: null, transactions: null };
     });
   }
 
@@ -121,8 +141,8 @@ function normalizeTenderMix(raw) {
   return { rows, total };
 }
 
-function normalizeCoverage(week) {
-  const coverage = week?.shop_coverage || week?.coverage || {};
+function normalizeCoverage(week, rootCoverage) {
+  const coverage = week?.shop_coverage || week?.coverage || rootCoverage || {};
   return {
     missingCount: firstNumber(coverage, [
       "missing_shops_count",
@@ -144,29 +164,33 @@ function normalizePosData(raw) {
   else if (Array.isArray(raw?.periods)) weeks = raw.periods;
   else if (raw && typeof raw === "object") weeks = [raw];
 
+  const rootCoverage = (!Array.isArray(raw) && (raw?.shop_coverage || raw?.coverage)) || null;
+
   const normalized = weeks
     .map((week) => {
       const { rows, total } = normalizeTenderMix(week?.tender_mix || week?.tenders || week?.mix);
-      const reportedTotal = firstNumber(week?.totals || {}, [
+      const totals = week?.totals || {};
+      const reportedTotal = firstNumber(totals, [
         "sales_amt",
+        "SALES_VOLUME",
+        "sales_volume",
         "total_sales",
         "net_sales",
         "amount",
         "total",
       ]);
+      const transactions = firstNumber(totals, TXN_KEYS);
       return {
         label: weekLabel(week),
         sortKey: weekSortKey(week),
         tenders: rows,
         tenderTotal: total,
         reportedTotal,
-        transactions: firstNumber(week?.totals || {}, [
-          "transaction_cnt",
-          "transactions",
-          "txn_cnt",
-          "count",
-        ]),
-        coverage: normalizeCoverage(week),
+        transactions,
+        avgTicket:
+          firstNumber(totals, ["AVG_TICKET", "avg_ticket", "average_ticket"]) ??
+          (reportedTotal && transactions ? reportedTotal / transactions : null),
+        coverage: normalizeCoverage(week, rootCoverage),
       };
     })
     .filter((week) => week.tenders.length);
@@ -267,27 +291,47 @@ function renderChart(week) {
   });
 }
 
-function showState(state, message) {
+const IMPORT_STEPS = [
+  "Export the weekly file from Snowflake to <code>in_shop_sales_data.json</code>.",
+  "Run <code>python3 scripts/import_pos_sales.py &lt;path-to-export&gt; --preview-only</code> to validate and copy it into the site data.",
+  "Commit the updated <code>site/preview/data/in_shop_sales_data.json</code> and redeploy.",
+];
+
+function showNotice(options) {
   const empty = document.getElementById("pos-empty");
   const content = document.getElementById("pos-content");
   if (!empty || !content) return;
-  if (state === "ready") {
-    empty.hidden = true;
-    content.hidden = false;
-    return;
-  }
-  empty.hidden = false;
   content.hidden = true;
-  empty.innerHTML = message;
+  empty.hidden = false;
+  if (window.__notices) {
+    window.__notices.renderNotice(empty, options);
+  } else {
+    empty.innerHTML = `<h3>${options.title}</h3>`;
+  }
+}
+
+function showReady() {
+  const empty = document.getElementById("pos-empty");
+  const content = document.getElementById("pos-content");
+  if (!empty || !content) return;
+  empty.hidden = true;
+  content.hidden = false;
+}
+
+function notPublishedNotice(technical) {
+  showNotice({
+    title: "POS sales for this week aren't published yet",
+    message: "Once the weekly POS export is loaded, tender mix will appear here.",
+    technical,
+    fix: IMPORT_STEPS,
+  });
 }
 
 function renderPos(weeks) {
   if (!weeks.length) {
     window.__posSalesState = { weeks: [], latest: null };
-    showState(
-      "empty",
-      `<h3>POS sales data not published yet</h3>
-       <p>Add <code>${POS_DATA_URL}</code> to publish this tab. Run <code>python3 scripts/import_pos_sales.py &lt;path-to-export&gt;</code> to copy and validate the Snowflake export.</p>`
+    notPublishedNotice(
+      `No usable weeks found in ${POS_DATA_URL}. Each week needs a tender_mix with labels and amounts.`
     );
     return;
   }
@@ -299,7 +343,7 @@ function renderPos(weeks) {
   renderCards(latest);
   renderTable(latest);
   renderChart(latest);
-  showState("ready");
+  showReady();
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }
@@ -308,19 +352,18 @@ async function loadPosSales() {
   try {
     const res = await fetch(POS_DATA_URL, { cache: "no-store" });
     if (!res.ok) {
-      showState(
-        "empty",
-        `<h3>POS sales data not published yet</h3>
-         <p>Add <code>${POS_DATA_URL}</code> to publish this tab. Run <code>python3 scripts/import_pos_sales.py &lt;path-to-export&gt;</code> to copy and validate the Snowflake export.</p>`
-      );
+      notPublishedNotice(`Request for ${POS_DATA_URL} returned HTTP ${res.status}.`);
       return;
     }
     renderPos(normalizePosData(await res.json()));
   } catch (err) {
-    showState(
-      "empty",
-      `<h3>POS sales data could not be read</h3><p>${String(err.message || err)}</p>`
-    );
+    showNotice({
+      title: "POS sales couldn't be displayed right now",
+      message:
+        "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
+      technical: String(err?.message || err),
+      fix: IMPORT_STEPS,
+    });
   }
 }
 

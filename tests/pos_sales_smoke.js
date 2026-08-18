@@ -11,7 +11,7 @@ const sandbox = {
   Array,
   RegExp,
   Date,
-  window: {},
+  window: { addEventListener() {}, dispatchEvent() {} },
   document: {
     addEventListener() {},
     getElementById() {
@@ -91,7 +91,21 @@ check("snowflake avg ticket", sfLatest.avgTicket, 10);
 check("snowflake tender order", sfLatest.tenders[0].label, "Card");
 check("snowflake supplied share", pos.sharePct(sfLatest.tenders[0].pct), "70.0%");
 check("root coverage applied to each week", sfLatest.coverage.missingCount, 313);
-// Coverage metadata stays in the data for certification. The UI does not advertise it.
+check("compact millions", pos.compactUsd(31681899.99), "$31.7M");
+check("compact thousands", pos.compactUsd(7358837.24), "$7.4M");
+
+const live = pos.normalizePosData(
+  JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"))
+);
+const liveLatest = live[live.length - 1];
+check("live wow sales", liveLatest.wow.salesPct, -2.1);
+check("gift split parts", liveLatest.giftSplit.parts.length, 2);
+check("gift split gift label", liveLatest.giftSplit.parts[0].label, "Gift Card");
+check("dutch pass label", liveLatest.giftSplit.parts[1].label, "Dutch Pass");
+const giftShare = liveLatest.giftSplit.parts.reduce((sum, p) => sum + p.pct, 0);
+if (Math.abs(giftShare - 1) > 0.000001) {
+  failures.push({ name: "gift split sums to 1", expected: 1, actual: giftShare });
+}
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

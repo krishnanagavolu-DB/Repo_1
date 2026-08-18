@@ -16,8 +16,7 @@ function activate(tabId) {
     panel.hidden = panel.dataset.panel !== tabId;
   }
 
-  const period = document.querySelector(".period");
-  if (period) period.hidden = tabId !== "worldpay";
+  // The period control drives every channel, so it stays visible on all tabs.
 
   window.dispatchEvent(new CustomEvent("dashboard:tab", { detail: { tabId } }));
 }

@@ -158,10 +158,34 @@ body {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   margin: 0 -28px;
   padding: 0 28px;
+}
+
+/* Channels that share the In Shop footprint sit under one label. */
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  margin-right: 18px;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.tab-group-label {
+  padding: 6px 16px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.tab-group-items {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .tab {
@@ -277,8 +301,27 @@ body {
   font-size: 13px;
 }
 
-.pos-card .kpi-value {
-  font-size: 30px;
+.pos-card .kpi-share {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-card .kpi-subvalue {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.pos-summary {
+  margin-bottom: 12px;
+}
+
+.pos-summary-card .kpi-value {
+  font-size: 28px;
 }
 
 .pos-charts {
@@ -286,38 +329,17 @@ body {
 }
 
 .pos-charts .mix-body {
-  justify-content: center;
+  align-items: center;
 }
 
 .pos-charts .chart-wrap {
-  width: 220px;
-  height: 220px;
+  width: 180px;
+  height: 180px;
   flex-shrink: 0;
 }
 
-.pos-table th {
-  padding: 0 0 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: left;
-}
-
-.pos-table th:not(:first-child),
-.pos-table td:not(:first-child) {
-  text-align: right;
-}
-
-.pos-table td:not(:first-child) {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.pos-total-row td {
-  border-top: 2px solid var(--line);
-  font-weight: 700;
+.pos-charts .panel-note {
+  margin: -8px 0 14px;
 }
 
 main {

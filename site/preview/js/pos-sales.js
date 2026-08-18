@@ -10,6 +10,7 @@ const TENDER_COLORS = {
 };
 
 let posChart = null;
+let selectedPeriodId = null;
 
 function firstNumber(source, keys) {
   for (const key of keys) {
@@ -36,11 +37,44 @@ function usd(value) {
   });
 }
 
+/** Approximate dollars for executive cards: $31.7M, $7.4M, $450K. */
+function compactUsd(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "$0";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `$${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `$${(abs / 1_000).toFixed(0)}K`;
+  return usd(n);
+}
+
+function compactCount(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${(abs / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${(abs / 1_000).toFixed(0)}K`;
+  return String(Math.round(abs));
+}
+
 function sharePct(value) {
   const share = Number(value) * 100;
   if (!Number.isFinite(share)) return "0.0%";
   if (share > 0 && share < 0.05) return "<0.1%";
   return `${share.toFixed(1)}%`;
+}
+
+/** Export week_over_week values are already percent changes (e.g. -2.1). */
+function wowLabel(pctChange) {
+  const n = Number(pctChange);
+  if (!Number.isFinite(n)) return null;
+  const abs = Math.abs(n).toFixed(1);
+  if (n > 0) return { text: `+${abs}% vs prior week`, tone: "up" };
+  if (n < 0) return { text: `-${abs}% vs prior week`, tone: "down" };
+  return { text: "— 0.0% vs prior week", tone: "flat" };
+}
+
+function tenderColor(label, idx = 0) {
+  return TENDER_COLORS[label] || ["#005F98", "#132550", "#FDE021"][idx % 3];
 }
 
 const START_KEYS = ["week_start", "week_start_date", "week", "date", "period_start", "start_date"];
@@ -105,6 +139,7 @@ function normalizeTenderMix(raw) {
       amount: firstNumber(item, AMOUNT_KEYS),
       pct: firstNumber(item, PCT_KEYS),
       transactions: firstNumber(item, TXN_KEYS),
+      components: item?.components || null,
     }));
   } else if (raw && typeof raw === "object") {
     rows = Object.entries(raw).map(([key, item]) => {
@@ -114,9 +149,10 @@ function normalizeTenderMix(raw) {
           amount: firstNumber(item, AMOUNT_KEYS),
           pct: firstNumber(item, PCT_KEYS),
           transactions: firstNumber(item, TXN_KEYS),
+          components: item.components || null,
         };
       }
-      return { label: key, amount: Number(item), pct: null, transactions: null };
+      return { label: key, amount: Number(item), pct: null, transactions: null, components: null };
     });
   }
 
@@ -139,6 +175,61 @@ function normalizeTenderMix(raw) {
   });
 
   return { rows, total };
+}
+
+const COMPONENT_LABELS = {
+  GIFT: "Gift Card",
+  CUSTOM: "Dutch Pass",
+  gift: "Gift Card",
+  custom: "Dutch Pass",
+  "Gift Card": "Gift Card",
+  "Dutch Pass": "Dutch Pass",
+};
+
+function normalizeGiftSplit(tenders) {
+  const giftRow = (tenders || []).find(
+    (row) => /gift|dutch pass/i.test(row.label) && row.components && typeof row.components === "object"
+  );
+  if (!giftRow) return null;
+  const parts = Object.entries(giftRow.components)
+    .map(([key, value]) => {
+      const amount =
+        value !== null && typeof value === "object"
+          ? firstNumber(value, AMOUNT_KEYS)
+          : Number(value);
+      if (!Number.isFinite(amount)) return null;
+      return {
+        label: COMPONENT_LABELS[key] || key,
+        amount,
+        transactions:
+          value !== null && typeof value === "object" ? firstNumber(value, TXN_KEYS) : null,
+      };
+    })
+    .filter(Boolean);
+  const total = parts.reduce((sum, part) => sum + part.amount, 0);
+  if (!total) return null;
+  for (const part of parts) part.pct = part.amount / total;
+  const order = ["Gift Card", "Dutch Pass"];
+  parts.sort((a, b) => {
+    const ai = order.indexOf(a.label);
+    const bi = order.indexOf(b.label);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return b.amount - a.amount;
+  });
+  return { parentLabel: giftRow.label, parentAmount: giftRow.amount, parts, total };
+}
+
+function normalizeWow(week) {
+  const raw = week?.week_over_week || week?.wow || {};
+  return {
+    salesPct: firstNumber(raw, ["SALES_VOLUME_PCT", "sales_volume_pct", "sales_pct", "sales"]),
+    transactionsPct: firstNumber(raw, [
+      "TRANSACTION_COUNT_PCT",
+      "transaction_count_pct",
+      "transactions_pct",
+      "transactions",
+    ]),
+  };
 }
 
 function normalizeCoverage(week, rootCoverage) {
@@ -190,6 +281,8 @@ function normalizePosData(raw) {
         avgTicket:
           firstNumber(totals, ["AVG_TICKET", "avg_ticket", "average_ticket"]) ??
           (reportedTotal && transactions ? reportedTotal / transactions : null),
+        wow: normalizeWow(week),
+        giftSplit: normalizeGiftSplit(rows),
         coverage: normalizeCoverage(week, rootCoverage),
       };
     })
@@ -204,47 +297,88 @@ function renderBanner() {
   // Do not advertise that exclusion on the page.
 }
 
-function renderCards(week) {
-  const grid = document.getElementById("pos-kpi-grid");
+function deltaHtml(wow) {
+  if (!wow) return "";
+  return `<div class="kpi-delta ${wow.tone}">${wow.text}</div>`;
+}
+
+function renderSummary(week) {
+  const grid = document.getElementById("pos-summary-grid");
   if (!grid) return;
-  grid.innerHTML = week.tenders
+  const sales = week.reportedTotal ?? week.tenderTotal;
+  const salesWow = wowLabel(week.wow?.salesPct);
+  const txnWow = wowLabel(week.wow?.transactionsPct);
+  const cards = [
+    {
+      label: "Total sales",
+      value: compactUsd(sales),
+      detail: usd(sales),
+      delta: salesWow,
+    },
+    {
+      label: "Transactions",
+      value: week.transactions != null ? compactCount(week.transactions) : "—",
+      detail:
+        week.transactions != null ? Number(week.transactions).toLocaleString("en-US") : null,
+      delta: txnWow,
+    },
+    {
+      label: "Avg ticket",
+      value: week.avgTicket != null ? `$${Number(week.avgTicket).toFixed(2)}` : "—",
+      detail: null,
+      delta: null,
+    },
+  ];
+  grid.innerHTML = cards
     .map(
-      (tender) => `
-      <article class="kpi-card pos-card">
-        <div class="label">${tender.label}</div>
-        <div class="kpi-value">${usd(tender.amount)}</div>
-        <div class="kpi-subvalue">${sharePct(tender.pct)} of total sales</div>
+      (card) => `
+      <article class="kpi-card pos-summary-card">
+        <div class="label">${card.label}</div>
+        <div class="kpi-value">${card.value}</div>
+        ${card.detail ? `<div class="kpi-subvalue">${card.detail}</div>` : ""}
+        ${deltaHtml(card.delta)}
       </article>`
     )
     .join("");
 }
 
-function renderTable(week) {
-  const body = document.getElementById("pos-tender-table");
-  if (!body) return;
-  const total = week.tenderTotal;
-  const rows = week.tenders
+function renderCards(week) {
+  const grid = document.getElementById("pos-kpi-grid");
+  if (!grid) return;
+  grid.innerHTML = week.tenders
     .map(
-      (tender) => `
+      (tender, idx) => `
+      <article class="kpi-card pos-card">
+        <div class="label">${tender.label}</div>
+        <div class="kpi-share" style="color:${tenderColor(tender.label, idx)}">${sharePct(
+          tender.pct
+        )}</div>
+        <div class="kpi-subvalue">${compactUsd(tender.amount)} of total sales</div>
+      </article>`
+    )
+    .join("");
+}
+
+function renderLegend(el, rows, colors) {
+  if (!el) return;
+  el.innerHTML = rows
+    .map(
+      (row, idx) => `
       <tr>
-        <td>${tender.label}</td>
-        <td>${usd(tender.amount)}</td>
-        <td>${sharePct(tender.pct)}</td>
+        <td><span style="color:${colors[idx]}">●</span> ${row.label}</td>
+        <td>${sharePct(row.pct)} <span class="mix-hint">${compactUsd(row.amount)}</span></td>
       </tr>`
     )
     .join("");
-  body.innerHTML = `${rows}
-    <tr class="pos-total-row">
-      <td>Total</td>
-      <td>${usd(total)}</td>
-      <td>100.0%</td>
-    </tr>`;
 }
 
 function renderChart(week) {
   const canvas = document.getElementById("chart-pos-tender");
+  const legend = document.getElementById("legend-pos-tender");
   if (!canvas || typeof Chart === "undefined") return;
   if (posChart) posChart.destroy();
+  const colors = week.tenders.map((t, idx) => tenderColor(t.label, idx));
+  renderLegend(legend, week.tenders, colors);
   posChart = new Chart(canvas, {
     type: "doughnut",
     data: {
@@ -252,9 +386,7 @@ function renderChart(week) {
       datasets: [
         {
           data: week.tenders.map((t) => t.pct),
-          backgroundColor: week.tenders.map(
-            (t, idx) => TENDER_COLORS[t.label] || ["#005F98", "#132550", "#FDE021"][idx % 3]
-          ),
+          backgroundColor: colors,
           borderWidth: 0,
         },
       ],
@@ -267,7 +399,64 @@ function renderChart(week) {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx) => `${sharePct(week.tenders[ctx.dataIndex]?.pct)}`,
+            label: (ctx) => {
+              const tender = week.tenders[ctx.dataIndex];
+              if (!tender) return "";
+              return `${sharePct(tender.pct)} · ${compactUsd(tender.amount)}`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+let giftChart = null;
+const GIFT_COLORS = { "Gift Card": "#FDE021", "Dutch Pass": "#005F98" };
+
+function renderGiftSplit(week) {
+  const panel = document.getElementById("pos-gift-panel");
+  const canvas = document.getElementById("chart-pos-gift");
+  const legend = document.getElementById("legend-pos-gift");
+  const note = document.getElementById("pos-gift-note");
+  if (!panel || !canvas) return;
+  const split = week.giftSplit;
+  if (!split?.parts?.length) {
+    panel.hidden = true;
+    if (giftChart) {
+      giftChart.destroy();
+      giftChart = null;
+    }
+    return;
+  }
+  panel.hidden = false;
+  if (note) {
+    note.textContent = `Of the ${compactUsd(split.parentAmount)} Gift Card / Dutch Pass tender`;
+  }
+  const colors = split.parts.map(
+    (part, idx) => GIFT_COLORS[part.label] || ["#FDE021", "#005F98", "#132550"][idx % 3]
+  );
+  renderLegend(legend, split.parts, colors);
+  if (giftChart) giftChart.destroy();
+  giftChart = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: split.parts.map((p) => p.label),
+      datasets: [{ data: split.parts.map((p) => p.pct), backgroundColor: colors, borderWidth: 0 }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "58%",
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const part = split.parts[ctx.dataIndex];
+              if (!part) return "";
+              return `${sharePct(part.pct)} · ${compactUsd(part.amount)}`;
+            },
           },
         },
       },
@@ -304,11 +493,62 @@ function showReady() {
 
 function notPublishedNotice(technical) {
   showNotice({
-    title: "POS sales for this week aren't published yet",
+    title: "All payments for this week aren't published yet",
     message: "Once the weekly POS export is loaded, tender mix will appear here.",
     technical,
     fix: IMPORT_STEPS,
   });
+}
+
+/** Worldpay period ids are week-start dates, which match the POS sort keys. */
+function findWeekForPeriod(weeks, periodId) {
+  if (!periodId || periodId === "ytd") return null;
+  return weeks.find((week) => week.sortKey === periodId) || null;
+}
+
+function renderWeek(week) {
+  const periodEl = document.getElementById("pos-period-label");
+  if (periodEl) periodEl.textContent = week.label;
+  renderBanner(week);
+  renderSummary(week);
+  renderCards(week);
+  renderChart(week);
+  renderGiftSplit(week);
+  showReady();
+}
+
+function selectPeriod(periodId) {
+  const weeks = window.__posSalesState?.weeks || [];
+  if (!weeks.length) return;
+  selectedPeriodId = periodId;
+
+  if (periodId === "ytd") {
+    const first = weeks[0].label.replace(/\s*–.*$/, "");
+    const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
+    showNotice({
+      title: "Year to date isn't published for All payments yet",
+      message: `Pick a week to see tender mix. Published weeks run ${first} through ${last}.`,
+      technical: `The POS export contains ${weeks.length} week(s) and no year-to-date rollup, so a YTD figure here would not match Card present.`,
+      fix: [
+        "Choose a week from the Period control.",
+        "To publish year to date, add a YTD rollup to the Snowflake export and reimport.",
+      ],
+    });
+    return;
+  }
+
+  const match = findWeekForPeriod(weeks, periodId);
+  if (!match) {
+    const available = weeks.map((week) => week.label).join(", ");
+    showNotice({
+      title: "All payments isn't published for this week yet",
+      message: `Pick another week — tender mix is available for ${available}.`,
+      technical: `No POS week matches period id "${periodId}" in ${POS_DATA_URL}.`,
+      fix: IMPORT_STEPS,
+    });
+    return;
+  }
+  renderWeek(match);
 }
 
 function renderPos(weeks) {
@@ -321,13 +561,9 @@ function renderPos(weeks) {
   }
   const latest = weeks[weeks.length - 1];
   window.__posSalesState = { weeks, latest };
-  const periodEl = document.getElementById("pos-period-label");
-  if (periodEl) periodEl.textContent = latest.label;
-  renderBanner(latest);
-  renderCards(latest);
-  renderTable(latest);
-  renderChart(latest);
-  showReady();
+  const requested = findWeekForPeriod(weeks, selectedPeriodId);
+  if (selectedPeriodId && !requested) selectPeriod(selectedPeriodId);
+  else renderWeek(requested || latest);
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }
@@ -342,7 +578,7 @@ async function loadPosSales() {
     renderPos(normalizePosData(await res.json()));
   } catch (err) {
     showNotice({
-      title: "POS sales couldn't be displayed right now",
+      title: "All payments couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),
@@ -354,12 +590,22 @@ async function loadPosSales() {
 window.__posSales = {
   normalizePosData,
   normalizeTenderMix,
+  normalizeGiftSplit,
+  findWeekForPeriod,
   usd,
+  compactUsd,
+  compactCount,
   sharePct,
+  wowLabel,
   loadPosSales,
   renderPos,
+  selectPeriod,
   getLatestWeek() {
     return window.__posSalesState?.latest || null;
+  },
+  getSelectedWeek() {
+    const weeks = window.__posSalesState?.weeks || [];
+    return findWeekForPeriod(weeks, selectedPeriodId) || window.__posSalesState?.latest || null;
   },
   getWeeks() {
     return window.__posSalesState?.weeks || [];
@@ -373,6 +619,16 @@ function startPosWhenUnlocked() {
   }
   window.addEventListener("dashboard:unlocked", () => loadPosSales(), { once: true });
 }
+
+window.addEventListener("dashboard:period", (event) => {
+  const periodId = event.detail?.periodId;
+  if (!periodId) return;
+  if (!window.__posSalesState?.weeks?.length) {
+    selectedPeriodId = periodId;
+    return;
+  }
+  selectPeriod(periodId);
+});
 
 document.addEventListener("DOMContentLoaded", startPosWhenUnlocked);
 })();

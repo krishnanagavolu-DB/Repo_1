@@ -371,6 +371,30 @@ function normalizePosData(raw) {
   return normalized;
 }
 
+const TREND_METRICS = {
+  sales: (week) => week.reportedTotal ?? week.tenderTotal,
+  payments: (week) => week.transactions,
+};
+
+/** Sparkline points for a summary card, oldest week first. */
+function trendSeries(weeks, metric) {
+  const pick = TREND_METRICS[metric];
+  if (!pick || !weeks?.length) return [];
+  const points = weeks
+    .map((week) => ({ label: week.label, value: Number(pick(week)) }))
+    .filter((point) => Number.isFinite(point.value));
+  return points.length > 1 ? points : [];
+}
+
+/** Earliest published week, used by the YTD banner. */
+function getDataStart(weeks) {
+  if (!weeks?.length) return null;
+  return {
+    startLabel: `${weeks[0].label.replace(/\s*–.*$/, "")}, ${weeks[0].sortKey.slice(0, 4)}`,
+    weekCount: weeks.length,
+  };
+}
+
 function sumMoney(values) {
   return Math.round(values.reduce((sum, value) => sum + Number(value || 0), 0) * 100) / 100;
 }
@@ -451,12 +475,14 @@ function renderSummary(week) {
   const sales = week.reportedTotal ?? week.tenderTotal;
   const salesWow = wowLabel(week.wow?.salesPct);
   const txnWow = wowLabel(week.wow?.transactionsPct);
+  const weeks = window.__posSalesState?.weeks || [];
   const cards = [
     {
       label: "Total sales",
       value: compactUsd(sales),
       detail: usd(sales),
       delta: salesWow,
+      metric: "sales",
     },
     {
       // The source counts deduplicated payment lines, not unique ORDER_IDs.
@@ -465,6 +491,7 @@ function renderSummary(week) {
       detail:
         week.transactions != null ? Number(week.transactions).toLocaleString("en-US") : null,
       delta: txnWow,
+      metric: "payments",
     },
     {
       label: "Avg payment",
@@ -474,16 +501,93 @@ function renderSummary(week) {
     },
   ];
   grid.innerHTML = cards
-    .map(
-      (card) => `
+    .map((card) => {
+      const series = card.metric ? trendSeries(weeks, card.metric) : [];
+      const trend = series.length
+        ? `<div class="kpi-trend">
+             <div class="trend-label">${series.length}-week trend</div>
+             <canvas id="pos-trend-${card.metric}" height="48"></canvas>
+           </div>`
+        : "";
+      return `
       <article class="kpi-card pos-summary-card">
         <div class="label">${card.label}</div>
         <div class="kpi-value">${card.value}</div>
         ${card.detail ? `<div class="kpi-subvalue">${card.detail}</div>` : ""}
         ${deltaHtml(card.delta)}
-      </article>`
-    )
+        ${trend}
+      </article>`;
+    })
     .join("");
+
+  for (const card of cards) {
+    if (card.metric) renderTrend(card.metric, trendSeries(weeks, card.metric), week);
+  }
+}
+
+const trendCharts = {};
+
+function renderTrend(metric, series, activeWeek) {
+  const canvas = document.getElementById(`pos-trend-${metric}`);
+  if (!canvas || typeof Chart === "undefined" || !series.length) return;
+  if (trendCharts[metric]) trendCharts[metric].destroy();
+  const values = series.map((point) => point.value);
+  const last = values[values.length - 1];
+  const prev = values.length > 1 ? values[values.length - 2] : last;
+  const endColor = last < prev ? "#D7282F" : "#005F98";
+  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+  // On YTD every week feeds the aggregate, so no single point is highlighted.
+  const currentIndex = series.findIndex((point) => point.label === activeWeek?.label);
+  const format = (value) =>
+    metric === "sales" ? usd(value) : Number(value).toLocaleString("en-US");
+
+  trendCharts[metric] = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: series.map((point) => point.label),
+      datasets: [
+        {
+          label: "Weekly value",
+          data: values,
+          borderColor: "#005F98",
+          backgroundColor: "transparent",
+          borderWidth: 3,
+          pointRadius: series.map((_, idx) => (idx === currentIndex ? 5 : 3)),
+          pointBackgroundColor: series.map((_, idx) =>
+            idx === values.length - 1 ? endColor : "#005F98"
+          ),
+          tension: 0.25,
+        },
+        {
+          label: "Average",
+          data: values.map(() => average),
+          borderColor: "#c3d0dd",
+          borderWidth: 1,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          filter: (item) => item.datasetIndex === 0,
+          callbacks: {
+            title: (items) => items[0]?.label || "",
+            label: (ctx) => format(ctx.raw),
+          },
+        },
+      },
+      scales: { x: { display: false }, y: { display: false } },
+      elements: { point: { hoverRadius: 4 } },
+    },
+  });
 }
 
 function renderCards(week) {
@@ -695,6 +799,7 @@ function renderPos(weeks) {
   }
   const latest = weeks[weeks.length - 1];
   window.__posSalesState = { weeks, latest };
+  window.__ytdBanner?.register("pos", getDataStart(weeks));
   const requested = findWeekForPeriod(weeks, selectedPeriodId);
   if (selectedPeriodId && !requested) selectPeriod(selectedPeriodId);
   else renderWeek(requested || latest);
@@ -726,6 +831,8 @@ window.__posSales = {
   normalizeTenderMix,
   normalizeGiftSplit,
   aggregateWeeks,
+  trendSeries,
+  getDataStart,
   findWeekForPeriod,
   usd,
   compactUsd,

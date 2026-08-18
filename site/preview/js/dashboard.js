@@ -257,6 +257,18 @@ function announcePeriod(periodId) {
   window.dispatchEvent(new CustomEvent("dashboard:period", { detail: { periodId } }));
 }
 
+/** Card present reaches back further than the POS feed, so report its own start. */
+function registerYtdCoverage(data) {
+  const weeks = data?.periods?.weeks || [];
+  if (!weeks.length) return;
+  const startLabel = String(weeks[0].label || "").replace(/\s*–\s*/, "|").split("|")[0];
+  const year = String(weeks[0].id || "").slice(0, 4);
+  window.__ytdBanner?.register("worldpay", {
+    startLabel: year ? `${startLabel}, ${year}` : startLabel,
+    weekCount: weeks.length,
+  });
+}
+
 function getPeriod(data, id) {
   if (id === "ytd") return data.periods.ytd;
   return data.periods.weeks.find((w) => w.id === id);
@@ -638,6 +650,7 @@ async function loadDashboard() {
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
     populatePeriodSelect(dashboardData);
+    registerYtdCoverage(dashboardData);
     const periodId = document.getElementById("period-select").value;
     window.__dashboardState = { data: dashboardData, periodId };
     renderPeriod(dashboardData, periodId);

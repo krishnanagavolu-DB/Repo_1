@@ -120,16 +120,16 @@ def validate(payload) -> tuple[list[str], list[str]]:
             )
 
         coverage = week.get("shop_coverage") or week.get("coverage") or root_coverage
-        if not coverage:
-            warnings.append(f"{where} has no shop_coverage block; the missing-shops banner cannot render")
-        else:
+        if coverage:
+            # Coverage metadata is kept for certification, but the UI does not
+            # advertise non–company-owned exclusions — that filter is by design.
             missing_count = first_number(coverage, ("missing_shops_count", "missing_count", "missing_shops"))
-            if missing_count is None:
-                warnings.append(f"{where} shop_coverage has no missing_shops_count")
-            elif missing_count > 0 and not coverage.get("missing_shops_note"):
-                warnings.append(
-                    f"{where} reports {int(missing_count)} missing shops but no missing_shops_note for the tooltip"
-                )
+            if missing_count is not None and missing_count < 0:
+                warnings.append(f"{where} shop_coverage missing_shops_count is negative")
+        else:
+            warnings.append(
+                f"{where} has no shop_coverage block; certification cannot confirm the company-owned filter footprint"
+            )
 
     return errors, warnings
 

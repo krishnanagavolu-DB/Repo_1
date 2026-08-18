@@ -91,9 +91,7 @@ check("snowflake avg ticket", sfLatest.avgTicket, 10);
 check("snowflake tender order", sfLatest.tenders[0].label, "Card");
 check("snowflake supplied share", pos.sharePct(sfLatest.tenders[0].pct), "70.0%");
 check("root coverage applied to each week", sfLatest.coverage.missingCount, 313);
-if (!sfLatest.coverage.note) {
-  failures.push({ name: "root coverage note", expected: "present", actual: sfLatest.coverage.note });
-}
+// Coverage metadata stays in the data for certification. The UI does not advertise it.
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

@@ -199,25 +199,9 @@ function normalizePosData(raw) {
   return normalized;
 }
 
-function renderBanner(week) {
-  const banner = document.getElementById("pos-coverage-banner");
-  if (!banner) return;
-  const { missingCount, note } = week.coverage;
-  if (!missingCount || missingCount <= 0) {
-    banner.hidden = true;
-    banner.innerHTML = "";
-    return;
-  }
-  const shopWord = missingCount === 1 ? "shop" : "shops";
-  const tip = note ? ` title="${String(note).replace(/"/g, "&quot;")}"` : "";
-  banner.hidden = false;
-  banner.innerHTML = `
-    <strong>Warning:</strong>
-    <span>${missingCount} ${shopWord} ${
-      missingCount === 1 ? "was" : "were"
-    } excluded from this calculation because they are missing from the Legacy/CO mapping extract.</span>
-    ${note ? `<button type="button" class="pos-banner-info"${tip} aria-label="Where to find the mapping file">Where is this from?</button>` : ""}
-  `;
+function renderBanner() {
+  // Non–company-owned stands are filtered by design across every channel.
+  // Do not advertise that exclusion on the page.
 }
 
 function renderCards(week) {

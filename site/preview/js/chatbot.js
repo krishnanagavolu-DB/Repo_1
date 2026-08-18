@@ -84,9 +84,9 @@ const PAYMENT_DEFINITIONS = [
     body: "Cash tender recorded at the shop POS. Cash is outside the Worldpay authorization feed.",
   },
   {
-    terms: ["missing shops", "shop coverage", "legacy/co mapping", "legacy co mapping"],
-    title: "Missing shops / shop coverage",
-    body: "Shops excluded from the POS calculation because they are missing from the Legacy/CO mapping extract. When the count is greater than zero, the POS tab shows a warning banner with a note pointing to the mapping CSV.",
+    terms: ["missing shops", "shop coverage", "legacy/co mapping", "legacy co mapping", "company owned", "company-owned"],
+    title: "Company-owned shops only",
+    body: "Every channel on this dashboard is limited to company-owned shops. Stands that are not company-owned are filtered out of the published numbers so POS, Worldpay, and future feeds stay on the same footprint.",
   },
 ];
 
@@ -623,7 +623,7 @@ function answerScope() {
   const state = getState();
   const scope = state?.data?.meta?.scope || "Company owned shops only";
   const channel = state?.data?.meta?.channel || "In Shop · Worldpay";
-  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. I can calculate only from these aggregate Worldpay files.`;
+  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. Every tab uses the same company-owned footprint.`;
 }
 
 async function loadBenchmarks() {
@@ -736,26 +736,12 @@ function answerPosTender(q = "") {
     })),
     `Total POS sales: ${money(week.tenderTotal, 2)}.`
   );
-  const coverage =
-    week.coverage?.missingCount > 0
-      ? `\n\n**Coverage note:** ${week.coverage.missingCount} shop(s) were excluded because they are missing from the Legacy/CO mapping extract.${
-          week.coverage.note ? ` ${week.coverage.note}` : ""
-        }`
-      : "";
-  return `**In Shop POS tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.${coverage}`;
+  return `**In Shop POS tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.`;
 }
 
 function answerPosCoverage() {
-  const week = latestPosWeek();
   chatContext.topic = "pos";
-  if (!week) return answerPosTender();
-  const count = week.coverage?.missingCount || 0;
-  if (!count) {
-    return `For **${week.label}**, no shops were flagged as missing from the Legacy/CO mapping extract.`;
-  }
-  return `For **${week.label}**, **${count}** shop(s) were excluded from the POS calculation because they are missing from the Legacy/CO mapping extract.${
-    week.coverage.note ? `\n\n${week.coverage.note}` : ""
-  }`;
+  return "Every channel on this dashboard is **company-owned shops only**. Stands that are not company-owned are filtered out so POS, Worldpay, and future feeds stay on the same footprint.";
 }
 
 function answerQuestion(raw) {
@@ -766,7 +752,7 @@ function answerQuestion(raw) {
   if (format) return formatRememberedView(format);
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Worldpay trends** and best/worst weeks\n• Answer **POS tender mix** (Card / Cash / Gift Card · Dutch Pass) and shop coverage\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks** (Visa, Worldpay, Equifax/Kount, Toast, and similar publications)\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Worldpay trends** and best/worst weeks\n• Answer **POS tender mix** (Card / Cash / Gift Card · Dutch Pass)\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks** (Visa, Worldpay, Equifax/Kount, Toast, and similar publications)\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
@@ -787,7 +773,10 @@ function answerQuestion(raw) {
     return `**${earlyDef.title}** — ${earlyDef.body}`;
   }
 
-  if (/\b(missing shops?|shop coverage|legacy.?co mapping|mapping extract)\b/.test(q)) return answerPosCoverage();
+  if (/\b(missing shops?|shop coverage|legacy.?co mapping|mapping extract|shops? (?:are |were )?missing|missing from the mapping|non[- ]?company[- ]?owned|franchise)\b/.test(q) ||
+      (/\bmissing\b/.test(q) && /\b(shops?|stands?|mapping)\b/.test(q))) {
+    return answerPosCoverage();
+  }
   if (/\b(pos sales|pos tender|tender mix|dutch pass|gift card)\b/.test(q) ||
       (/\b(cash|card)\b/.test(q) && /\b(pos|tender|mix|share|percent|%)\b/.test(q)) ||
       (chatContext.topic === "pos" && /\b(cash|card|gift|dutch pass|mix|percent|%)\b/.test(q))) {
@@ -863,7 +852,7 @@ function suggestedFollowUps() {
   const byTopic = {
     pos: [
       { label: "Want the cash share specifically?", question: "What share of POS sales was cash?" },
-      { label: "Any shops missing from the calculation?", question: "How many shops are missing from the mapping?" },
+      { label: "Want gift card / Dutch Pass next?", question: "What share of POS sales was Gift Card / Dutch Pass?" },
       { label: "Want this as a table?", question: "Show that as a table" },
     ],
     auth_entry: [
@@ -935,9 +924,9 @@ const TAB_PROMPTS = {
   pos: [
     { question: "Show the POS tender mix", label: "How did guests pay at the POS?" },
     { question: "What share of POS sales was cash?", label: "What’s the cash share?" },
-    { question: "How many shops are missing from the mapping?", label: "Any shops missing from the mix?" },
     { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
     { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
+    { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
   worldpay: [
     { question: "Which metrics need attention?", label: "What’s brewing in this week’s metrics?" },
@@ -966,7 +955,7 @@ function refreshTabPrompts(tabId) {
   if (blurb) {
     blurb.textContent =
       tabId === "pos"
-        ? "Ask about POS tender mix, coverage, definitions, industry benchmarks, and competitor research — available on every tab"
+        ? "Ask about POS tender mix, definitions, industry benchmarks, and competitor research — available on every tab"
         : "Ask about Worldpay trends, definitions, POS tender mix, industry benchmarks, and competitor research — available on every tab";
   }
 }

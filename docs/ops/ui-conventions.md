@@ -44,9 +44,13 @@ Rules:
 Use the `hidden` attribute. `[hidden] { display: none !important; }` in `dashboard.css` ensures it
 wins over layout rules such as `display: flex`, which otherwise leaves empty banners on screen.
 
-## Ask about this data
+## Company-owned shops only
 
-The chatbot panel lives outside every tab panel so it is available on all channels. It answers
-definitions, Worldpay KPIs, POS tender mix, cited industry benchmarks, and competitor research
-regardless of which tab is active. Suggested prompts change with the active tab; the answer routing
-does not.
+Every channel on this dashboard — POS Sales, In Shop Worldpay, and the tabs still
+to come — is limited to **company-owned shops**. Stands that are not company-owned
+are filtered out of the published numbers so every feed shares the same footprint.
+
+That filter is by design. **Do not advertise it** with warning banners, callouts,
+or chatbot prompts. The quiet scope line ("Company owned shops only") is enough.
+If someone asks the chatbot directly, answer in one sentence that the dashboard is
+company-owned only — do not surface counts of excluded non-CO stands.

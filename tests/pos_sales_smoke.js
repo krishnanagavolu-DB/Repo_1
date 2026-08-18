@@ -168,10 +168,6 @@ check("payments trend length", paymentsTrend.length, 3);
 check("payments trend first", paymentsTrend[0].value, 4548240);
 check("payments trend last", paymentsTrend[2].value, 4594352);
 
-const avgTrend = pos.trendSeries(live, "avg");
-check("avg trend length", avgTrend.length, 3);
-check("avg trend last", Number(avgTrend[2].value.toFixed(2)), 9.97);
-
 // One week cannot form a line, so no series is offered.
 check("single week has no trend", pos.trendSeries([live[0]], "sales").length, 0);
 check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);

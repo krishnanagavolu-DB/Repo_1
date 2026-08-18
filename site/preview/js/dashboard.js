@@ -101,7 +101,7 @@ window.KPI_ORDER = window.KPI_SECTIONS.flatMap((section) => section.metrics);
 const KPI_ORDER = window.KPI_ORDER;
 const KPI_SECTIONS = window.KPI_SECTIONS;
 
-const MIX_COLORS = ["#005F98", "#132550", "#FDE021", "#D7282F", "#9FE5FA", "#69788b"];
+const MIX_COLORS = ["#1B6CA8", "#2F3A4A", "#FDE021", "#D7282F", "#9FE5FA", "#69788b"];
 
 let dashboardData = null;
 window.__dashboardState = { data: null, periodId: null };
@@ -331,7 +331,7 @@ function renderKpis(period) {
     const last = history.length ? history[history.length - 1].value : kpi.value;
     const prev = history.length > 1 ? history[history.length - 2].value : last;
     const improved = meta.invertDelta ? last < prev : last > prev;
-    const endColor = improved ? "#005F98" : last === prev ? "#005F98" : "#D7282F";
+    const endColor = improved ? "#1B6CA8" : last === prev ? "#1B6CA8" : "#D7282F";
     const average = history.length
       ? history.reduce((sum, h) => sum + Number(h.value), 0) / history.length
       : null;
@@ -343,12 +343,12 @@ function renderKpis(period) {
           {
             label: "Weekly value",
             data: history.map((h) => h.value),
-            borderColor: "#005F98",
+            borderColor: "#1B6CA8",
             backgroundColor: "transparent",
             borderWidth: 3,
             pointRadius: 3,
             pointBackgroundColor: history.map((_, i) =>
-              i === history.length - 1 ? endColor : "#005F98"
+              i === history.length - 1 ? endColor : "#1B6CA8"
             ),
             tension: 0.25,
           },
@@ -516,7 +516,7 @@ function renderAuthByEntry(items) {
       datasets: [
         {
           data: rows.map((i) => Number(i.auth_rate) * 100),
-          backgroundColor: ["#005F98", "#132550", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
+          backgroundColor: ["#1B6CA8", "#2F3A4A", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
           borderRadius: 4,
         },
       ],
@@ -590,7 +590,7 @@ function renderDeclines(items) {
       datasets: [
         {
           data: top.map((i) => i.count),
-          backgroundColor: ["#D7282F", "#005F98", "#F5D600", "#132550", "#69788b", "#9FE5FA", "#006098", "#ea575d"],
+          backgroundColor: ["#D7282F", "#1B6CA8", "#F5D600", "#2F3A4A", "#69788b", "#9FE5FA", "#145585", "#ea575d"],
           borderRadius: 4,
         },
       ],

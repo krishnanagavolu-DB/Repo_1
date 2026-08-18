@@ -4,8 +4,8 @@
 const POS_DATA_URL = "data/in_shop_sales_data.json";
 const TENDER_ORDER = ["Card", "Cash", "Gift Card / Dutch Pass"];
 const TENDER_COLORS = {
-  Card: "#005F98",
-  Cash: "#132550",
+  Card: "#1B6CA8",
+  Cash: "#2F3A4A",
   "Gift Card / Dutch Pass": "#FDE021",
 };
 
@@ -82,7 +82,7 @@ function wowLabel(pctChange) {
 }
 
 function tenderColor(label, idx = 0) {
-  return TENDER_COLORS[label] || ["#005F98", "#132550", "#FDE021"][idx % 3];
+  return TENDER_COLORS[label] || ["#1B6CA8", "#2F3A4A", "#FDE021"][idx % 3];
 }
 
 function tenderInk(label, idx = 0) {
@@ -408,7 +408,6 @@ function normalizePosData(raw) {
 const TREND_METRICS = {
   sales: (week) => week.reportedTotal ?? week.tenderTotal,
   payments: (week) => week.transactions,
-  avg: (week) => week.avgTicket,
 };
 
 /** Sparkline points for a summary card, oldest week first. */
@@ -469,7 +468,6 @@ function renderSummary(week) {
       value: week.avgTicket != null ? `$${Number(week.avgTicket).toFixed(2)}` : "—",
       detail: null,
       delta: null,
-      metric: "avg",
     },
   ];
   grid.innerHTML = cards
@@ -506,7 +504,7 @@ function renderTrend(metric, series, activeWeek) {
   const values = series.map((point) => point.value);
   const last = values[values.length - 1];
   const prev = values.length > 1 ? values[values.length - 2] : last;
-  const endColor = last < prev ? "#D7282F" : "#005F98";
+  const endColor = last < prev ? "#D7282F" : "#1B6CA8";
   const average = values.reduce((sum, value) => sum + value, 0) / values.length;
   // On YTD every week feeds the aggregate, so no single point is highlighted.
   const currentIndex = series.findIndex((point) => point.label === activeWeek?.label);
@@ -521,12 +519,12 @@ function renderTrend(metric, series, activeWeek) {
         {
           label: "Weekly value",
           data: values,
-          borderColor: "#005F98",
+          borderColor: "#1B6CA8",
           backgroundColor: "transparent",
           borderWidth: 3,
           pointRadius: series.map((_, idx) => (idx === currentIndex ? 5 : 3)),
           pointBackgroundColor: series.map((_, idx) =>
-            idx === values.length - 1 ? endColor : "#005F98"
+            idx === values.length - 1 ? endColor : "#1B6CA8"
           ),
           tension: 0.25,
         },
@@ -632,7 +630,7 @@ function renderChart(week) {
 }
 
 let giftChart = null;
-const GIFT_COLORS = { "Gift Card": "#FDE021", "Dutch Pass": "#005F98" };
+const GIFT_COLORS = { "Gift Card": "#FDE021", "Dutch Pass": "#1B6CA8" };
 
 function renderGiftSplit(week) {
   const panel = document.getElementById("pos-gift-panel");
@@ -654,7 +652,7 @@ function renderGiftSplit(week) {
     note.textContent = `Of the ${compactUsd(split.parentAmount)} Gift Card / Dutch Pass tender`;
   }
   const colors = split.parts.map(
-    (part, idx) => GIFT_COLORS[part.label] || ["#FDE021", "#005F98", "#132550"][idx % 3]
+    (part, idx) => GIFT_COLORS[part.label] || ["#FDE021", "#1B6CA8", "#2F3A4A"][idx % 3]
   );
   renderLegend(legend, split.parts, colors);
   if (giftChart) giftChart.destroy();

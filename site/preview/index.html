@@ -6,15 +6,15 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=f1ce2e0064" />
+    <link rel="stylesheet" href="css/dashboard.css?v=313ace450b" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=9a8d72ee87" defer></script>
-    <script src="js/dashboard.js?v=5de564e267" defer></script>
-    <script src="js/pos-sales.js?v=dee1a1a435" defer></script>
+    <script src="js/dashboard.js?v=b05f5e1768" defer></script>
+    <script src="js/pos-sales.js?v=6ca1852bde" defer></script>
     <script src="js/tabs.js?v=5d677809bc" defer></script>
-    <script src="js/chatbot.js?v=5028197af4" defer></script>
+    <script src="js/chatbot.js?v=fc457a7583" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -23,7 +23,6 @@
           <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="180" height="43" />
         </div>
         <p class="auth-eyebrow">Dutch Bros Payments</p>
-        <span class="brand-rule" aria-hidden="true"><i></i><i></i><i></i></span>
         <p id="auth-phrase" class="auth-phrase">Enter the key to continue.</p>
         <p class="auth-hint">Type the access key below</p>
         <form id="auth-form" class="auth-form" autocomplete="off">
@@ -47,79 +46,69 @@
         <strong>Preview only</strong>
         <span>Try changes here first. The leadership page is unchanged until you say it’s ready.</span>
       </div>
-
-      <!-- Portal-style app bar: brand at left, search in the middle, account at right. -->
-      <div class="app-bar">
-        <div class="app-bar-inner">
-          <span class="app-mark">
-            <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="118" height="28" />
-          </span>
-          <form class="app-search" id="app-search-form" role="search">
-            <svg class="app-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path
-                d="M10 4a6 6 0 1 0 3.86 10.6l4.27 4.27a1 1 0 0 0 1.42-1.42l-4.27-4.27A6 6 0 0 0 10 4Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"
-              />
-            </svg>
-            <label for="app-search" class="visually-hidden">Search this dashboard</label>
-            <input id="app-search" type="search" placeholder="Search…" autocomplete="off" />
-            <kbd class="app-search-key">⌘K</kbd>
-          </form>
-          <span class="app-avatar" title="Dutch Bros Payments">DB</span>
-        </div>
-      </div>
-
-      <header class="portal-head">
-        <nav class="portal-nav" aria-label="Sales channels">
-          <div class="portal-nav-inner">
-            <span class="nav-group-label">In Shop</span>
-            <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
-            <button type="button" class="tab" data-tab="worldpay">Card present</button>
-            <span class="nav-divider" aria-hidden="true"></span>
-            <button type="button" class="tab locked" disabled aria-disabled="true">
-              <svg class="lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
-                />
-              </svg>
-              Olo Pay
-            </button>
-            <button type="button" class="tab locked" disabled aria-disabled="true">
-              <svg class="lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
-                />
-              </svg>
-              Gift Cards
-            </button>
-            <button type="button" class="tab locked" disabled aria-disabled="true">
-              <svg class="lock" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
-                />
-              </svg>
-              Other
-            </button>
-          </div>
-        </nav>
-
-        <div class="portal-title">
-          <h1>Payments Executive KPI Dashboard</h1>
-          <span class="brand-rule" aria-hidden="true"><i></i><i></i><i></i></span>
-          <p class="eyebrow">Preview</p>
-        </div>
-      </header>
-
-      <div class="toolbar">
-        <div class="toolbar-inner">
-          <div class="scope" id="scope-line">Company owned shops only</div>
-          <div class="period">
-            <label for="period-select" class="period-label">Period</label>
-            <div class="period-control">
-              <select id="period-select" aria-label="Select period"></select>
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="brand">
+            <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="160" height="38" />
+            <div class="brand-divider" aria-hidden="true"></div>
+            <div>
+              <div class="eyebrow">Payments · Preview</div>
+              <h1>Executive KPI Dashboard</h1>
+              <span class="brand-rule" aria-hidden="true"><i></i><i></i><i></i></span>
             </div>
           </div>
+          <div class="period">
+            <div class="period-label">Period</div>
+            <div class="period-control">
+              <label for="period-select" class="visually-hidden">Period</label>
+              <select id="period-select" aria-label="Select period"></select>
+            </div>
+            <div class="scope" id="scope-line">Company owned shops only</div>
+          </div>
         </div>
-      </div>
+        <nav class="tabs" aria-label="Sales channels">
+          <div class="tab-group" role="group" aria-label="In Shop">
+            <span class="tab-group-label">In Shop</span>
+            <div class="tab-group-items">
+              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
+              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+            </div>
+          </div>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Olo Pay
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Gift Cards
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Other
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+        </nav>
+      </header>
 
       <main>
         <!-- Shown on every tab when the period is YTD; each channel reports its own start. -->

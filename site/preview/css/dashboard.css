@@ -248,6 +248,21 @@ body {
   display: none !important;
 }
 
+.ytd-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 13px 18px;
+  border: 1px solid #f3e08a;
+  border-left: 5px solid var(--yellow);
+  border-radius: 8px;
+  background: #fffdf0;
+  color: #5c4a06;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .pos-banner {
   display: flex;
   align-items: center;

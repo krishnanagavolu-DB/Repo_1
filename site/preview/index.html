@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=20260818d" defer></script>
     <script src="js/notices.js?v=20260818d" defer></script>
+    <script src="js/ytd-banner.js?v=20260818d" defer></script>
     <script src="js/dashboard.js?v=20260818d" defer></script>
     <script src="js/pos-sales.js?v=20260818d" defer></script>
     <script src="js/tabs.js?v=20260818d" defer></script>
@@ -109,6 +110,9 @@
       </header>
 
       <main>
+        <!-- Shown on every tab when the period is YTD; each channel reports its own start. -->
+        <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
+
         <section id="panel-pos" class="tab-panel" data-panel="pos">
           <div class="section-head">
             <h2>In Shop · All payments</h2>

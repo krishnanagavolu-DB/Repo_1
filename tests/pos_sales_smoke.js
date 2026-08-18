@@ -123,6 +123,26 @@ check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 13724812.45);
 check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 6831693.98);
 check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
 
+// Sparkline series for the summary cards, oldest week first.
+const salesTrend = pos.trendSeries(live, "sales");
+check("sales trend length", salesTrend.length, 3);
+check("sales trend starts oldest", salesTrend[0].value, 45989528.17);
+check("sales trend ends newest", salesTrend[2].value, 45799722.66);
+check("sales trend label", salesTrend[0].label, "Jul 27 – Aug 2, 2026");
+
+const paymentsTrend = pos.trendSeries(live, "payments");
+check("payments trend length", paymentsTrend.length, 3);
+check("payments trend first", paymentsTrend[0].value, 4548240);
+check("payments trend last", paymentsTrend[2].value, 4594352);
+
+// One week cannot form a line, so no series is offered.
+check("single week has no trend", pos.trendSeries([live[0]], "sales").length, 0);
+check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
+
+// The data start feeds the YTD banner.
+check("pos data start", pos.getDataStart(live).startLabel, "Jul 27, 2026");
+check("pos data week count", pos.getDataStart(live).weekCount, 3);
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

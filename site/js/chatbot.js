@@ -169,9 +169,9 @@ const chatContext = {
 let benchmarkData = window.__benchmarkData || null;
 
 const OFF_TOPIC_REPLIES = [
-  "I’m the payments data desk, not the whole internet. Ask me to explain a trend, compare weeks, convert a number to a percentage, or drill into a payment metric.",
-  "That’s outside my Worldpay lane. I’m much better at questions like “Why did sales fall?” or “Show declines as percentages.”",
-  "I only have the data on this dashboard and a payments glossary. Try “What needs attention?” or “Compare this week to last week.”",
+  "I’m the payments data desk, not the whole internet. Try “Explain the exclusions in the data”, “What are the assumptions?”, or ask me to compare weeks or drill into a payment metric.",
+  "That’s outside my lane. I’m much better at “Why did sales fall?”, “Explain the exclusions in the data”, or “What assumptions were made?”",
+  "I only have the data on this dashboard and a payments glossary. Try “What needs attention?”, “Explain the exclusions in the data”, or “What are the assumptions?”",
 ];
 
 function getState() {
@@ -866,6 +866,41 @@ function answerPosNotInKpi(q) {
   return "All payments publishes Card / Cash / Gift Card · Dutch Pass only. Item mix, taxes, discounts, and mobile-wallet brand detail are not in this KPI — wallets show on Card present (Worldpay).";
 }
 
+function answerPosExclusions() {
+  chatContext.topic = "pos";
+  return [
+    "**What is excluded from All payments (Xenial)**",
+    "• **Tips** — not drink sales. Card networks still authorize sale + tip, so Worldpay average ticket stays higher.",
+    "• **Change** — cash handed back to the guest, not sales. Never appears on Worldpay.",
+    "• **Payment lines over $10k** — dropped as bad data. The filter is any line over $10k, not cash-only.",
+    "• **Legacy and unmapped shops** — company-owned only, per `Shop_Type_Mapping.xlsx`.",
+    "• **CHECK and UNKNOWN payment types** — left out of the tender mix.",
+    "• **Duplicate payment rows** — deduped on `SYS_HASH`. `TRANSACTION_ID` is not unique, so it is never used to dedupe.",
+    "",
+    "**Kept, not excluded:** refunds stay in as **negative** dollars, so sales are net.",
+    "",
+    "**On the Xenial table but not in this KPI:** item names/categories, quantities, taxes, and discounts (about **$8.5M** company-wide item + order discounts in the week of 8/10). Apple / Google / Samsung Pay are not broken out here — those show on **Card present** (Worldpay).",
+    "",
+    "Ask **“What are the assumptions?”** for the judgement calls behind these rules.",
+  ].join("\n");
+}
+
+function answerPosAssumptions() {
+  chatContext.topic = "pos";
+  return [
+    "**Assumptions behind All payments (Xenial)** — each of these is a judgement call, not a fact from the source system:",
+    "• `Shop_Type_Mapping.xlsx` is treated as the **authority** on which shops are company-owned vs Legacy. Join is `STAND_NUMBER` = column B (`NewCoID #`); that file's headers are swapped versus its values.",
+    "• The **$10k** filter drops **any** payment line over $10k, not just cash lines.",
+    "• **Card** = all `CREDIT`. There is no debit split, and Visa/MC/Amex/Discover brand mix is not published here (`CREDIT_CARD_TYPE` exists but is blank on many rows).",
+    "• **`CUSTOM` is the only Dutch Pass mapping** — Dutch Pass is the window wallet scan, grouped with `GIFT` into one tender bucket.",
+    "• Worldpay chain **`0OS957`** is **not confirmed** to cover the same shop list as the company-owned footprint, so Card present and All payments totals are not guaranteed to reconcile shop-for-shop.",
+    "• Weeks are completed **Monday–Sunday** on `BUSINESS_DATE`.",
+    "• `AVG_TICKET` basis can differ by week: published weeks use sales ÷ payment lines, and older weeks keep that basis until they are rebuilt on distinct orders.",
+    "",
+    "Ask **“Explain the exclusions in the data”** for what gets filtered out before these numbers.",
+  ].join("\n");
+}
+
 function answerPosAvgTicketChange() {
   chatContext.topic = "pos";
   return "Yes — for the next published build, **AVG_TICKET** moves from **sales ÷ payment lines** to **sales ÷ distinct ORDER_ID** (guest checks), and the file will carry \`AVG_TICKET_BASIS = distinct_ORDER_ID\` plus \`ORDER_COUNT\`. \`TRANSACTION_COUNT\` stays payment lines. Older weeks already in the rolling file keep their original average until rebuilt.";
@@ -904,7 +939,28 @@ function answerQuestion(raw) {
   if (format) return formatRememberedView(format);
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments (Xenial)** tender mix, AVG_TICKET basis, tips/change exclusions, and why Worldpay ticket differs\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments (Xenial)** tender mix, AVG_TICKET basis, and why Worldpay ticket differs\n• List the **exclusions** (tips, change, $10k lines, Legacy shops) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+  }
+
+  // Anyone about to share these numbers should be able to ask what was left out.
+  // A question that names one item ("why are tips excluded") gets the specific
+  // answer further down instead of this whole-list one.
+  const namesOneExclusion =
+    /\b(tips?|gratuity|change|cash back|apple pay|google pay|samsung pay|android pay|wallet|discounts?|taxes|tax|items?|categor|quantit|refunds?|legacy|franchise)\b/.test(
+      q
+    );
+  if (
+    !namesOneExclusion &&
+    (/\bexclusions?\b|\bexclud/.test(q) ||
+      /\b(filtered out|filter out|left out|leave out|not include|doesn't include|does not include|removed from|dropped from)\b/.test(q))
+  ) {
+    return answerPosExclusions();
+  }
+  if (
+    /\b(assumptions?|assumed|caveats?|limitations?|gotchas?|footnotes?|fine print)\b/.test(q) ||
+    /\b(what should i know|need to know|before (i )?shar)\b/.test(q)
+  ) {
+    return answerPosAssumptions();
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
@@ -959,10 +1015,15 @@ function answerQuestion(raw) {
     return answerPosPaymentsCount();
   }
   if (
-    /\b(apple pay|google pay|samsung pay|android pay|item (name|mix|categor)|tax|discount)\b/.test(q) &&
-    (wantsPosKnowledge(q) || /\b(all payments|tender mix|xenial)\b/.test(q))
+    /\b(apple pay|google pay|samsung pay|android pay|item (name|mix|categor)|taxes?|discounts?)\b/.test(q) &&
+    (wantsPosKnowledge(q) ||
+      /\b(all payments|tender mix|xenial|left out)\b|\bexclud|\bnot includ|\bincluded\b/.test(q))
   ) {
     return answerPosNotInKpi(q);
+  }
+  if (/\brefunds?\b/.test(q) && (/\bexclud|\binclud|\bnegative\b|\bfiltered\b|\bleft out\b/.test(q))) {
+    chatContext.topic = "pos";
+    return "Refunds are **not excluded** from All payments — they stay in as **negative** dollars, so `SALES_VOLUME` is net. Tips, change, and payment lines over $10k are what get dropped.";
   }
 
   // Definitions before POS routing so "What is cash?" / "What is POS sales?" stay definitional.
@@ -1129,7 +1190,8 @@ const TAB_PROMPTS = {
   pos: [
     { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
     { question: "What is AVG_TICKET on All payments?", label: "What does AVG_TICKET mean?" },
-    { question: "Why is Worldpay average ticket higher than POS?", label: "Why is Worldpay ticket higher?" },
+    { question: "Explain the exclusions in the data", label: "What’s excluded from these numbers?" },
+    { question: "What are the assumptions?", label: "What assumptions did we make?" },
     { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
@@ -1191,7 +1253,7 @@ async function initChatbot() {
 
   appendMessage(
     "bot",
-    "Hey there—I’m available on **every tab**. I can explain **Card present (Worldpay)** KPIs, **All payments (Xenial)** tender mix and ticket definitions, why tips/change stay out, cited **QSR/payment industry benchmarks**, public **competitor** research (Starbucks, Dunkin, 7 Brew), or this week’s **data certification**."
+    "Hey there—I’m available on **every tab**. I can explain **Card present (Worldpay)** KPIs, **All payments (Xenial)** tender mix and ticket definitions, the **exclusions and assumptions** behind the numbers, cited **QSR/payment industry benchmarks**, public **competitor** research (Starbucks, Dunkin, 7 Brew), or this week’s **data certification**."
   );
   appendFollowUps(input);
 }

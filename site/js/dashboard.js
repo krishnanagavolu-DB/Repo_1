@@ -248,6 +248,24 @@ function populatePeriodSelect(data) {
   select.addEventListener("change", () => {
     window.__dashboardState.periodId = select.value;
     renderPeriod(data, select.value);
+    announcePeriod(select.value);
+  });
+}
+
+/** Every channel follows this one control, so broadcast the selection. */
+function announcePeriod(periodId) {
+  window.dispatchEvent(new CustomEvent("dashboard:period", { detail: { periodId } }));
+}
+
+/** Card present reaches back further than the POS feed, so report its own start. */
+function registerYtdCoverage(data) {
+  const weeks = data?.periods?.weeks || [];
+  if (!weeks.length) return;
+  const startLabel = String(weeks[0].label || "").replace(/\s*–\s*/, "|").split("|")[0];
+  const year = String(weeks[0].id || "").slice(0, 4);
+  window.__ytdBanner?.register("worldpay", {
+    startLabel: year ? `${startLabel}, ${year}` : startLabel,
+    weekCount: weeks.length,
   });
 }
 
@@ -632,14 +650,27 @@ async function loadDashboard() {
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
     populatePeriodSelect(dashboardData);
+    registerYtdCoverage(dashboardData);
     const periodId = document.getElementById("period-select").value;
     window.__dashboardState = { data: dashboardData, periodId };
     renderPeriod(dashboardData, periodId);
+    announcePeriod(periodId);
   } catch (err) {
     const page = document.querySelector(".page");
     const box = document.createElement("div");
-    box.className = "error";
-    box.textContent = `Dashboard failed to load: ${err.message}`;
+    box.className = "notice notice-error";
+    box.innerHTML =
+      window.__notices?.noticeHtml({
+        title: "This week's numbers aren't available right now",
+        message:
+          "The Worldpay metrics could not be loaded. Try refreshing in a moment — if it keeps happening, share the technical details below with the data team.",
+        technical: err.message,
+        fix: [
+          "Refresh the page — most load failures are temporary.",
+          "Confirm the weekly publish finished by checking that <code>site/data/dashboard.json</code> exists in the repository.",
+          "If the file is missing, rerun the weekly ingest and certification, then redeploy.",
+        ],
+      }) || `Dashboard failed to load: ${err.message}`;
     page.prepend(box);
   }
 }

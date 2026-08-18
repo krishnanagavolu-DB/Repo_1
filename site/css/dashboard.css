@@ -158,10 +158,34 @@ body {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   margin: 0 -28px;
   padding: 0 28px;
+}
+
+/* Channels that share the In Shop footprint sit under one label. */
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  margin-right: 18px;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.tab-group-label {
+  padding: 6px 16px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.tab-group-items {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .tab {
@@ -212,6 +236,125 @@ body {
   width: 11px;
   height: 11px;
   fill: currentColor;
+}
+
+.tab[data-tab]:not(.active):hover {
+  color: var(--blue);
+}
+
+/* Author display rules beat the UA [hidden] rule, so restate it for the
+   containers we toggle from JS. */
+[hidden] {
+  display: none !important;
+}
+
+.ytd-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 13px 18px;
+  border: 1px solid #f3e08a;
+  border-left: 5px solid var(--yellow);
+  border-radius: 8px;
+  background: #fffdf0;
+  color: #5c4a06;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pos-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid #f0d27a;
+  border-left: 5px solid #e8b931;
+  border-radius: 8px;
+  background: #fff8e2;
+  color: #6a4e05;
+  font-size: 14px;
+}
+
+.pos-banner-info {
+  border: 1px solid #e0c470;
+  border-radius: 999px;
+  background: #fffdf6;
+  color: #6a4e05;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: help;
+}
+
+.pos-empty {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 28px;
+  color: var(--muted);
+}
+
+.pos-empty h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.pos-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.pos-empty code {
+  background: #eef2f6;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
+
+.pos-card .kpi-share {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-card .kpi-subvalue {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.pos-summary {
+  margin-bottom: 12px;
+}
+
+.pos-summary-card .kpi-value {
+  font-size: 28px;
+}
+
+.pos-charts {
+  margin-top: 16px;
+}
+
+.pos-charts .mix-body {
+  align-items: center;
+}
+
+.pos-charts .chart-wrap {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.pos-charts .panel-note {
+  margin: -8px 0 14px;
 }
 
 main {
@@ -480,6 +623,112 @@ main {
   background: #fff5f5;
   color: var(--red);
   border: 1px solid #f5c2c5;
+}
+
+/* ===== Shared notices: friendly headline, technical detail behind a toggle ===== */
+.notice {
+  margin: 24px 28px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.notice-error {
+  border-color: #f5c2c5;
+  background: #fff7f7;
+}
+
+.notice-body h3,
+.pos-empty h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.notice-body > p,
+.pos-empty > .notice-body > p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+.notice-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.notice-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  list-style: none;
+}
+
+.notice-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.notice-details summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 6px;
+  transition: transform 0.15s ease;
+}
+
+.notice-details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.notice-details summary:hover,
+.notice-details summary:focus-visible {
+  text-decoration: underline;
+}
+
+.notice-detail-body {
+  margin-top: 10px;
+}
+
+.notice-tech-label {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.notice-tech {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #eef2f6;
+  color: #33475b;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notice-fix {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.notice-fix li {
+  margin-bottom: 4px;
+}
+
+.notice-fix code,
+.notice-body code {
+  background: #eef2f6;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12.5px;
 }
 
 /* ===== Ask about this data (in-page chatbot) ===== */

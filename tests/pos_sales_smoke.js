@@ -93,6 +93,7 @@ check("snowflake supplied share", pos.sharePct(sfLatest.tenders[0].pct), "70.0%"
 check("root coverage applied to each week", sfLatest.coverage.missingCount, 313);
 check("compact millions", pos.compactUsd(31681899.99), "$31.7M");
 check("compact thousands", pos.compactUsd(7358837.24), "$7.4M");
+check("missing WoW stays blank", pos.wowLabel(null), null);
 
 const live = pos.normalizePosData(
   JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"))
@@ -106,6 +107,21 @@ const giftShare = liveLatest.giftSplit.parts.reduce((sum, p) => sum + p.pct, 0);
 if (Math.abs(giftShare - 1) > 0.000001) {
   failures.push({ name: "gift split sums to 1", expected: 1, actual: giftShare });
 }
+
+// YTD means the aggregate of every week held by All payments.
+const liveYtd = pos.aggregateWeeks(live);
+check("YTD label", liveYtd.label, "YTD · Jul 27 – Aug 16, 2026");
+check("YTD total sales", liveYtd.reportedTotal, 138569865.15);
+check("YTD tender total reconciles", liveYtd.tenderTotal, 138569865.15);
+check("YTD transactions", liveYtd.transactions, 13825173);
+check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "10.02");
+check("YTD card dollars", liveYtd.tenders[0].amount, 95661242.92);
+check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.0%");
+check("YTD cash dollars", liveYtd.tenders[1].amount, 22352115.8);
+check("YTD gift/Dutch Pass dollars", liveYtd.tenders[2].amount, 20556506.43);
+check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 13724812.45);
+check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 6831693.98);
+check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

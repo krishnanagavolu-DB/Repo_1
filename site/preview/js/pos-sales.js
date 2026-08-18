@@ -65,6 +65,7 @@ function sharePct(value) {
 
 /** Export week_over_week values are already percent changes (e.g. -2.1). */
 function wowLabel(pctChange) {
+  if (pctChange === null || pctChange === undefined || pctChange === "") return null;
   const n = Number(pctChange);
   if (!Number.isFinite(n)) return null;
   const abs = Math.abs(n).toFixed(1);
@@ -219,6 +220,84 @@ function normalizeGiftSplit(tenders) {
   return { parentLabel: giftRow.label, parentAmount: giftRow.amount, parts, total };
 }
 
+/** YTD is every published week rolled up — there is no prior period to compare. */
+function aggregateWeeks(weeks) {
+  if (!weeks?.length) return null;
+
+  const byLabel = new Map();
+  const giftParts = new Map();
+  let reportedTotal = 0;
+  let transactions = 0;
+  let hasTransactions = false;
+
+  for (const week of weeks) {
+    for (const tender of week.tenders) {
+      const row = byLabel.get(tender.label) || { label: tender.label, amount: 0, transactions: 0 };
+      row.amount += Number(tender.amount) || 0;
+      if (Number.isFinite(tender.transactions)) row.transactions += tender.transactions;
+      byLabel.set(tender.label, row);
+    }
+    for (const part of week.giftSplit?.parts || []) {
+      const row = giftParts.get(part.label) || { label: part.label, amount: 0 };
+      row.amount += Number(part.amount) || 0;
+      giftParts.set(part.label, row);
+    }
+    reportedTotal += Number.isFinite(week.reportedTotal) ? week.reportedTotal : week.tenderTotal;
+    if (Number.isFinite(week.transactions)) {
+      transactions += week.transactions;
+      hasTransactions = true;
+    }
+  }
+
+  const tenders = [...byLabel.values()];
+  const tenderTotal = tenders.reduce((sum, row) => sum + row.amount, 0);
+  for (const row of tenders) row.pct = tenderTotal ? row.amount / tenderTotal : 0;
+  tenders.sort((a, b) => {
+    const ai = TENDER_ORDER.indexOf(a.label);
+    const bi = TENDER_ORDER.indexOf(b.label);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return b.amount - a.amount;
+  });
+
+  let giftSplit = null;
+  const parts = [...giftParts.values()];
+  const giftTotal = parts.reduce((sum, part) => sum + part.amount, 0);
+  if (parts.length && giftTotal) {
+    for (const part of parts) part.pct = part.amount / giftTotal;
+    const order = ["Gift Card", "Dutch Pass"];
+    parts.sort((a, b) => {
+      const ai = order.indexOf(a.label);
+      const bi = order.indexOf(b.label);
+      if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      return b.amount - a.amount;
+    });
+    const parent = tenders.find((row) => /gift|dutch pass/i.test(row.label));
+    giftSplit = {
+      parentLabel: parent?.label || "Gift Card / Dutch Pass",
+      parentAmount: parent?.amount ?? giftTotal,
+      parts,
+      total: giftTotal,
+    };
+  }
+
+  const first = weeks[0].label.replace(/\s*–.*$/, "");
+  const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
+
+  return {
+    label: `YTD · ${first} – ${last}`,
+    sortKey: "ytd",
+    weekCount: weeks.length,
+    tenders,
+    tenderTotal,
+    reportedTotal,
+    transactions: hasTransactions ? transactions : null,
+    avgTicket: hasTransactions && transactions ? reportedTotal / transactions : null,
+    wow: { salesPct: null, transactionsPct: null },
+    giftSplit,
+    coverage: weeks[weeks.length - 1].coverage,
+  };
+}
+
 function normalizeWow(week) {
   const raw = week?.week_over_week || week?.wow || {};
   return {
@@ -292,6 +371,70 @@ function normalizePosData(raw) {
   return normalized;
 }
 
+function sumMoney(values) {
+  return Math.round(values.reduce((sum, value) => sum + Number(value || 0), 0) * 100) / 100;
+}
+
+/** YTD for All payments is every week currently held by this feed. */
+function aggregateWeeks(weeks) {
+  if (!weeks?.length) return null;
+  const tenders = TENDER_ORDER.map((label) => {
+    const sourceRows = weeks
+      .map((week) => week.tenders.find((tender) => tender.label === label))
+      .filter(Boolean);
+    const amount = sumMoney(sourceRows.map((row) => row.amount));
+    const transactions = sourceRows.reduce(
+      (sum, row) => sum + Number(row.transactions || 0),
+      0
+    );
+    const componentKeys = new Set(
+      sourceRows.flatMap((row) => Object.keys(row.components || {}))
+    );
+    const components = Object.fromEntries(
+      [...componentKeys].map((key) => [
+        key,
+        {
+          amount: sumMoney(
+            sourceRows.map((row) => firstNumber(row.components?.[key] || {}, AMOUNT_KEYS))
+          ),
+          TRANSACTION_COUNT: sourceRows.reduce(
+            (sum, row) =>
+              sum + Number(firstNumber(row.components?.[key] || {}, TXN_KEYS) || 0),
+            0
+          ),
+        },
+      ])
+    );
+    return {
+      label,
+      amount,
+      transactions,
+      components: componentKeys.size ? components : null,
+      pct: 0,
+    };
+  });
+  const tenderTotal = sumMoney(tenders.map((tender) => tender.amount));
+  for (const tender of tenders) tender.pct = tenderTotal ? tender.amount / tenderTotal : 0;
+  const transactions = weeks.reduce((sum, week) => sum + Number(week.transactions || 0), 0);
+  const first = weeks[0].label.replace(/\s*–.*$/, "");
+  const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
+  const aggregate = {
+    label: `YTD · ${first} – ${last}`,
+    sortKey: "ytd",
+    tenders,
+    tenderTotal,
+    reportedTotal: sumMoney(
+      weeks.map((week) => week.reportedTotal ?? week.tenderTotal)
+    ),
+    transactions,
+    avgTicket: transactions ? tenderTotal / transactions : null,
+    wow: { salesPct: null, transactionsPct: null },
+    coverage: {},
+  };
+  aggregate.giftSplit = normalizeGiftSplit(tenders);
+  return aggregate;
+}
+
 function renderBanner() {
   // Non–company-owned stands are filtered by design across every channel.
   // Do not advertise that exclusion on the page.
@@ -316,14 +459,15 @@ function renderSummary(week) {
       delta: salesWow,
     },
     {
-      label: "Transactions",
+      // The source counts deduplicated payment lines, not unique ORDER_IDs.
+      label: "Payments",
       value: week.transactions != null ? compactCount(week.transactions) : "—",
       detail:
         week.transactions != null ? Number(week.transactions).toLocaleString("en-US") : null,
       delta: txnWow,
     },
     {
-      label: "Avg ticket",
+      label: "Avg payment",
       value: week.avgTicket != null ? `$${Number(week.avgTicket).toFixed(2)}` : "—",
       detail: null,
       delta: null,
@@ -523,17 +667,7 @@ function selectPeriod(periodId) {
   selectedPeriodId = periodId;
 
   if (periodId === "ytd") {
-    const first = weeks[0].label.replace(/\s*–.*$/, "");
-    const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
-    showNotice({
-      title: "Year to date isn't published for All payments yet",
-      message: `Pick a week to see tender mix. Published weeks run ${first} through ${last}.`,
-      technical: `The POS export contains ${weeks.length} week(s) and no year-to-date rollup, so a YTD figure here would not match Card present.`,
-      fix: [
-        "Choose a week from the Period control.",
-        "To publish year to date, add a YTD rollup to the Snowflake export and reimport.",
-      ],
-    });
+    renderWeek(aggregateWeeks(weeks));
     return;
   }
 
@@ -591,6 +725,7 @@ window.__posSales = {
   normalizePosData,
   normalizeTenderMix,
   normalizeGiftSplit,
+  aggregateWeeks,
   findWeekForPeriod,
   usd,
   compactUsd,
@@ -605,6 +740,7 @@ window.__posSales = {
   },
   getSelectedWeek() {
     const weeks = window.__posSalesState?.weeks || [];
+    if (selectedPeriodId === "ytd") return aggregateWeeks(weeks);
     return findWeekForPeriod(weeks, selectedPeriodId) || window.__posSalesState?.latest || null;
   },
   getWeeks() {

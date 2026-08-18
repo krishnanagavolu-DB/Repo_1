@@ -122,6 +122,39 @@ check("YTD gift/Dutch Pass dollars", liveYtd.tenders[2].amount, 20556506.43);
 check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 13724812.45);
 check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 6831693.98);
 check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
+check("live orderCount absent until rebuild", liveLatest.orderCount, null);
+check("live avgTicketBasis absent until rebuild", liveLatest.avgTicketBasis, null);
+
+// Next-publish shape: ORDER_COUNT + AVG_TICKET_BASIS = distinct_ORDER_ID.
+const withOrders = pos.normalizePosData({
+  weeks: [
+    {
+      week_start: "2026-08-17",
+      week_end: "2026-08-23",
+      label: "Aug 17 – Aug 23, 2026",
+      totals: {
+        SALES_VOLUME: 1000,
+        TRANSACTION_COUNT: 120,
+        ORDER_COUNT: 100,
+        AVG_TICKET: 10,
+        AVG_TICKET_BASIS: "distinct_ORDER_ID",
+      },
+      tender_mix: [
+        { label: "Card", amount: 700 },
+        { label: "Cash", amount: 200 },
+        { label: "Gift Card / Dutch Pass", amount: 100 },
+      ],
+    },
+  ],
+});
+check("orderCount from totals", withOrders[0].orderCount, 100);
+check("avgTicketBasis from totals", withOrders[0].avgTicketBasis, "distinct_ORDER_ID");
+check("avgTicket prefers published field", withOrders[0].avgTicket, 10);
+
+const orderYtd = pos.aggregateWeeks(withOrders);
+check("YTD orderCount", orderYtd.orderCount, 100);
+check("YTD avgTicket uses orders when basis is ORDER_ID", orderYtd.avgTicket, 10);
+check("YTD avgTicketBasis", orderYtd.avgTicketBasis, "distinct_ORDER_ID");
 
 // Sparkline series for the summary cards, oldest week first.
 const salesTrend = pos.trendSeries(live, "sales");

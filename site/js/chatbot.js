@@ -11,7 +11,33 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["aov", "average order value"],
     title: "AOV (Average Order Value)",
-    body: "Sales dollars divided by sales transaction count.",
+    body: "On Card present (Worldpay): sales dollars divided by sales transaction count. That figure includes authorized sale + tip when tips are present, so it will sit above the All payments average ticket.",
+  },
+  {
+    terms: [
+      "sales volume on all payments",
+      "all payments sales",
+      "xenial sales volume",
+      "pos sales dollars",
+      "sales_volume",
+    ],
+    title: "SALES_VOLUME",
+    body: "Net company-owned Xenial payment dollars. Refunds are negative. Tips and change are excluded. Lines over $10k are dropped. No Legacy, no unmapped shops, no CHECK/UNKNOWN tender types.",
+  },
+  {
+    terms: ["avg ticket", "average ticket", "avg payment", "average payment", "avg_ticket", "average check"],
+    title: "AVG_TICKET (All payments)",
+    body: "On All payments (Xenial): sales dollars divided by the published ticket basis. Published weeks currently use sales ÷ payment lines. A later rebuild will switch to sales ÷ distinct ORDER_ID (guest checks) and publish AVG_TICKET_BASIS = distinct_ORDER_ID. Older weeks keep their original basis until rebuilt. This is all tenders, not card-only, and not Worldpay.",
+  },
+  {
+    terms: ["transaction_count", "transaction count", "payment lines", "payments count"],
+    title: "TRANSACTION_COUNT",
+    body: "Count of Xenial payment lines after SYS_HASH dedupe. Two tenders on one guest check count as two lines. This is not distinct ORDER_ID.",
+  },
+  {
+    terms: ["order_count", "order count", "guest checks", "guest check", "distinct orders"],
+    title: "ORDER_COUNT",
+    body: "Distinct Xenial ORDER_ID values — one guest check. Not published in the current All payments weeks; it arrives with the AVG_TICKET rebuild that switches the average to sales ÷ orders.",
   },
   {
     terms: ["returns as % of sales", "return rate", "refund rate"],
@@ -68,6 +94,41 @@ const PAYMENT_DEFINITIONS = [
     title: "YTD",
     body: "All loaded weeks in the current calendar year.",
   },
+  {
+    terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender", "xenial"],
+    title: "In Shop · All payments",
+    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Xenial SILVER_CLEANSED.XENIAL_BULK.ORDER_DETAILS_FEED joined to Shop_Type_Mapping on STAND_NUMBER = NewCoID #. Weeks are completed Monday–Sunday on BUSINESS_DATE. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
+  },
+  {
+    terms: ["gift card", "dutch pass", "custom"],
+    title: "Gift Card / Dutch Pass",
+    body: "Xenial PAYMENT_TYPE GIFT plus CUSTOM. CUSTOM is Dutch Pass — the loyalty-app / digital-wallet scan at the window. Together they form one tender bucket in the mix.",
+  },
+  {
+    terms: ["cash"],
+    title: "Cash",
+    body: "Xenial PAYMENT_TYPE = CASH at company-owned shops. Cash never appears on Worldpay.",
+  },
+  {
+    terms: ["card", "credit"],
+    title: "Card",
+    body: "Xenial PAYMENT_TYPE = CREDIT. All credit is one Card bucket here — no debit split, and Visa/MC/Amex/Discover brand mix is not published in this JSON.",
+  },
+  {
+    terms: ["tips", "tip", "gratuity"],
+    title: "Tips excluded",
+    body: "Tips are not drink sales, so All payments leaves them out of SALES_VOLUME. Card networks still authorize sale + tip, which is why Worldpay average ticket stays higher than the Xenial sales ticket.",
+  },
+  {
+    terms: ["change", "cash back"],
+    title: "Change excluded",
+    body: "Change is cash handed back to the guest, not sales. It never appears on Worldpay and is excluded from All payments SALES_VOLUME.",
+  },
+  {
+    terms: ["missing shops", "shop coverage", "legacy/co mapping", "legacy co mapping", "company owned", "company-owned"],
+    title: "Company-owned shops only",
+    body: "Every channel on this dashboard is limited to company-owned shops. Shop_Type_Mapping.xlsx is the CO/Legacy authority. Non-CO stands are filtered out so POS, Worldpay, and future feeds stay on the same footprint.",
+  },
 ];
 
 const KPI_ALIASES = [
@@ -79,7 +140,7 @@ const KPI_ALIASES = [
   { key: "ic_rate", terms: ["ic rate", "interchange rate"] },
   { key: "returns_pct_of_sales", terms: ["returns as %", "returns percent", "return rate", "refund rate"] },
   { key: "transaction_volume", terms: ["transaction volume", "transaction count", "transactions"] },
-  { key: "aov", terms: ["aov", "average order", "average ticket"] },
+  { key: "aov", terms: ["aov", "average order"] },
 ];
 
 const ENTRY_ALIASES = [
@@ -102,6 +163,7 @@ const chatContext = {
   mixKind: null,
   entryLabel: null,
   lastView: null,
+  activeTab: null,
 };
 
 let benchmarkData = window.__benchmarkData || null;
@@ -603,7 +665,7 @@ function answerScope() {
   const state = getState();
   const scope = state?.data?.meta?.scope || "Company owned shops only";
   const channel = state?.data?.meta?.channel || "In Shop · Worldpay";
-  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. I can calculate only from these aggregate Worldpay files.`;
+  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. Every tab uses the same company-owned footprint.`;
 }
 
 async function loadBenchmarks() {
@@ -669,6 +731,171 @@ function answerDataQuality() {
   return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitHub Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
 }
 
+function latestPosWeek() {
+  return (
+    window.__posSales?.getSelectedWeek?.() ||
+    window.__posSales?.getLatestWeek?.() ||
+    window.__posSalesState?.latest ||
+    null
+  );
+}
+
+function answerPosTender(q = "") {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (!week) {
+    return "All payments data isn’t published yet. Import the Snowflake export with `python3 scripts/import_pos_sales.py <path>` (or attach the JSON here) and I’ll answer tender-mix questions.";
+  }
+  const wantCash = /\bcash\b/.test(q);
+  const wantGift = /\bgift card|dutch pass\b/.test(q);
+  const wantCard = /\bcard\b/.test(q) && !wantGift;
+  const selected = week.tenders.find((tender) => {
+    const label = normalize(tender.label);
+    if (wantGift) return label.includes("gift") || label.includes("dutch");
+    if (wantCash) return label.includes("cash");
+    if (wantCard) return label === "card";
+    return false;
+  });
+  if (selected) {
+    rememberView(
+      `${selected.label} — ${week.label}`,
+      week.tenders.map((tender) => ({
+        label: tender.label,
+        value: Number(tender.amount),
+        display: money(tender.amount, 2),
+        secondary: pct(tender.pct, 1),
+      })),
+      `${selected.label}: ${money(selected.amount, 2)} (${pct(selected.pct, 1)} of POS sales).`
+    );
+    return `For **${week.label}**, **${selected.label}** was **${money(selected.amount, 2)}** — **${pct(selected.pct, 1)}** of In Shop All payments.`;
+  }
+
+  const lines = week.tenders.map(
+    (tender) => `• ${tender.label}: **${money(tender.amount, 2)}** (${pct(tender.pct, 1)})`
+  );
+  rememberView(
+    `POS tender mix — ${week.label}`,
+    week.tenders.map((tender) => ({
+      label: tender.label,
+      value: Number(tender.amount),
+      display: money(tender.amount, 2),
+      secondary: pct(tender.pct, 1),
+    })),
+    `Total POS sales: ${money(week.tenderTotal, 2)}.`
+  );
+  return `**In Shop · All payments tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.`;
+}
+
+function answerPosCoverage() {
+  chatContext.topic = "pos";
+  return "Every channel on this dashboard is **company-owned shops only**. Shop_Type_Mapping.xlsx is the CO/Legacy authority. Non-CO stands are filtered out so POS, Worldpay, and future feeds stay on the same footprint.";
+}
+
+function ticketBasisLabel(week) {
+  const basis = week?.avgTicketBasis || week?.ticketBasis;
+  if (basis === "distinct_ORDER_ID" || basis === "orders") return "sales ÷ distinct ORDER_ID (guest checks)";
+  if (basis === "payment_lines" || basis === "TRANSACTION_COUNT") return "sales ÷ payment lines";
+  // Published weeks before the rebuild omit the basis field and use payment lines.
+  return "sales ÷ payment lines (current published basis)";
+}
+
+function answerPosAvgTicket() {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (!week || week.avgTicket == null) {
+    return `**AVG_TICKET (All payments)** — Xenial sales dollars divided by the published ticket basis. Current published weeks use **sales ÷ payment lines**. A later rebuild will switch to **sales ÷ distinct ORDER_ID** and publish \`AVG_TICKET_BASIS = distinct_ORDER_ID\`. Older weeks keep their original basis until rebuilt. This is all tenders — not card-only, and not Worldpay.`;
+  }
+  return `For **${week.label}**, All payments **AVG_TICKET** is **$${Number(week.avgTicket).toFixed(2)}** (${ticketBasisLabel(week)}).\n\nThis is Xenial sales across Card + Cash + Gift Card / Dutch Pass — not card-only and not Worldpay. Worldpay AOV stays higher because networks authorize **sale + tip**.`;
+}
+
+function answerPosPaymentsCount() {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (!week || week.transactions == null) {
+    return "**TRANSACTION_COUNT** is the count of Xenial payment **lines** after `SYS_HASH` dedupe. Two tenders on one guest check count as two lines. It is not distinct `ORDER_ID`.";
+  }
+  return `For **${week.label}**, All payments recorded **${Number(week.transactions).toLocaleString("en-US")}** payment lines (\`TRANSACTION_COUNT\` after \`SYS_HASH\` dedupe).\n\nTwo tenders on one guest check count as two lines. Distinct guest checks (\`ORDER_COUNT\`) are not published in these weeks yet.`;
+}
+
+function answerPosOrderCount() {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (week?.orderCount != null) {
+    return `For **${week.label}**, All payments recorded **${Number(week.orderCount).toLocaleString("en-US")}** guest checks (\`ORDER_COUNT\` = distinct \`ORDER_ID\`).`;
+  }
+  return "**ORDER_COUNT** (distinct guest checks / \`ORDER_ID\`) is **not published** in the current All payments weeks. Today’s totals expose payment **lines** only. \`ORDER_COUNT\` arrives with the AVG_TICKET rebuild that switches the average to sales ÷ orders.";
+}
+
+function answerPosTipsOrChange(q) {
+  chatContext.topic = "pos";
+  const aboutTips = /\btips?|gratuity\b/.test(q);
+  const aboutChange = /\bchange|cash back\b/.test(q);
+  if (aboutTips && !aboutChange) {
+    return "Tips are excluded from All payments **SALES_VOLUME** because they are not drink sales. Card networks still authorize **sale + tip**, so Worldpay average ticket (about **$12.15** last week on chain `0OS957`) stays higher than the Xenial sales ticket. Do not force the two averages to match.";
+  }
+  if (aboutChange && !aboutTips) {
+    return "Change is cash handed back to the guest, not sales. It is excluded from All payments **SALES_VOLUME** and never appears on Worldpay.";
+  }
+  return "All payments excludes **tips** and **change**. Tips are not drink sales; change is cash handed back. Worldpay still sees authorized **sale + tip**, which is why its average ticket sits above the Xenial sales ticket.";
+}
+
+function answerPosWorldpayTicketGap() {
+  chatContext.topic = "pos";
+  const week = latestPosWeek();
+  const posTicket =
+    week?.avgTicket != null ? `All payments AVG_TICKET for **${week.label}** is **$${Number(week.avgTicket).toFixed(2)}** (${ticketBasisLabel(week)}). ` : "";
+  const worldpay = currentPeriod()?.kpis?.aov?.value;
+  const wpTicket =
+    worldpay != null ? `Card present AOV for the selected Worldpay period is **${formatKpiValue("aov", worldpay)}**. ` : "";
+  return `${posTicket}${wpTicket}They are not the same metric. All payments is Xenial drink/tender sales with tips and change removed. Worldpay authorizes **sale + tip**, so its average stays higher (about **$12.15** last week on chain \`0OS957\`). Do not force them to match.`;
+}
+
+function answerPosSource() {
+  chatContext.topic = "pos";
+  return "**All payments** is Xenial POS tender mix from \`SILVER_CLEANSED.XENIAL_BULK.ORDER_DETAILS_FEED\`, limited to company-owned shops via \`Shop_Type_Mapping.xlsx\` (\`STAND_NUMBER\` = \`NewCoID #\`). Weeks are completed Monday–Sunday on \`BUSINESS_DATE\`. Sales are net CO payment dollars after \`SYS_HASH\` dedupe — refunds negative, tips/change out, lines over $10k dropped, no Legacy/unmapped shops, no CHECK/UNKNOWN.";
+}
+
+function answerPosNotInKpi(q) {
+  chatContext.topic = "pos";
+  if (/\bapple pay|google pay|samsung pay|android pay|wallet\b/.test(q)) {
+    return "Apple Pay / Google Pay / Samsung Pay do **not** appear as their own buckets in All payments. Those wallets show clearly on **Card present** (Worldpay). In Xenial they typically land inside \`CREDIT\` when present at all.";
+  }
+  if (/\btax|discount|item|category|quantity\b/.test(q)) {
+    return "Item names/categories, quantities, taxes, and discounts sit on the Xenial table but are **not** in this All payments KPI. The published mix is Card / Cash / Gift Card · Dutch Pass only.";
+  }
+  return "All payments publishes Card / Cash / Gift Card · Dutch Pass only. Item mix, taxes, discounts, and mobile-wallet brand detail are not in this KPI — wallets show on Card present (Worldpay).";
+}
+
+function answerPosAvgTicketChange() {
+  chatContext.topic = "pos";
+  return "Yes — for the next published build, **AVG_TICKET** moves from **sales ÷ payment lines** to **sales ÷ distinct ORDER_ID** (guest checks), and the file will carry \`AVG_TICKET_BASIS = distinct_ORDER_ID\` plus \`ORDER_COUNT\`. \`TRANSACTION_COUNT\` stays payment lines. Older weeks already in the rolling file keep their original average until rebuilt.";
+}
+
+function isPosSalesTab() {
+  if (chatContext.activeTab === "pos") return true;
+  try {
+    return document.querySelector?.(".tab[data-tab].active")?.dataset?.tab === "pos";
+  } catch (_) {
+    return false;
+  }
+}
+
+function wantsPosKnowledge(q) {
+  if (
+    /\b(all payments|xenial|tender mix|guest checks?|payment lines|dutch pass|shop type mapping|order details feed)\b/.test(
+      q
+    )
+  ) {
+    return true;
+  }
+  if (/\b(avg[_\s]?ticket|order[_\s]?count|transaction[_\s]?count|avg ticket basis)\b/.test(q)) {
+    return true;
+  }
+  if (/\bpos\b/.test(q)) return true;
+  if (chatContext.topic === "pos") return true;
+  return isPosSalesTab();
+}
+
 function answerQuestion(raw) {
   const q = normalize(raw);
   if (!q) return "Ask me to explain a metric, build a trend, compare weeks, or convert a number to a percentage.";
@@ -677,13 +904,89 @@ function answerQuestion(raw) {
   if (format) return formatRememberedView(format);
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I can:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Reformat answers as **tables, visual bars, percentages, or executive summaries**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Give cited **QSR/coffee benchmark context**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments (Xenial)** tender mix, AVG_TICKET basis, tips/change exclusions, and why Worldpay ticket differs\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
   if (/\b(data quality|certified|certification|sanity check|validated|validation|accurate)\b/.test(q)) return answerDataQuality();
   if (/\b(starbucks|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
   if (/\b(industry standards?|industry benchmarks?|qsr benchmarks?|coffee chain benchmarks?|restaurant benchmarks?|benchmarks?)\b/.test(q)) return answerIndustryBenchmark(q);
+
+  // Xenial / All payments knowledge before Worldpay KPI aliases steal "average ticket" / "transaction count".
+  if (
+    /\b(where does|where do|source|comes from|come from|xenial|order details feed|shop type mapping)\b/.test(q) &&
+    /\b(all payments|pos|tender|xenial|data)\b/.test(q)
+  ) {
+    return answerPosSource();
+  }
+  if (
+    /\b(why|higher|differ|difference|gap|vs|versus|compared)\b/.test(q) &&
+    /\b(worldpay|card present)\b/.test(q) &&
+    /\b(avg|average|ticket|aov|pos|all payments|xenial)\b/.test(q)
+  ) {
+    return answerPosWorldpayTicketGap();
+  }
+  if (
+    /\b(tips?|gratuity|change|cash back)\b/.test(q) &&
+    /\b(exclud|left out|removed|why|not (in|on)|all payments|pos|sales volume|sales)\b/.test(q)
+  ) {
+    return answerPosTipsOrChange(q);
+  }
+  if (
+    /\b(will|next week|later|rebuild|change|switch)\b/.test(q) &&
+    /\b(avg[_\s]?ticket|average ticket|ticket basis|order[_\s]?count|distinct order)\b/.test(q)
+  ) {
+    return answerPosAvgTicketChange();
+  }
+  if (/\b(order[_\s]?count|guest checks?|distinct orders?|how many (orders|checks|guest))\b/.test(q)) {
+    return answerPosOrderCount();
+  }
+  if (
+    /\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q) &&
+    !/\b(aov|average order)\b/.test(q)
+  ) {
+    // AVG_TICKET is the All payments metric. Worldpay uses AOV (sale + tip).
+    const explicitWorldpayOnly =
+      /\b(worldpay|card present)\b/.test(q) && !/\b(all payments|xenial|pos)\b/.test(q);
+    if (!explicitWorldpayOnly && (wantsPosKnowledge(q) || isDefinitionIntent(q) || isPosSalesTab())) {
+      return answerPosAvgTicket();
+    }
+  }
+  if (
+    /\b(transaction[_\s]?count|payment lines)\b/.test(q) ||
+    (/\b(how many payments|payments count)\b/.test(q) && wantsPosKnowledge(q))
+  ) {
+    return answerPosPaymentsCount();
+  }
+  if (
+    /\b(apple pay|google pay|samsung pay|android pay|item (name|mix|categor)|tax|discount)\b/.test(q) &&
+    (wantsPosKnowledge(q) || /\b(all payments|tender mix|xenial)\b/.test(q))
+  ) {
+    return answerPosNotInKpi(q);
+  }
+
+  // Definitions before POS routing so "What is cash?" / "What is POS sales?" stay definitional.
+  const earlyDef = findDefinition(q);
+  if (isDefinitionIntent(q) && earlyDef) {
+    if (earlyDef.title === "Key entered" && currentPeriod()?.auth_rate_by_entry) {
+      const detail = answerEntryAuth("key entered", "Key entered").replace(
+        /\n\n A card number[\s\S]*$/,
+        ""
+      );
+      return `**Key entered** — ${earlyDef.body}\n\n**Current period:**\n${detail}`;
+    }
+    return `**${earlyDef.title}** — ${earlyDef.body}`;
+  }
+
+  if (/\b(missing shops?|shop coverage|legacy.?co mapping|mapping extract|shops? (?:are |were )?missing|missing from the mapping|non[- ]?company[- ]?owned|franchise)\b/.test(q) ||
+      (/\bmissing\b/.test(q) && /\b(shops?|stands?|mapping)\b/.test(q))) {
+    return answerPosCoverage();
+  }
+  if (/\b(pos sales|pos tender|tender mix|dutch pass|gift card)\b/.test(q) ||
+      (/\b(cash|card)\b/.test(q) && /\b(pos|tender|mix|share|percent|%)\b/.test(q)) ||
+      (chatContext.topic === "pos" && /\b(cash|card|gift|dutch pass|mix|percent|%)\b/.test(q))) {
+    return answerPosTender(q);
+  }
   if (/\b(what needs attention|need attention|critical|biggest concern|leadership summary|executive summary)\b/.test(q)) return answerAttention();
   if (/\b(compare|versus|vs|prior week|last week|week over week|wow)\b/.test(q) && !detectKpiKey(q)) return answerComparison();
 
@@ -752,6 +1055,11 @@ function suggestedFollowUps() {
     { label: "Would a visual comparison help?", question: "Show that as visual bars" },
   ];
   const byTopic = {
+    pos: [
+      { label: "Want the cash share specifically?", question: "What share of POS sales was cash?" },
+      { label: "Want gift card / Dutch Pass next?", question: "What share of POS sales was Gift Card / Dutch Pass?" },
+      { label: "Want this as a table?", question: "Show that as a table" },
+    ],
     auth_entry: [
       { label: "Curious why keyed transactions approve less often?", question: "What is key entered?" },
       { label: "Want to compare entry methods side by side?", question: "Show that as visual bars" },
@@ -817,6 +1125,46 @@ function submitQuestion(text, input) {
   }, 100);
 }
 
+const TAB_PROMPTS = {
+  pos: [
+    { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
+    { question: "What is AVG_TICKET on All payments?", label: "What does AVG_TICKET mean?" },
+    { question: "Why is Worldpay average ticket higher than POS?", label: "Why is Worldpay ticket higher?" },
+    { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
+    { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
+  ],
+  worldpay: [
+    { question: "Which metrics need attention?", label: "What’s brewing in this week’s metrics?" },
+    { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
+    { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
+    { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
+    { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
+  ],
+};
+
+function refreshTabPrompts(tabId) {
+  const wrap = document.querySelector(".ask-data-prompts");
+  const blurb = document.getElementById("ask-data-blurb");
+  const input = document.getElementById("chat-input");
+  if (!wrap) return;
+  const prompts = TAB_PROMPTS[tabId] || TAB_PROMPTS.worldpay;
+  wrap.innerHTML = "";
+  for (const prompt of prompts) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.question = prompt.question;
+    button.textContent = prompt.label;
+    button.addEventListener("click", () => submitQuestion(prompt.question, input));
+    wrap.appendChild(button);
+  }
+  if (blurb) {
+    blurb.textContent =
+      tabId === "pos"
+        ? "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab"
+        : "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
+  }
+}
+
 async function initChatbot() {
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
@@ -832,9 +1180,18 @@ async function initChatbot() {
     button.addEventListener("click", () => submitQuestion(button.dataset.question, input));
   });
 
+  window.addEventListener("dashboard:tab", (event) => {
+    const tabId = event.detail?.tabId || "pos";
+    chatContext.activeTab = tabId;
+    refreshTabPrompts(tabId);
+  });
+  const activeTab = document.querySelector(".tab[data-tab].active");
+  chatContext.activeTab = activeTab?.dataset.tab || "pos";
+  refreshTabPrompts(chatContext.activeTab);
+
   appendMessage(
     "bot",
-    "Hey there—let’s make these numbers useful. I can **explain trends**, **compare weeks**, reformat results, add **industry context**, research public competitor facts, or walk through this week’s **data certification**."
+    "Hey there—I’m available on **every tab**. I can explain **Card present (Worldpay)** KPIs, **All payments (Xenial)** tender mix and ticket definitions, why tips/change stay out, cited **QSR/payment industry benchmarks**, public **competitor** research (Starbucks, Dunkin, 7 Brew), or this week’s **data certification**."
   );
   appendFollowUps(input);
 }

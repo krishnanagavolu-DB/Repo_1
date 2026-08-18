@@ -1,0 +1,627 @@
+{
+  "generated_at": "2026-08-17T17:27:29-07:00",
+  "week_cadence": "Monday-Sunday",
+  "definitions": {
+    "SALES_VOLUME": "Net payment dollars after SYS_HASH dedupe, refunds signed negative, tips/change excluded, cash outliers > $10k dropped.",
+    "TRANSACTION_COUNT": "Count of payment lines after SYS_HASH dedupe. Not unique ORDER_ID (split tenders = multiple lines).",
+    "Card": "PAYMENT_TYPE = CREDIT",
+    "Cash": "PAYMENT_TYPE = CASH",
+    "Gift Card / Dutch Pass": "PAYMENT_TYPE IN (GIFT, CUSTOM). CUSTOM = Dutch Pass (loyalty app / digital wallet at the window).",
+    "mix_rule": "Card + Cash + Gift Card / Dutch Pass pct_of_total_sales = 100.0 each week."
+  },
+  "filter": {
+    "record_type": "payment",
+    "record_subtype": "payment",
+    "shop_type": "CO",
+    "join_key": "STAND_NUMBER = mapping[NewCoID #]",
+    "tips_and_change_excluded": true,
+    "tender_map": {
+      "CASH": "Cash",
+      "CREDIT": "Card",
+      "GIFT": "Gift Card / Dutch Pass",
+      "CUSTOM": "Gift Card / Dutch Pass"
+    }
+  },
+  "tender_order": [
+    "Card",
+    "Cash",
+    "Gift Card / Dutch Pass"
+  ],
+  "weeks": [
+    {
+      "week_start_date": "2026-07-27",
+      "week_end_date": "2026-08-02",
+      "totals": {
+        "SALES_VOLUME": 45989528.17,
+        "TRANSACTION_COUNT": 4548240,
+        "AVG_TICKET": 10.11
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31799647.63,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2855807
+        },
+        "Cash": {
+          "amount": 7446625.2,
+          "pct_of_total_sales": 16.2,
+          "TRANSACTION_COUNT": 1052867
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6743255.34,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 639566,
+          "components": {
+            "GIFT": {
+              "amount": 4500630.53,
+              "TRANSACTION_COUNT": 417037
+            },
+            "CUSTOM": {
+              "amount": 2242624.81,
+              "TRANSACTION_COUNT": 222529
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31799647.63,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2855807
+        },
+        {
+          "name": "Cash",
+          "amount": 7446625.2,
+          "pct_of_total_sales": 16.2,
+          "TRANSACTION_COUNT": 1052867
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6743255.34,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 639566,
+          "components": {
+            "GIFT": {
+              "amount": 4500630.53,
+              "TRANSACTION_COUNT": 417037
+            },
+            "CUSTOM": {
+              "amount": 2242624.81,
+              "TRANSACTION_COUNT": 222529
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": null,
+        "TRANSACTION_COUNT_PCT": null
+      }
+    },
+    {
+      "week_start_date": "2026-08-03",
+      "week_end_date": "2026-08-09",
+      "totals": {
+        "SALES_VOLUME": 46780614.32,
+        "TRANSACTION_COUNT": 4682581,
+        "AVG_TICKET": 9.99
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 32179695.3,
+          "pct_of_total_sales": 68.8,
+          "TRANSACTION_COUNT": 2922990
+        },
+        "Cash": {
+          "amount": 7546653.36,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 1083879
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 7054265.66,
+          "pct_of_total_sales": 15.1,
+          "TRANSACTION_COUNT": 675712,
+          "components": {
+            "GIFT": {
+              "amount": 4675221.35,
+              "TRANSACTION_COUNT": 435708
+            },
+            "CUSTOM": {
+              "amount": 2379044.31,
+              "TRANSACTION_COUNT": 240004
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 32179695.3,
+          "pct_of_total_sales": 68.8,
+          "TRANSACTION_COUNT": 2922990
+        },
+        {
+          "name": "Cash",
+          "amount": 7546653.36,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 1083879
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 7054265.66,
+          "pct_of_total_sales": 15.1,
+          "TRANSACTION_COUNT": 675712,
+          "components": {
+            "GIFT": {
+              "amount": 4675221.35,
+              "TRANSACTION_COUNT": 435708
+            },
+            "CUSTOM": {
+              "amount": 2379044.31,
+              "TRANSACTION_COUNT": 240004
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 1.7,
+        "TRANSACTION_COUNT_PCT": 3.0
+      }
+    },
+    {
+      "week_start_date": "2026-08-10",
+      "week_end_date": "2026-08-16",
+      "totals": {
+        "SALES_VOLUME": 45799722.66,
+        "TRANSACTION_COUNT": 4594352,
+        "AVG_TICKET": 9.97
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31681899.99,
+          "pct_of_total_sales": 69.2,
+          "TRANSACTION_COUNT": 2881861
+        },
+        "Cash": {
+          "amount": 7358837.24,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 1064615
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6758985.43,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 647876,
+          "components": {
+            "GIFT": {
+              "amount": 4548960.57,
+              "TRANSACTION_COUNT": 423085
+            },
+            "CUSTOM": {
+              "amount": 2210024.86,
+              "TRANSACTION_COUNT": 224791
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31681899.99,
+          "pct_of_total_sales": 69.2,
+          "TRANSACTION_COUNT": 2881861
+        },
+        {
+          "name": "Cash",
+          "amount": 7358837.24,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 1064615
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6758985.43,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 647876,
+          "components": {
+            "GIFT": {
+              "amount": 4548960.57,
+              "TRANSACTION_COUNT": 423085
+            },
+            "CUSTOM": {
+              "amount": 2210024.86,
+              "TRANSACTION_COUNT": 224791
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -2.1,
+        "TRANSACTION_COUNT_PCT": -1.9
+      }
+    }
+  ],
+  "shop_coverage": {
+    "co_shops_in_mapping": 1035,
+    "stands_with_volume_in_extract": 1251,
+    "missing_shops_count": 313,
+    "missing_shops_note": "Stands with POS volume not on the CO mapping. Full list is in missing_shops_csv."
+  },
+  "artifacts": {
+    "json": "in_shop_sales_data_20260817.json",
+    "rolling_json": "in_shop_sales_data.json",
+    "missing_shops_csv": "missing_shops_extract_20260817.csv",
+    "granular": {
+      "format": "parquet_zstd_partitioned_by_week",
+      "directory": "/Users/krishna.nagavolu/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_grain_20260817",
+      "rolling_directory": "/Users/krishna.nagavolu/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_grain",
+      "partitions": [
+        "/Users/krishna.nagavolu/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_grain_20260817/week_start_date=2026-07-27/part-0.parquet",
+        "/Users/krishna.nagavolu/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_grain_20260817/week_start_date=2026-08-03/part-0.parquet",
+        "/Users/krishna.nagavolu/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_grain_20260817/week_start_date=2026-08-10/part-0.parquet"
+      ],
+      "row_count": 13825173,
+      "note": "Do not open full grain in Excel (row cap 1,048,576). Use DuckDB/pandas/Snowflake."
+    }
+  },
+  "missing_shops": [
+    "AZ0501",
+    "AZ0502",
+    "AZ0503",
+    "AZ0504",
+    "AZ0505",
+    "AZ0506",
+    "AZ0507",
+    "AZ0510",
+    "AZ0511",
+    "AZ0512",
+    "AZ0514",
+    "AZ0515",
+    "AZ0516",
+    "AZ0517",
+    "AZ0518",
+    "AZ0520",
+    "AZ0521",
+    "AZ0524",
+    "AZ0525",
+    "AZ0526",
+    "AZ0528",
+    "AZ0529",
+    "AZ0532",
+    "AZ0533",
+    "CA1401",
+    "CA1402",
+    "CA1403",
+    "CA1404",
+    "CA1405",
+    "CA1406",
+    "CA1407",
+    "CA1409",
+    "CA1411",
+    "CA1412",
+    "CA1414",
+    "CA1415",
+    "CA1417",
+    "CA1419",
+    "CA1420",
+    "CA1422",
+    "CA1423",
+    "CA14T2",
+    "CA1501",
+    "CA1502",
+    "CA1503",
+    "CA1506",
+    "CA1508",
+    "CA1701",
+    "CA1702",
+    "CA1901",
+    "CA1902",
+    "CA1905",
+    "CA1906",
+    "CA1908",
+    "CA1909",
+    "CA1910",
+    "CA1911",
+    "CA1912",
+    "CA1913",
+    "CA1914",
+    "CA1915",
+    "CA1917",
+    "CA1918",
+    "CA1920",
+    "CA1923",
+    "CA2001",
+    "CA2002",
+    "CA2003",
+    "CA2005",
+    "CA2007",
+    "CA2008",
+    "CA2011",
+    "CA2015",
+    "CA2101",
+    "CA2104",
+    "CA2201",
+    "CA2301",
+    "CA2302",
+    "CA2303",
+    "CA2304",
+    "CA2312",
+    "CA2313",
+    "CA2314",
+    "CA2317",
+    "CA2501",
+    "CA2502",
+    "CA2503",
+    "CA2504",
+    "CA2505",
+    "CA2506",
+    "CA2507",
+    "CA2601",
+    "CA2603",
+    "CA2604",
+    "CA2605",
+    "CA2606",
+    "CA2701",
+    "CA2702",
+    "CA2703",
+    "CA2704",
+    "CA2705",
+    "CA2706",
+    "CA2707",
+    "CA2708",
+    "CA2901",
+    "CA2902",
+    "CA2905",
+    "CA2907",
+    "CA2908",
+    "CA3502",
+    "CO0801",
+    "CO0802",
+    "CO0806",
+    "CO0808",
+    "CO0809",
+    "CO0810",
+    "CO0811",
+    "CO1002",
+    "CO1003",
+    "ID0101",
+    "ID0201",
+    "ID0202",
+    "ID0203",
+    "ID0204",
+    "ID0301",
+    "ID0302",
+    "ID0401",
+    "ID0402",
+    "ID0601",
+    "ID0602",
+    "ID0603",
+    "ID0604",
+    "ID0605",
+    "ID0606",
+    "ID0607",
+    "ID0608",
+    "ID0609",
+    "ID0610",
+    "ID0611",
+    "ID0701",
+    "ID0702",
+    "ID0703",
+    "ID0704",
+    "ID0705",
+    "ID0706",
+    "ID0707",
+    "ID0708",
+    "ID0709",
+    "ID0710",
+    "ID0711",
+    "ID0712",
+    "ID0713",
+    "ID0801",
+    "ID0802",
+    "ID0803",
+    "ID0804",
+    "ID0805",
+    "ID0806",
+    "LAB003",
+    "LAB004",
+    "NV0801",
+    "NV0802",
+    "NV0804",
+    "NV0805",
+    "OR0501",
+    "OR0801",
+    "OR0802",
+    "OR0901",
+    "OR1101",
+    "OR1102",
+    "OR1103",
+    "OR1104",
+    "OR1105",
+    "OR1106",
+    "OR1107",
+    "OR1108",
+    "OR1109",
+    "OR1110",
+    "OR1111",
+    "OR1201",
+    "OR1202",
+    "OR1203",
+    "OR1204",
+    "OR1205",
+    "OR1206",
+    "OR1301",
+    "OR1303",
+    "OR1401",
+    "OR1402",
+    "OR1403",
+    "OR1404",
+    "OR1405",
+    "OR1406",
+    "OR1601",
+    "OR1602",
+    "OR1801",
+    "OR1802",
+    "OR1803",
+    "OR1901",
+    "OR1902",
+    "OR1903",
+    "OR2001",
+    "OR2003",
+    "OR2004",
+    "OR2005",
+    "OR2006",
+    "OR2101",
+    "OR2201",
+    "OR2202",
+    "OR2203",
+    "OR2204",
+    "OR2205",
+    "OR2206",
+    "OR2301",
+    "OR2302",
+    "OR2303",
+    "OR2304",
+    "OR2305",
+    "OR2306",
+    "OR2401",
+    "OR2402",
+    "OR2403",
+    "OR2501",
+    "OR2502",
+    "OR2503",
+    "OR2504",
+    "OR2505",
+    "OR2506",
+    "OR2601",
+    "OR2602",
+    "OR2603",
+    "OR2604",
+    "OR2606",
+    "OR2801",
+    "OR2802",
+    "OR2803",
+    "OR2901",
+    "OR2902",
+    "OR2903",
+    "OR2904",
+    "OR2905",
+    "OR2906",
+    "OR2907",
+    "OR2908",
+    "OR3001",
+    "OR3002",
+    "OR3003",
+    "OR3004",
+    "OR3005",
+    "OR3006",
+    "OR3007",
+    "OR3008",
+    "OR3009",
+    "OR3010",
+    "OR3011",
+    "OR3012",
+    "OR3013",
+    "OR3014",
+    "OR3015",
+    "OR3016",
+    "OR3017",
+    "OR3018",
+    "OR3019",
+    "OR3020",
+    "OR3101",
+    "OR3102",
+    "OR3103",
+    "WA0701",
+    "WA0702",
+    "WA0703",
+    "WA0705",
+    "WA0707",
+    "WA0901",
+    "WA0902",
+    "WA0903",
+    "WA1001",
+    "WA1002",
+    "WA1101",
+    "WA1102",
+    "WA1104",
+    "WA1106",
+    "WA1201",
+    "WA1202",
+    "WA1203",
+    "WA1206",
+    "WA1301",
+    "WA1302",
+    "WA1303",
+    "WA1304",
+    "WA1401",
+    "WA1402",
+    "WA1501",
+    "WA1502",
+    "WA1503",
+    "WA1504",
+    "WA1505",
+    "WA1506",
+    "WA1507",
+    "WA1508",
+    "WA1509",
+    "WA1512",
+    "WA1513",
+    "WA1514",
+    "WA1515",
+    "WA1601",
+    "WA1602",
+    "WA1603",
+    "WA1604",
+    "WA1605",
+    "WA1607",
+    "WA1609",
+    "WA1801",
+    "WY0102"
+  ],
+  "error_log": [
+    {
+      "code": "duplicate_sys_hash",
+      "dropped_rows": 896,
+      "note": "TRANSACTION_ID is not unique in Xenial. Deduped on SYS_HASH instead of TRANSACTION_ID/ORDER_ID."
+    },
+    {
+      "code": "outlier_gt_10000",
+      "dropped_rows": 3,
+      "amount": 83823.0,
+      "action": "excluded"
+    },
+    {
+      "code": "refunds_netted",
+      "action": "signed as negative via TRANSACTION_TYPE=REFUND"
+    },
+    {
+      "code": "excluded_subtype_tip",
+      "action": "excluded from sales KPI (RECORD_SUBTYPE=tip)"
+    },
+    {
+      "code": "excluded_subtype_change",
+      "action": "excluded from sales KPI (RECORD_SUBTYPE=change)"
+    },
+    {
+      "code": "custom_mapped_to_dutch_pass",
+      "payment_type": "CUSTOM",
+      "action": "folded into Gift Card / Dutch Pass"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "CHECK",
+      "amount": 150.0,
+      "rows": 1,
+      "action": "excluded_from_kpi_mix"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "UNKNOWN",
+      "amount": 151.45,
+      "rows": 27,
+      "action": "excluded_from_kpi_mix"
+    }
+  ]
+}

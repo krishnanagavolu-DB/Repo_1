@@ -6,11 +6,15 @@
     <title>Dutch Bros · Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=62120702f7" />
+    <link rel="stylesheet" href="css/dashboard.css?v=6fbbaac95a" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
-    <script src="js/dashboard.js?v=9e179675ac" defer></script>
-    <script src="js/chatbot.js?v=0c0d45f1fd" defer></script>
+    <script src="js/notices.js?v=5306b66e42" defer></script>
+    <script src="js/ytd-banner.js?v=9a8d72ee87" defer></script>
+    <script src="js/dashboard.js?v=3850440102" defer></script>
+    <script src="js/pos-sales.js?v=c52743551d" defer></script>
+    <script src="js/tabs.js?v=5d677809bc" defer></script>
+    <script src="js/chatbot.js?v=74ff0b73b5" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -58,7 +62,13 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
-          <button type="button" class="tab active" aria-current="page">Worldpay</button>
+          <div class="tab-group" role="group" aria-label="In Shop">
+            <span class="tab-group-label">In Shop</span>
+            <div class="tab-group-items">
+              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
+              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+            </div>
+          </div>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Olo Pay
             <span class="tab-badge">
@@ -96,8 +106,44 @@
       </header>
 
       <main>
+        <!-- Shown on every tab when the period is YTD; each channel reports its own start. -->
+        <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
+
+        <section id="panel-pos" class="tab-panel" data-panel="pos">
+          <div class="section-head">
+            <h2>In Shop · All payments</h2>
+            <p>Tender mix for <span id="pos-period-label">the most recent week</span></p>
+          </div>
+
+          <div id="pos-empty" class="pos-empty" hidden></div>
+
+          <div id="pos-content" hidden>
+            <div class="kpi-grid pos-summary" id="pos-summary-grid"></div>
+            <div class="kpi-grid" id="pos-kpi-grid"></div>
+
+            <section class="charts-2 pos-charts">
+              <article class="panel">
+                <h3>Tender mix</h3>
+                <div class="mix-body">
+                  <div class="chart-wrap"><canvas id="chart-pos-tender"></canvas></div>
+                  <table class="mix-legend" id="legend-pos-tender" aria-label="Tender mix legend"></table>
+                </div>
+              </article>
+              <article class="panel" id="pos-gift-panel" hidden>
+                <h3>Gift Card / Dutch Pass split</h3>
+                <p class="panel-note" id="pos-gift-note">Share of the Gift Card / Dutch Pass tender</p>
+                <div class="mix-body">
+                  <div class="chart-wrap"><canvas id="chart-pos-gift"></canvas></div>
+                  <table class="mix-legend" id="legend-pos-gift" aria-label="Gift Card versus Dutch Pass"></table>
+                </div>
+              </article>
+            </section>
+          </div>
+        </section>
+
+        <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
         <div class="section-head">
-          <h2>In Shop performance</h2>
+          <h2>In Shop · Card present</h2>
           <p>Ranked for leadership action — revenue risk first, then cost, then context</p>
         </div>
 
@@ -179,14 +225,16 @@
           <div class="coming-card">Coming soon · False decline / retry</div>
           <div class="coming-card">Coming soon · Chargebacks</div>
         </section>
+        </section>
 
-        <!-- In-page chatbot: title + chat thread + question bar -->
+        <!-- Shared across every channel tab: definitions, KPIs, POS mix, benchmarks, competitors -->
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p>Explore trends, comparisons, percentages, and payment definitions</p>
+            <p id="ask-data-blurb">Explore trends, definitions, POS tender mix, industry benchmarks, and competitor research</p>
             <div class="ask-data-prompts" aria-label="Suggested questions">
               <button type="button" data-question="Which metrics need attention?">What’s brewing in this week’s metrics?</button>
+              <button type="button" data-question="Show the POS tender mix">How did guests pay at the POS?</button>
               <button type="button" data-question="How does our auth rate compare with industry benchmarks?">How does our auth rate stack up?</button>
               <button type="button" data-question="What competitor research is available for Starbucks, Dunkin, and 7 Brew?">What can our competitors teach us?</button>
               <button type="button" data-question="Is this data certified?">Has this data passed its quality checks?</button>
@@ -199,7 +247,7 @@
               id="chat-input"
               type="text"
               autocomplete="off"
-              placeholder="Type a question — e.g. What is the auth rate?"
+              placeholder="Type a question — e.g. What is the auth rate? or Show the POS tender mix"
             />
             <button type="submit">Ask</button>
           </form>

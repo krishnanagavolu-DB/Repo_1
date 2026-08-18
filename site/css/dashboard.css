@@ -112,6 +112,30 @@ body {
   color: var(--dark);
 }
 
+/* The Dutch Bros three-colour rule, as it sits under Portal page titles. */
+.brand-rule {
+  display: flex;
+  width: 132px;
+  margin-top: 8px;
+}
+
+.brand-rule i {
+  flex: 1;
+  height: 4px;
+}
+
+.brand-rule i:nth-child(1) {
+  background: var(--yellow);
+}
+
+.brand-rule i:nth-child(2) {
+  background: var(--red);
+}
+
+.brand-rule i:nth-child(3) {
+  background: var(--blue);
+}
+
 .period {
   text-align: right;
 }

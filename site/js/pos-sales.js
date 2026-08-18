@@ -9,6 +9,13 @@ const TENDER_COLORS = {
   "Gift Card / Dutch Pass": "#FDE021",
 };
 
+/* Brand yellow is unreadable as text or as a small dot on white, so ink uses a
+   darker gold while the chart slice keeps the brand colour. */
+const TENDER_INK = {
+  "Gift Card / Dutch Pass": "#8a6a00",
+  "Gift Card": "#8a6a00",
+};
+
 let posChart = null;
 let selectedPeriodId = null;
 
@@ -76,6 +83,10 @@ function wowLabel(pctChange) {
 
 function tenderColor(label, idx = 0) {
   return TENDER_COLORS[label] || ["#005F98", "#132550", "#FDE021"][idx % 3];
+}
+
+function tenderInk(label, idx = 0) {
+  return TENDER_INK[label] || tenderColor(label, idx);
 }
 
 const START_KEYS = ["week_start", "week_start_date", "week", "date", "period_start", "start_date"];
@@ -557,7 +568,7 @@ function renderCards(week) {
       (tender, idx) => `
       <article class="kpi-card pos-card">
         <div class="label">${tender.label}</div>
-        <div class="kpi-share" style="color:${tenderColor(tender.label, idx)}">${sharePct(
+        <div class="kpi-share" style="color:${tenderInk(tender.label, idx)}">${sharePct(
           tender.pct
         )}</div>
         <div class="kpi-subvalue">${compactUsd(tender.amount)} of total sales</div>
@@ -572,7 +583,7 @@ function renderLegend(el, rows, colors) {
     .map(
       (row, idx) => `
       <tr>
-        <td><span style="color:${colors[idx]}">●</span> ${row.label}</td>
+        <td><span style="color:${tenderInk(row.label, idx)}">●</span> ${row.label}</td>
         <td>${sharePct(row.pct)} <span class="mix-hint">${compactUsd(row.amount)}</span></td>
       </tr>`
     )

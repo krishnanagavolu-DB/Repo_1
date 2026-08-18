@@ -68,6 +68,26 @@ const PAYMENT_DEFINITIONS = [
     title: "YTD",
     body: "All loaded weeks in the current calendar year.",
   },
+  {
+    terms: ["pos sales", "in shop pos", "tender mix", "tender"],
+    title: "In Shop POS sales",
+    body: "Shop POS tender mix for company-owned shops, sourced from the POS/Snowflake export rather than Worldpay. It shows how sales dollars split across Card, Cash, and Gift Card / Dutch Pass.",
+  },
+  {
+    terms: ["gift card", "dutch pass"],
+    title: "Gift Card / Dutch Pass",
+    body: "Stored-value tender used at Dutch Bros shops, including gift cards and Dutch Pass. This is POS tender mix, not Worldpay card-brand mix.",
+  },
+  {
+    terms: ["cash"],
+    title: "Cash",
+    body: "Cash tender recorded at the shop POS. Cash is outside the Worldpay authorization feed.",
+  },
+  {
+    terms: ["missing shops", "shop coverage", "legacy/co mapping", "legacy co mapping"],
+    title: "Missing shops / shop coverage",
+    body: "Shops excluded from the POS calculation because they are missing from the Legacy/CO mapping extract. When the count is greater than zero, the POS tab shows a warning banner with a note pointing to the mapping CSV.",
+  },
 ];
 
 const KPI_ALIASES = [
@@ -669,6 +689,75 @@ function answerDataQuality() {
   return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitHub Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
 }
 
+function latestPosWeek() {
+  return window.__posSales?.getLatestWeek?.() || window.__posSalesState?.latest || null;
+}
+
+function answerPosTender(q = "") {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (!week) {
+    return "POS sales data isn’t published yet. Import the Snowflake export with `python3 scripts/import_pos_sales.py <path>` (or attach the JSON here) and I’ll answer tender-mix questions.";
+  }
+  const wantCash = /\bcash\b/.test(q);
+  const wantGift = /\bgift card|dutch pass\b/.test(q);
+  const wantCard = /\bcard\b/.test(q) && !wantGift;
+  const selected = week.tenders.find((tender) => {
+    const label = normalize(tender.label);
+    if (wantGift) return label.includes("gift") || label.includes("dutch");
+    if (wantCash) return label.includes("cash");
+    if (wantCard) return label === "card";
+    return false;
+  });
+  if (selected) {
+    rememberView(
+      `${selected.label} — ${week.label}`,
+      week.tenders.map((tender) => ({
+        label: tender.label,
+        value: Number(tender.amount),
+        display: money(tender.amount, 2),
+        secondary: pct(tender.pct, 1),
+      })),
+      `${selected.label}: ${money(selected.amount, 2)} (${pct(selected.pct, 1)} of POS sales).`
+    );
+    return `For **${week.label}**, **${selected.label}** was **${money(selected.amount, 2)}** — **${pct(selected.pct, 1)}** of In Shop POS sales.`;
+  }
+
+  const lines = week.tenders.map(
+    (tender) => `• ${tender.label}: **${money(tender.amount, 2)}** (${pct(tender.pct, 1)})`
+  );
+  rememberView(
+    `POS tender mix — ${week.label}`,
+    week.tenders.map((tender) => ({
+      label: tender.label,
+      value: Number(tender.amount),
+      display: money(tender.amount, 2),
+      secondary: pct(tender.pct, 1),
+    })),
+    `Total POS sales: ${money(week.tenderTotal, 2)}.`
+  );
+  const coverage =
+    week.coverage?.missingCount > 0
+      ? `\n\n**Coverage note:** ${week.coverage.missingCount} shop(s) were excluded because they are missing from the Legacy/CO mapping extract.${
+          week.coverage.note ? ` ${week.coverage.note}` : ""
+        }`
+      : "";
+  return `**In Shop POS tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.${coverage}`;
+}
+
+function answerPosCoverage() {
+  const week = latestPosWeek();
+  chatContext.topic = "pos";
+  if (!week) return answerPosTender();
+  const count = week.coverage?.missingCount || 0;
+  if (!count) {
+    return `For **${week.label}**, no shops were flagged as missing from the Legacy/CO mapping extract.`;
+  }
+  return `For **${week.label}**, **${count}** shop(s) were excluded from the POS calculation because they are missing from the Legacy/CO mapping extract.${
+    week.coverage.note ? `\n\n${week.coverage.note}` : ""
+  }`;
+}
+
 function answerQuestion(raw) {
   const q = normalize(raw);
   if (!q) return "Ask me to explain a metric, build a trend, compare weeks, or convert a number to a percentage.";
@@ -677,13 +766,33 @@ function answerQuestion(raw) {
   if (format) return formatRememberedView(format);
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I can:\n• Explain **trends** and best/worst weeks\n• **Compare** the selected week with the prior week\n• Reformat answers as **tables, visual bars, percentages, or executive summaries**\n• Drill into **entry methods, wallets, card brands, and declines**\n• Give cited **QSR/coffee benchmark context**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Worldpay trends** and best/worst weeks\n• Answer **POS tender mix** (Card / Cash / Gift Card · Dutch Pass) and shop coverage\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks** (Visa, Worldpay, Equifax/Kount, Toast, and similar publications)\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
   if (/\b(data quality|certified|certification|sanity check|validated|validation|accurate)\b/.test(q)) return answerDataQuality();
   if (/\b(starbucks|dunkin|7 brew|7brew|competitor|competition|peer)\b/.test(q)) return answerCompetitor(q.replace("7brew", "7 brew"));
   if (/\b(industry standards?|industry benchmarks?|qsr benchmarks?|coffee chain benchmarks?|restaurant benchmarks?|benchmarks?)\b/.test(q)) return answerIndustryBenchmark(q);
+
+  // Definitions before POS routing so "What is cash?" / "What is POS sales?" stay definitional.
+  const earlyDef = findDefinition(q);
+  if (isDefinitionIntent(q) && earlyDef) {
+    if (earlyDef.title === "Key entered" && currentPeriod()?.auth_rate_by_entry) {
+      const detail = answerEntryAuth("key entered", "Key entered").replace(
+        /\n\n A card number[\s\S]*$/,
+        ""
+      );
+      return `**Key entered** — ${earlyDef.body}\n\n**Current period:**\n${detail}`;
+    }
+    return `**${earlyDef.title}** — ${earlyDef.body}`;
+  }
+
+  if (/\b(missing shops?|shop coverage|legacy.?co mapping|mapping extract)\b/.test(q)) return answerPosCoverage();
+  if (/\b(pos sales|pos tender|tender mix|dutch pass|gift card)\b/.test(q) ||
+      (/\b(cash|card)\b/.test(q) && /\b(pos|tender|mix|share|percent|%)\b/.test(q)) ||
+      (chatContext.topic === "pos" && /\b(cash|card|gift|dutch pass|mix|percent|%)\b/.test(q))) {
+    return answerPosTender(q);
+  }
   if (/\b(what needs attention|need attention|critical|biggest concern|leadership summary|executive summary)\b/.test(q)) return answerAttention();
   if (/\b(compare|versus|vs|prior week|last week|week over week|wow)\b/.test(q) && !detectKpiKey(q)) return answerComparison();
 
@@ -752,6 +861,11 @@ function suggestedFollowUps() {
     { label: "Would a visual comparison help?", question: "Show that as visual bars" },
   ];
   const byTopic = {
+    pos: [
+      { label: "Want the cash share specifically?", question: "What share of POS sales was cash?" },
+      { label: "Any shops missing from the calculation?", question: "How many shops are missing from the mapping?" },
+      { label: "Want this as a table?", question: "Show that as a table" },
+    ],
     auth_entry: [
       { label: "Curious why keyed transactions approve less often?", question: "What is key entered?" },
       { label: "Want to compare entry methods side by side?", question: "Show that as visual bars" },
@@ -817,6 +931,46 @@ function submitQuestion(text, input) {
   }, 100);
 }
 
+const TAB_PROMPTS = {
+  pos: [
+    { question: "Show the POS tender mix", label: "How did guests pay at the POS?" },
+    { question: "What share of POS sales was cash?", label: "What’s the cash share?" },
+    { question: "How many shops are missing from the mapping?", label: "Any shops missing from the mix?" },
+    { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
+    { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
+  ],
+  worldpay: [
+    { question: "Which metrics need attention?", label: "What’s brewing in this week’s metrics?" },
+    { question: "Show the POS tender mix", label: "How did guests pay at the POS?" },
+    { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
+    { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
+    { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
+  ],
+};
+
+function refreshTabPrompts(tabId) {
+  const wrap = document.querySelector(".ask-data-prompts");
+  const blurb = document.getElementById("ask-data-blurb");
+  const input = document.getElementById("chat-input");
+  if (!wrap) return;
+  const prompts = TAB_PROMPTS[tabId] || TAB_PROMPTS.worldpay;
+  wrap.innerHTML = "";
+  for (const prompt of prompts) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.question = prompt.question;
+    button.textContent = prompt.label;
+    button.addEventListener("click", () => submitQuestion(prompt.question, input));
+    wrap.appendChild(button);
+  }
+  if (blurb) {
+    blurb.textContent =
+      tabId === "pos"
+        ? "Ask about POS tender mix, coverage, definitions, industry benchmarks, and competitor research — available on every tab"
+        : "Ask about Worldpay trends, definitions, POS tender mix, industry benchmarks, and competitor research — available on every tab";
+  }
+}
+
 async function initChatbot() {
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
@@ -832,9 +986,15 @@ async function initChatbot() {
     button.addEventListener("click", () => submitQuestion(button.dataset.question, input));
   });
 
+  window.addEventListener("dashboard:tab", (event) => {
+    refreshTabPrompts(event.detail?.tabId || "pos");
+  });
+  const activeTab = document.querySelector(".tab[data-tab].active");
+  refreshTabPrompts(activeTab?.dataset.tab || "pos");
+
   appendMessage(
     "bot",
-    "Hey there—let’s make these numbers useful. I can **explain trends**, **compare weeks**, reformat results, add **industry context**, research public competitor facts, or walk through this week’s **data certification**."
+    "Hey there—I’m available on **every tab**. I can explain **Worldpay KPIs**, **POS tender mix**, payment **definitions**, cited **QSR/payment industry benchmarks**, public **competitor** research (Starbucks, Dunkin, 7 Brew), or this week’s **data certification**."
   );
   appendFollowUps(input);
 }

@@ -283,14 +283,16 @@ function showState(state, message) {
 
 function renderPos(weeks) {
   if (!weeks.length) {
+    window.__posSalesState = { weeks: [], latest: null };
     showState(
       "empty",
-      `<h3>POS sales data not loaded</h3>
-       <p>No usable weeks were found in <code>${POS_DATA_URL}</code>. The tab stays empty rather than showing placeholder numbers.</p>`
+      `<h3>POS sales data not published yet</h3>
+       <p>Add <code>${POS_DATA_URL}</code> to publish this tab. Run <code>python3 scripts/import_pos_sales.py &lt;path-to-export&gt;</code> to copy and validate the Snowflake export.</p>`
     );
     return;
   }
   const latest = weeks[weeks.length - 1];
+  window.__posSalesState = { weeks, latest };
   const periodEl = document.getElementById("pos-period-label");
   if (periodEl) periodEl.textContent = latest.label;
   renderBanner(latest);
@@ -298,6 +300,7 @@ function renderPos(weeks) {
   renderTable(latest);
   renderChart(latest);
   showState("ready");
+  window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }
 
@@ -321,7 +324,20 @@ async function loadPosSales() {
   }
 }
 
-window.__posSales = { normalizePosData, normalizeTenderMix, usd, sharePct, loadPosSales, renderPos };
+window.__posSales = {
+  normalizePosData,
+  normalizeTenderMix,
+  usd,
+  sharePct,
+  loadPosSales,
+  renderPos,
+  getLatestWeek() {
+    return window.__posSalesState?.latest || null;
+  },
+  getWeeks() {
+    return window.__posSalesState?.weeks || [];
+  },
+};
 
 function startPosWhenUnlocked() {
   if (document.body.classList.contains("auth-unlocked")) {

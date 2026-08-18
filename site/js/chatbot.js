@@ -164,6 +164,7 @@ const chatContext = {
   entryLabel: null,
   lastView: null,
   activeTab: null,
+  pendingChoice: null,
 };
 
 let benchmarkData = window.__benchmarkData || null;
@@ -488,13 +489,97 @@ function mixLabel(label) {
 
 function findMixItem(items, q) {
   return (items || []).find((item) => {
-    const candidates = [normalize(item.label), normalize(mixLabel(item.label))];
+    const names = [item.label, mixLabel(item.label)];
+    // "Android Pay (Google)" should answer to "Android Pay".
+    const candidates = names
+      .flatMap((name) => [name, String(name).replace(/\s*\([^)]*\)/g, "")])
+      .map(normalize)
+      .filter(Boolean);
     return candidates.some(
       (label) =>
         q.includes(label) ||
         label.split(" ").filter((w) => w.length > 3).every((w) => q.includes(w))
     );
   });
+}
+
+/** How many trailing weeks the question asked for, if it said. */
+function requestedWeekCount(q) {
+  const match = q.match(/\b(?:last|past|previous|trailing)\s+(\d{1,2})\s+weeks?\b/);
+  if (match) return Math.max(2, Number(match[1]));
+  return null;
+}
+
+/**
+ * One mix row (Apple Pay, Contactless, Visa…) followed across the loaded weeks.
+ * Every week carries its own mix array, so this is read, never interpolated.
+ */
+function answerMixItemTrend(kind, q, explicitKind = false) {
+  const config = mixConfig(kind);
+  const weeks = allWeeks();
+  if (!config || weeks.length < 2) return null;
+
+  const latestItems = currentPeriod()?.[config.field] || [];
+  const selected = findMixItem(latestItems, q);
+  if (!selected) return null;
+
+  // "Other" style buckets match too loosely to claim a question on their own.
+  if (!explicitKind && /^(other|card \/ other|other entry|unknown)$/i.test(selected.label)) {
+    return null;
+  }
+
+  const wanted = requestedWeekCount(q);
+  const window = wanted ? weeks.slice(-wanted) : weeks;
+  const series = window
+    .map((week) => {
+      const row = (week[config.field] || []).find((item) => item.label === selected.label);
+      return row ? { label: week.label, pct: Number(row.pct), count: Number(row.count) } : null;
+    })
+    .filter(Boolean);
+
+  if (series.length < 2) {
+    return `I only have one week of ${mixLabel(selected.label)} in the ${config.title.toLowerCase()}, so there isn’t a trend yet.`;
+  }
+
+  chatContext.topic = "mix";
+  chatContext.mixKind = kind;
+
+  const first = series[0];
+  const last = series.at(-1);
+  const changePts = (last.pct - first.pct) * 100;
+  const direction =
+    Math.abs(changePts) < 0.05 ? "held flat" : changePts > 0 ? "grew" : "shrank";
+  const move =
+    Math.abs(changePts) < 0.05
+      ? "no change"
+      : `${changePts > 0 ? "+" : "-"}${Math.abs(changePts).toFixed(2)} pts`;
+  const points = series.map((point) => `${point.label}: **${pct(point.pct, 1)}**`).join("\n• ");
+  const asked = wanted && wanted > weeks.length ? ` I only have ${weeks.length} loaded weeks.` : "";
+
+  rememberView(
+    `${mixLabel(selected.label)} share by week`,
+    series.map((point) => ({
+      label: point.label,
+      value: point.pct,
+      display: pct(point.pct, 1),
+    })),
+    `${mixLabel(selected.label)} ${direction} by ${move} across ${series.length} weeks.`
+  );
+
+  return `**${mixLabel(selected.label)} — ${config.title.toLowerCase()} by week**\n• ${points}\n\nIt **${direction}** over these ${series.length} weeks (**${move}**), from ${pct(first.pct, 1)} to ${pct(last.pct, 1)}. Latest week is **${count(last.count)} transactions**.${asked}`;
+}
+
+/** Try the named mix first, then the others, so "contactless trend" finds entry mix. */
+function answerAnyMixItemTrend(q) {
+  const named = detectMixKind(q);
+  const order = named
+    ? [named, ...["wallet", "entry", "payment"].filter((kind) => kind !== named)]
+    : ["wallet", "entry", "payment"];
+  for (const kind of order) {
+    const answer = answerMixItemTrend(kind, q, kind === named);
+    if (answer) return answer;
+  }
+  return null;
 }
 
 function answerMix(kind, q, forceCounts = false) {
@@ -906,15 +991,6 @@ function answerPosAvgTicketChange() {
   return "Yes — for the next published build, **AVG_TICKET** moves from **sales ÷ payment lines** to **sales ÷ distinct ORDER_ID** (guest checks), and the file will carry \`AVG_TICKET_BASIS = distinct_ORDER_ID\` plus \`ORDER_COUNT\`. \`TRANSACTION_COUNT\` stays payment lines. Older weeks already in the rolling file keep their original average until rebuilt.";
 }
 
-function isPosSalesTab() {
-  if (chatContext.activeTab === "pos") return true;
-  try {
-    return document.querySelector?.(".tab[data-tab].active")?.dataset?.tab === "pos";
-  } catch (_) {
-    return false;
-  }
-}
-
 function wantsPosKnowledge(q) {
   if (
     /\b(all payments|xenial|tender mix|guest checks?|payment lines|dutch pass|shop type mapping|order details feed)\b/.test(
@@ -927,8 +1003,95 @@ function wantsPosKnowledge(q) {
     return true;
   }
   if (/\bpos\b/.test(q)) return true;
-  if (chatContext.topic === "pos") return true;
-  return isPosSalesTab();
+  // The tab in front of you is deliberately not a signal: Ask Data is one
+  // assistant for every channel, so the same question gets the same answer.
+  return chatContext.topic === "pos";
+}
+
+/* Some metrics exist on both feeds with different definitions. Rather than
+   quietly picking one, ask which lane — and remember the question while we
+   wait for the answer. */
+const CHANNEL_CHOICES = {
+  ticket: {
+    ask:
+      "Two lanes, two different answers here — which one do you want?\n\n" +
+      "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ payment lines, with tips and change left out.\n" +
+      "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n\n" +
+      "Say **All payments** or **Card present** and I’ll pull it.",
+  },
+  sales: {
+    ask:
+      "Happy to pull that — which set of sales?\n\n" +
+      "• **All payments (Xenial)** — net tender dollars taken at company-owned shops.\n" +
+      "• **Card present (Worldpay)** — card sales the network settled, tips included.\n\n" +
+      "Say **All payments** or **Card present**.",
+  },
+  count: {
+    ask:
+      "Depends which counter we’re standing at — which one?\n\n" +
+      "• **All payments (Xenial)** — payment **lines** after dedupe, so two tenders on one check count twice.\n" +
+      "• **Card present (Worldpay)** — card sales transactions the network saw.\n\n" +
+      "Say **All payments** or **Card present**.",
+  },
+};
+
+/** The literal field names are Xenial's, so asking for one is not ambiguous. */
+function namesXenialField(raw) {
+  return /\b(AVG_TICKET|TRANSACTION_COUNT|ORDER_COUNT|SALES_VOLUME|AVG_TICKET_BASIS)\b/.test(
+    String(raw || "")
+  );
+}
+
+function namesAChannel(q) {
+  return /\b(all payments|xenial|pos|tender|in shop sales|card present|worldpay|aov|average order value|olo|gift cards?)\b/.test(
+    q
+  );
+}
+
+function ambiguousChannelMetric(q, raw) {
+  if (namesAChannel(q) || namesXenialField(raw)) return null;
+  // Naming a wallet, card brand, or entry method already picks the feed that
+  // publishes that breakdown, so there is nothing to ask about.
+  if (["wallet", "entry", "payment"].some((kind) => findMixItem(currentPeriod()?.[mixConfig(kind)?.field], q))) {
+    return null;
+  }
+  if (/\b(avg|average)\s+(ticket|payment|check)\b|\bticket size\b/.test(q)) return "ticket";
+  if (/\b(how many|number of|count of)\b/.test(q) && /\b(transactions?|payments?)\b/.test(q)) {
+    return "count";
+  }
+  if (
+    /\b(sales|revenue)\b/.test(q) &&
+    /\b(total|how much|what were|what was|this week|volume)\b/.test(q)
+  ) {
+    return "sales";
+  }
+  return null;
+}
+
+/** Only a short, direct reply counts as picking a lane. */
+function detectChannelReply(q) {
+  if (q.split(" ").length > 6) return null;
+  if (/^(the )?(all payments|xenial)( one| please)?[.!?]?$/.test(q)) return "pos";
+  if (/^(the )?(card present|worldpay)( one| please)?[.!?]?$/.test(q)) return "worldpay";
+  if (/^(first|the first one)[.!?]?$/.test(q)) return "pos";
+  if (/^(second|the second one)[.!?]?$/.test(q)) return "worldpay";
+  return null;
+}
+
+function answerChannelChoice(kind, channel) {
+  chatContext.pendingChoice = null;
+  if (channel === "pos") {
+    if (kind === "ticket") return answerPosAvgTicket();
+    if (kind === "count") return answerPosPaymentsCount();
+    const week = latestPosWeek();
+    chatContext.topic = "pos";
+    if (!week) return "All payments has no published week loaded right now.";
+    const sales = week.reportedTotal ?? week.tenderTotal;
+    return `For **${week.label}**, All payments took **${money(sales, 2)}** in net tender at company-owned shops — card, cash, and gift card / Dutch Pass together.`;
+  }
+  if (kind === "ticket") return answerKpi("aov");
+  if (kind === "count") return answerKpi("transaction_volume");
+  return answerKpi("sales_volume");
 }
 
 function answerQuestion(raw) {
@@ -937,6 +1100,15 @@ function answerQuestion(raw) {
 
   const format = detectFormatRequest(q);
   if (format) return formatRememberedView(format);
+
+  // "All payments" on its own only makes sense as a reply to our own question,
+  // and the offer expires after one turn so it cannot capture a later question.
+  if (chatContext.pendingChoice) {
+    const pending = chatContext.pendingChoice;
+    chatContext.pendingChoice = null;
+    const channel = detectChannelReply(q);
+    if (channel) return answerChannelChoice(pending, channel);
+  }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
     return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments (Xenial)** tender mix, AVG_TICKET basis, and why Worldpay ticket differs\n• List the **exclusions** (tips, change, $10k lines, Legacy shops) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
@@ -961,6 +1133,20 @@ function answerQuestion(raw) {
     /\b(what should i know|need to know|before (i )?shar)\b/.test(q)
   ) {
     return answerPosAssumptions();
+  }
+
+  // A wallet, brand, or entry method followed over weeks is a series question.
+  // It is answered from whichever feed carries that breakdown, on any tab.
+  if (/\b(trend|trending|over time|by week|week by week|over the last|over the past|history|trajectory|changed|changing|growing|declining)\b/.test(q)) {
+    const mixTrend = answerAnyMixItemTrend(q);
+    if (mixTrend) return mixTrend;
+  }
+
+  const ambiguous = ambiguousChannelMetric(q, raw);
+  if (ambiguous) {
+    chatContext.topic = "clarify";
+    chatContext.pendingChoice = ambiguous;
+    return CHANNEL_CHOICES[ambiguous].ask;
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
@@ -1004,7 +1190,7 @@ function answerQuestion(raw) {
     // AVG_TICKET is the All payments metric. Worldpay uses AOV (sale + tip).
     const explicitWorldpayOnly =
       /\b(worldpay|card present)\b/.test(q) && !/\b(all payments|xenial|pos)\b/.test(q);
-    if (!explicitWorldpayOnly && (wantsPosKnowledge(q) || isDefinitionIntent(q) || isPosSalesTab())) {
+    if (!explicitWorldpayOnly && (wantsPosKnowledge(q) || isDefinitionIntent(q))) {
       return answerPosAvgTicket();
     }
   }
@@ -1152,6 +1338,10 @@ function suggestedFollowUps() {
     quality: [
       { label: "What gets checked before these numbers go live?", question: "What data sanity checks run before publish?" },
       { label: "How did this week move versus last week?", question: "Compare this week with the prior week" },
+    ],
+    clarify: [
+      { label: "All payments (Xenial)", question: "All payments" },
+      { label: "Card present (Worldpay)", question: "Card present" },
     ],
     kpi: commonFormats,
   };

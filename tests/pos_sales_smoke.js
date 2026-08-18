@@ -78,6 +78,23 @@ check("keyed derived share", keyed.rows[0].pct, 0.75);
 check("empty input", pos.normalizePosData({}).length, 0);
 check("null tender mix", pos.normalizePosData([{ week_start: "2026-08-10" }]).length, 0);
 
+// The Snowflake export uses its own key names and puts shop_coverage at the root.
+const snowflake = pos.normalizePosData(
+  JSON.parse(fs.readFileSync("tests/fixtures/pos_sales_snowflake_shape.json", "utf8"))
+);
+check("snowflake week count", snowflake.length, 2);
+const sfLatest = snowflake[snowflake.length - 1];
+check("snowflake week label", sfLatest.label, "Aug 10 – Aug 16, 2026");
+check("snowflake reported total", sfLatest.reportedTotal, 1200);
+check("snowflake transactions", sfLatest.transactions, 120);
+check("snowflake avg ticket", sfLatest.avgTicket, 10);
+check("snowflake tender order", sfLatest.tenders[0].label, "Card");
+check("snowflake supplied share", pos.sharePct(sfLatest.tenders[0].pct), "70.0%");
+check("root coverage applied to each week", sfLatest.coverage.missingCount, 313);
+if (!sfLatest.coverage.note) {
+  failures.push({ name: "root coverage note", expected: "present", actual: sfLatest.coverage.note });
+}
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

@@ -19,8 +19,19 @@ TARGETS = [
     ROOT / "site" / "data" / "in_shop_sales_data.json",
 ]
 
-AMOUNT_KEYS = ("amount", "amt", "dollar_volume", "sales_amt", "total", "total_amount", "value")
+AMOUNT_KEYS = (
+    "amount",
+    "amt",
+    "dollar_volume",
+    "sales_amt",
+    "SALES_VOLUME",
+    "sales_volume",
+    "total",
+    "total_amount",
+    "value",
+)
 LABEL_KEYS = ("label", "tender", "tender_type", "payment_type", "name", "type")
+TOTAL_KEYS = ("sales_amt", "SALES_VOLUME", "sales_volume", "total_sales", "net_sales", "total")
 
 
 def first_number(source: dict, keys: tuple[str, ...]) -> float | None:
@@ -61,6 +72,10 @@ def validate(payload) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
 
+    root_coverage = {}
+    if isinstance(payload, dict):
+        root_coverage = payload.get("shop_coverage") or payload.get("coverage") or {}
+
     weeks = extract_weeks(payload)
     if not weeks:
         errors.append("No weeks found. Expected an array of weeks or an object with a 'weeks' array.")
@@ -98,13 +113,13 @@ def validate(payload) -> tuple[list[str], list[str]]:
         if missing:
             warnings.append(f"{where} is missing expected tender labels: {sorted(missing)}")
 
-        reported = first_number(week.get("totals") or {}, ("sales_amt", "total_sales", "net_sales", "total"))
+        reported = first_number(week.get("totals") or {}, TOTAL_KEYS)
         if reported is not None and total and abs(reported - total) / max(total, 1) > 0.01:
             warnings.append(
                 f"{where} totals ({reported:,.2f}) differ from tender sum ({total:,.2f}) by more than 1%"
             )
 
-        coverage = week.get("shop_coverage") or week.get("coverage") or {}
+        coverage = week.get("shop_coverage") or week.get("coverage") or root_coverage
         if not coverage:
             warnings.append(f"{where} has no shop_coverage block; the missing-shops banner cannot render")
         else:

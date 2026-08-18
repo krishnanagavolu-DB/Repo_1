@@ -228,7 +228,10 @@ function aggregateWeeks(weeks) {
   const giftParts = new Map();
   let reportedTotal = 0;
   let transactions = 0;
+  let orderCount = 0;
   let hasTransactions = false;
+  let hasOrderCount = false;
+  const bases = new Set();
 
   for (const week of weeks) {
     for (const tender of week.tenders) {
@@ -247,6 +250,11 @@ function aggregateWeeks(weeks) {
       transactions += week.transactions;
       hasTransactions = true;
     }
+    if (Number.isFinite(week.orderCount)) {
+      orderCount += week.orderCount;
+      hasOrderCount = true;
+    }
+    if (week.avgTicketBasis) bases.add(week.avgTicketBasis);
   }
 
   const tenders = [...byLabel.values()];
@@ -283,6 +291,16 @@ function aggregateWeeks(weeks) {
   const first = weeks[0].label.replace(/\s*–.*$/, "");
   const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
 
+  const singleBasis = bases.size === 1 ? [...bases][0] : null;
+  const useOrders =
+    singleBasis === "distinct_ORDER_ID" || singleBasis === "orders";
+  let avgTicket = null;
+  if (useOrders && hasOrderCount && orderCount) {
+    avgTicket = reportedTotal / orderCount;
+  } else if (hasTransactions && transactions) {
+    avgTicket = reportedTotal / transactions;
+  }
+
   return {
     label: `YTD · ${first} – ${last}`,
     sortKey: "ytd",
@@ -291,7 +309,9 @@ function aggregateWeeks(weeks) {
     tenderTotal,
     reportedTotal,
     transactions: hasTransactions ? transactions : null,
-    avgTicket: hasTransactions && transactions ? reportedTotal / transactions : null,
+    orderCount: hasOrderCount ? orderCount : null,
+    avgTicket,
+    avgTicketBasis: singleBasis,
     wow: { salesPct: null, transactionsPct: null },
     giftSplit,
     coverage: weeks[weeks.length - 1].coverage,
@@ -357,9 +377,12 @@ function normalizePosData(raw) {
         tenderTotal: total,
         reportedTotal,
         transactions,
+        orderCount: firstNumber(totals, ["ORDER_COUNT", "order_count", "orders", "guest_checks"]),
         avgTicket:
           firstNumber(totals, ["AVG_TICKET", "avg_ticket", "average_ticket"]) ??
           (reportedTotal && transactions ? reportedTotal / transactions : null),
+        avgTicketBasis: firstString(week, ["AVG_TICKET_BASIS", "avg_ticket_basis", "ticket_basis"]) ||
+          firstString(totals, ["AVG_TICKET_BASIS", "avg_ticket_basis", "ticket_basis"]),
         wow: normalizeWow(week),
         giftSplit: normalizeGiftSplit(rows),
         coverage: normalizeCoverage(week, rootCoverage),
@@ -393,70 +416,6 @@ function getDataStart(weeks) {
     startLabel: `${weeks[0].label.replace(/\s*–.*$/, "")}, ${weeks[0].sortKey.slice(0, 4)}`,
     weekCount: weeks.length,
   };
-}
-
-function sumMoney(values) {
-  return Math.round(values.reduce((sum, value) => sum + Number(value || 0), 0) * 100) / 100;
-}
-
-/** YTD for All payments is every week currently held by this feed. */
-function aggregateWeeks(weeks) {
-  if (!weeks?.length) return null;
-  const tenders = TENDER_ORDER.map((label) => {
-    const sourceRows = weeks
-      .map((week) => week.tenders.find((tender) => tender.label === label))
-      .filter(Boolean);
-    const amount = sumMoney(sourceRows.map((row) => row.amount));
-    const transactions = sourceRows.reduce(
-      (sum, row) => sum + Number(row.transactions || 0),
-      0
-    );
-    const componentKeys = new Set(
-      sourceRows.flatMap((row) => Object.keys(row.components || {}))
-    );
-    const components = Object.fromEntries(
-      [...componentKeys].map((key) => [
-        key,
-        {
-          amount: sumMoney(
-            sourceRows.map((row) => firstNumber(row.components?.[key] || {}, AMOUNT_KEYS))
-          ),
-          TRANSACTION_COUNT: sourceRows.reduce(
-            (sum, row) =>
-              sum + Number(firstNumber(row.components?.[key] || {}, TXN_KEYS) || 0),
-            0
-          ),
-        },
-      ])
-    );
-    return {
-      label,
-      amount,
-      transactions,
-      components: componentKeys.size ? components : null,
-      pct: 0,
-    };
-  });
-  const tenderTotal = sumMoney(tenders.map((tender) => tender.amount));
-  for (const tender of tenders) tender.pct = tenderTotal ? tender.amount / tenderTotal : 0;
-  const transactions = weeks.reduce((sum, week) => sum + Number(week.transactions || 0), 0);
-  const first = weeks[0].label.replace(/\s*–.*$/, "");
-  const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
-  const aggregate = {
-    label: `YTD · ${first} – ${last}`,
-    sortKey: "ytd",
-    tenders,
-    tenderTotal,
-    reportedTotal: sumMoney(
-      weeks.map((week) => week.reportedTotal ?? week.tenderTotal)
-    ),
-    transactions,
-    avgTicket: transactions ? tenderTotal / transactions : null,
-    wow: { salesPct: null, transactionsPct: null },
-    coverage: {},
-  };
-  aggregate.giftSplit = normalizeGiftSplit(tenders);
-  return aggregate;
 }
 
 function renderBanner() {

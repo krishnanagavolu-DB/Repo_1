@@ -41,6 +41,7 @@ jobs:
           node tests/chatbot_smoke.js
           node tests/chatbot_xenial_smoke.js
           node tests/chatbot_exclusions_smoke.js
+          node tests/chatbot_mix_trend_smoke.js
           node tests/format_smoke.js
           node tests/pos_sales_smoke.js
           node tests/notices_smoke.js

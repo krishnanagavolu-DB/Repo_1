@@ -1,0 +1,46 @@
+{
+  "_comment": "SAMPLE fixture for tests and layout review only. Not real Dutch Bros data.",
+  "generated_at": "2026-08-18T00:00:00Z",
+  "weeks": [
+    {
+      "week_start": "2026-07-27",
+      "week_end": "2026-08-02",
+      "label": "Jul 27 – Aug 2, 2026",
+      "totals": { "sales_amt": 30100000.0, "transaction_cnt": 2450000 },
+      "tender_mix": [
+        { "label": "Card", "amount": 26187000.0 },
+        { "label": "Cash", "amount": 2408000.0 },
+        { "label": "Gift Card / Dutch Pass", "amount": 1505000.0 }
+      ],
+      "shop_coverage": { "missing_shops_count": 0, "included_shops_count": 705 }
+    },
+    {
+      "week_start": "2026-08-03",
+      "week_end": "2026-08-09",
+      "label": "Aug 3 – Aug 9, 2026",
+      "totals": { "sales_amt": 29450000.0, "transaction_cnt": 2390000 },
+      "tender_mix": [
+        { "label": "Card", "amount": 25522650.0 },
+        { "label": "Cash", "amount": 2415800.0 },
+        { "label": "Gift Card / Dutch Pass", "amount": 1511550.0 }
+      ],
+      "shop_coverage": { "missing_shops_count": 2, "included_shops_count": 704 }
+    },
+    {
+      "week_start": "2026-08-10",
+      "week_end": "2026-08-16",
+      "label": "Aug 10 – Aug 16, 2026",
+      "totals": { "sales_amt": 29312450.75, "transaction_cnt": 2371880 },
+      "tender_mix": [
+        { "label": "Card", "amount": 25384122.4 },
+        { "label": "Cash", "amount": 2402398.15 },
+        { "label": "Gift Card / Dutch Pass", "amount": 1525930.2 }
+      ],
+      "shop_coverage": {
+        "missing_shops_count": 3,
+        "included_shops_count": 703,
+        "missing_shops_note": "See legacy_co_mapping_missing_shops.csv in the Snowflake export folder."
+      }
+    }
+  ]
+}

@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=20260817a" defer></script>
     <script src="js/dashboard.js?v=20260817a" defer></script>
+    <script src="js/pos-sales.js?v=20260817a" defer></script>
+    <script src="js/tabs.js?v=20260817a" defer></script>
     <script src="js/chatbot.js?v=20260817a" defer></script>
   </head>
   <body class="auth-locked">
@@ -62,7 +64,8 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
-          <button type="button" class="tab active" aria-current="page">Worldpay</button>
+          <button type="button" class="tab active" data-tab="pos" aria-current="page">POS Sales</button>
+          <button type="button" class="tab" data-tab="worldpay">In Shop WorldPay</button>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Olo Pay
             <span class="tab-badge">
@@ -100,6 +103,44 @@
       </header>
 
       <main>
+        <section id="panel-pos" class="tab-panel" data-panel="pos">
+          <div id="pos-coverage-banner" class="pos-banner" role="status" hidden></div>
+
+          <div class="section-head">
+            <h2>In Shop POS sales</h2>
+            <p>Tender mix for <span id="pos-period-label">the most recent week</span></p>
+          </div>
+
+          <div id="pos-empty" class="pos-empty" hidden></div>
+
+          <div id="pos-content" hidden>
+            <div class="kpi-grid" id="pos-kpi-grid"></div>
+
+            <section class="charts-2 pos-charts">
+              <article class="panel">
+                <h3>Tender mix</h3>
+                <div class="mix-body">
+                  <div class="chart-wrap"><canvas id="chart-pos-tender"></canvas></div>
+                </div>
+              </article>
+              <article class="panel">
+                <h3>Tender detail</h3>
+                <table class="mix-legend pos-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Payment type</th>
+                      <th scope="col">Dollar volume</th>
+                      <th scope="col">% of total mix</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pos-tender-table"></tbody>
+                </table>
+              </article>
+            </section>
+          </div>
+        </section>
+
+        <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
         <div class="section-head">
           <h2>In Shop performance</h2>
           <p>Ranked for leadership action — revenue risk first, then cost, then context</p>
@@ -207,6 +248,7 @@
             />
             <button type="submit">Ask</button>
           </form>
+        </section>
         </section>
       </main>
     </div>

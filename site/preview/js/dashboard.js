@@ -638,8 +638,19 @@ async function loadDashboard() {
   } catch (err) {
     const page = document.querySelector(".page");
     const box = document.createElement("div");
-    box.className = "error";
-    box.textContent = `Dashboard failed to load: ${err.message}`;
+    box.className = "notice notice-error";
+    box.innerHTML =
+      window.__notices?.noticeHtml({
+        title: "This week's numbers aren't available right now",
+        message:
+          "The Worldpay metrics could not be loaded. Try refreshing in a moment — if it keeps happening, share the technical details below with the data team.",
+        technical: err.message,
+        fix: [
+          "Refresh the page — most load failures are temporary.",
+          "Confirm the weekly publish finished by checking that <code>site/preview/data/dashboard.json</code> exists in the repository.",
+          "If the file is missing, rerun the weekly ingest and certification, then redeploy.",
+        ],
+      }) || `Dashboard failed to load: ${err.message}`;
     page.prepend(box);
   }
 }

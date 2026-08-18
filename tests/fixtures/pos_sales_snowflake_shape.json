@@ -1,0 +1,44 @@
+{
+  "_comment": "SAMPLE fixture matching the Snowflake export key names. Numbers are synthetic, not Dutch Bros data.",
+  "generated_at": "2026-08-17T17:27:29-07:00",
+  "week_cadence": "Monday-Sunday",
+  "tender_order": ["Card", "Cash", "Gift Card / Dutch Pass"],
+  "weeks": [
+    {
+      "week_start_date": "2026-08-03",
+      "week_end_date": "2026-08-09",
+      "totals": { "SALES_VOLUME": 1000.0, "TRANSACTION_COUNT": 100, "AVG_TICKET": 10.0 },
+      "tender_mix": {
+        "Card": { "amount": 700.0, "pct_of_total_sales": 70.0, "TRANSACTION_COUNT": 60 },
+        "Cash": { "amount": 200.0, "pct_of_total_sales": 20.0, "TRANSACTION_COUNT": 25 },
+        "Gift Card / Dutch Pass": {
+          "amount": 100.0,
+          "pct_of_total_sales": 10.0,
+          "TRANSACTION_COUNT": 15,
+          "components": {
+            "GIFT": { "amount": 60.0, "TRANSACTION_COUNT": 9 },
+            "CUSTOM": { "amount": 40.0, "TRANSACTION_COUNT": 6 }
+          }
+        }
+      },
+      "mix_checksum": 100.0
+    },
+    {
+      "week_start_date": "2026-08-10",
+      "week_end_date": "2026-08-16",
+      "totals": { "SALES_VOLUME": 1200.0, "TRANSACTION_COUNT": 120, "AVG_TICKET": 10.0 },
+      "tender_mix": {
+        "Card": { "amount": 840.0, "pct_of_total_sales": 70.0, "TRANSACTION_COUNT": 72 },
+        "Cash": { "amount": 240.0, "pct_of_total_sales": 20.0, "TRANSACTION_COUNT": 30 },
+        "Gift Card / Dutch Pass": { "amount": 120.0, "pct_of_total_sales": 10.0, "TRANSACTION_COUNT": 18 }
+      },
+      "mix_checksum": 100.0
+    }
+  ],
+  "shop_coverage": {
+    "co_shops_in_mapping": 1035,
+    "stands_with_volume_in_extract": 1251,
+    "missing_shops_count": 313,
+    "missing_shops_note": "Stands with POS volume not on the CO mapping. Full list is in missing_shops_csv."
+  }
+}

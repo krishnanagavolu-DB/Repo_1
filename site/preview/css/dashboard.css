@@ -1,23 +1,20 @@
 :root {
-  --blue: #005f98;
-  --blue-deep: #006098;
-  --navy: #132550;
+  --blue: #1b6ca8;
+  --blue-deep: #145585;
+  --navy: #2f3a4a;
   --red: #d7282f;
   --yellow: #fde021;
-  --dark: #021521;
-  --muted: #69788b;
-  --muted-2: #8a97a8;
+  --gold-ink: #8a6a00;
+  --dark: #2f3a4a;
+  --muted: #667487;
+  --muted-2: #8794a5;
   --line: #d6dee7;
-  --bg: #e9edf2;
+  --bg: #eef1f5;
   --panel: #ffffff;
   --good: #168a45;
-  --font: "futura-pt", "Futura PT", "Trebuchet MS", "Segoe UI", sans-serif;
-
-  /* Portal chrome: dark app bar over a lighter slate header block. */
-  --portal-bar: #2f3a4a;
-  --portal-slate: #4b5768;
-  --portal-slate-hover: #5a6779;
-  --shell: 1180px;
+  /* Portal uses the platform UI sans, not the Futura on our marketing pages. */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
 }
 
 * {
@@ -44,31 +41,21 @@ body {
 }
 
 .page {
+  max-width: 1120px;
   margin: 0 auto;
   background: var(--bg);
   min-height: 100vh;
-}
-
-/* Every band is full-bleed; the content inside lines up on one shell width. */
-.app-bar-inner,
-.portal-nav-inner,
-.portal-title,
-.toolbar-inner,
-main {
-  max-width: var(--shell);
-  margin: 0 auto;
 }
 
 .preview-banner {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  justify-content: center;
   gap: 8px 14px;
-  padding: 8px 24px;
+  padding: 12px 28px;
   background: var(--yellow);
   color: var(--dark);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.35;
   border-bottom: 1px solid #e6c900;
 }
@@ -79,193 +66,65 @@ main {
   text-transform: uppercase;
 }
 
-/* ===== Portal app bar ===== */
-.app-bar {
-  background: var(--portal-bar);
+.topbar {
+  background: var(--panel);
+  padding: 22px 28px 0;
+  border-bottom: 1px solid var(--line);
 }
 
-.app-bar-inner {
+.topbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding-bottom: 18px;
+}
+
+.brand {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 0 24px;
-  height: 46px;
+  gap: 16px;
 }
 
-.app-mark img {
-  display: block;
-  height: 26px;
+.brand img {
+  height: 38px;
   width: auto;
-  /* One white wordmark for the dark bar, without shipping a second asset. */
-  filter: brightness(0) invert(1);
+  display: block;
 }
 
-.app-search {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: min(340px, 40vw);
-}
-
-.app-search-icon {
-  position: absolute;
-  left: 10px;
-  width: 15px;
-  height: 15px;
-  fill: #8f9bab;
-  pointer-events: none;
-}
-
-.app-search input {
-  width: 100%;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: #f1f3f6;
-  font-family: var(--font);
-  font-size: 13px;
-  color: var(--dark);
-  padding: 0 42px 0 32px;
-  outline: none;
-}
-
-.app-search input::placeholder {
-  color: #8f9bab;
-}
-
-.app-search input:focus {
-  border-color: #9db4cc;
-  background: #fff;
-}
-
-.app-search input::-webkit-search-cancel-button {
-  display: none;
-}
-
-.app-search-key {
-  position: absolute;
-  right: 8px;
-  font-family: var(--font);
-  font-size: 11px;
-  font-weight: 700;
-  color: #8f9bab;
-  pointer-events: none;
-}
-
-.app-avatar {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #e2542c;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-/* ===== Portal header block: channel strip + centered title ===== */
-.portal-head {
-  background: var(--portal-slate);
-}
-
-.portal-nav {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.portal-nav-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-  padding: 0 24px;
-}
-
-.nav-group-label {
-  padding-right: 14px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.nav-divider {
+.brand-divider {
   width: 1px;
-  height: 16px;
-  margin: 0 10px;
-  background: rgba(255, 255, 255, 0.18);
+  align-self: stretch;
+  background: var(--line);
 }
 
-.tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 11px 14px;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  background: none;
-  font-family: var(--font);
-  font-size: 11.5px;
+.eyebrow {
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: rgba(255, 255, 255, 0.82);
-  cursor: pointer;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--blue);
 }
 
-.tab[data-tab]:not(.active):hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.tab.active {
-  color: #fff;
-  border-bottom-color: var(--yellow);
-}
-
-.tab.locked {
-  color: rgba(255, 255, 255, 0.42);
-  cursor: not-allowed;
-}
-
-.tab .lock {
-  width: 11px;
-  height: 11px;
-  fill: currentColor;
-}
-
-/* Centered page title with the Dutch Bros three-colour rule. */
-.portal-title {
-  padding: 22px 24px 26px;
-  text-align: center;
-}
-
-.portal-title h1 {
-  margin: 0;
-  font-size: 21px;
+.brand h1 {
+  margin: 4px 0 0;
+  font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #fff;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--dark);
 }
 
+/* The Dutch Bros three-colour rule, as it sits under Portal page titles. */
 .brand-rule {
   display: flex;
-  justify-content: center;
-  gap: 0;
-  margin: 9px auto 0;
-  width: 168px;
+  width: 132px;
+  margin-top: 8px;
 }
 
 .brand-rule i {
-  height: 4px;
   flex: 1;
+  height: 4px;
 }
 
 .brand-rule i:nth-child(1) {
@@ -280,73 +139,134 @@ main {
   background: var(--blue);
 }
 
-.eyebrow {
-  margin: 12px 0 0;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.62);
-}
-
-/* ===== White control strip under the header ===== */
-.toolbar {
-  background: var(--panel);
-  border-bottom: 1px solid var(--line);
-}
-
-.toolbar-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 12px 24px;
-}
-
-.scope {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 .period {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  text-align: right;
 }
 
 .period-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted-2);
+  color: var(--muted);
+  margin-bottom: 6px;
 }
 
 .period-control {
   display: inline-flex;
   align-items: stretch;
   border: 1px solid #c3cedb;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   background: #fff;
-  min-height: 34px;
+  min-height: 42px;
 }
 
 .period-control select {
   border: 0;
   background: transparent;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--dark);
-  padding: 0 12px;
+  padding: 0 14px;
   min-width: 210px;
   outline: none;
   cursor: pointer;
+}
+
+.scope {
+  font-size: 11px;
+  color: var(--muted-2);
+  margin-top: 7px;
+  letter-spacing: 0.02em;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px;
+  margin: 0 -28px;
+  padding: 0 28px;
+}
+
+/* Channels that share the In Shop footprint sit under one label. */
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  margin-right: 18px;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.tab-group-label {
+  padding: 6px 16px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.tab-group-items {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px 10px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--muted-2);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-bottom-color: var(--blue);
+  color: var(--blue);
+}
+
+.tab.locked {
+  color: var(--muted-2);
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: var(--muted-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tab-badge svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+
+.tab[data-tab]:not(.active):hover {
+  color: var(--blue);
 }
 
 /* Author display rules beat the UA [hidden] rule, so restate it for the
@@ -363,7 +283,7 @@ main {
   padding: 13px 18px;
   border: 1px solid #f3e08a;
   border-left: 5px solid var(--yellow);
-  border-radius: 5px;
+  border-radius: 8px;
   background: #fffdf0;
   color: #5c4a06;
   font-size: 14px;
@@ -399,7 +319,7 @@ main {
 
 .pos-empty {
   border: 1px dashed var(--line);
-  border-radius: 5px;
+  border-radius: 10px;
   background: var(--panel);
   padding: 28px;
   color: var(--muted);
@@ -417,7 +337,7 @@ main {
 }
 
 .pos-empty code {
-  background: #eef2f6;
+  background: #eef1f5;
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 13px;
@@ -465,20 +385,18 @@ main {
 }
 
 main {
-  padding: 24px 24px 48px;
+  padding: 28px 28px 48px;
 }
 
 .section-head {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .section-head h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--portal-bar);
+  letter-spacing: -0.01em;
 }
 
 .section-head p {
@@ -509,8 +427,7 @@ main {
 }
 
 .kpi-section-head h2 {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 18px;
 }
 
 .kpi-why {
@@ -522,17 +439,10 @@ main {
 }
 
 .kpi-card {
-  display: flex;
-  flex-direction: column;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 20px 20px 16px;
-}
-
-/* Sparklines line up across a row even when some cards carry a delta line. */
-.kpi-trend {
-  margin-top: auto;
 }
 
 .kpi-card .label {
@@ -591,7 +501,7 @@ main {
 }
 
 .kpi-trend {
-  border-top: 1px solid #e8eef4;
+  border-top: 1px solid #e5eaf0;
   padding-top: 12px;
 }
 
@@ -619,7 +529,7 @@ main {
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 22px;
 }
 
@@ -629,11 +539,9 @@ main {
 
 .panel h3 {
   margin: 0 0 18px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--portal-bar);
+  letter-spacing: 0.01em;
 }
 
 .mix-body {
@@ -656,7 +564,7 @@ main {
 
 .mix-legend td {
   padding: 8px 0;
-  border-top: 1px solid #e8eef4;
+  border-top: 1px solid #e5eaf0;
 }
 
 .mix-legend tr:first-child td {
@@ -727,8 +635,8 @@ main {
 
 .coming-card {
   background: var(--panel);
-  border: 1px dashed #c5d0db;
-  border-radius: 5px;
+  border: 1px dashed #c9d3de;
+  border-radius: 10px;
   padding: 20px;
   color: var(--muted-2);
   font-size: 13px;
@@ -746,10 +654,10 @@ main {
 
 /* ===== Shared notices: friendly headline, technical detail behind a toggle ===== */
 .notice {
-  margin: 24px 0;
+  margin: 24px 28px;
   padding: 20px 22px;
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 10px;
   background: var(--panel);
 }
 
@@ -824,7 +732,7 @@ main {
   margin: 0;
   padding: 10px 12px;
   border-radius: 6px;
-  background: #eef2f6;
+  background: #eef1f5;
   color: #33475b;
   font-size: 12.5px;
   white-space: pre-wrap;
@@ -844,7 +752,7 @@ main {
 
 .notice-fix code,
 .notice-body code {
-  background: #eef2f6;
+  background: #eef1f5;
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 12.5px;
@@ -854,7 +762,7 @@ main {
 .ask-data {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 5px;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -864,16 +772,15 @@ main {
 .ask-data-head {
   padding: 20px 22px 16px;
   border-bottom: 1px solid var(--line);
-  background: #fff;
+  background: #fbfcfd;
 }
 
 .ask-data-head h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--portal-bar);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--blue);
+  letter-spacing: -0.01em;
 }
 
 .ask-data-head p {
@@ -891,8 +798,8 @@ main {
 
 .ask-data-prompts button {
   border: 1px solid #c3cedb;
-  border-radius: 4px;
-  background: #f7f9fb;
+  border-radius: 999px;
+  background: #fff;
   color: var(--blue);
   font-family: var(--font);
   font-size: 12px;
@@ -904,7 +811,7 @@ main {
 .ask-data-prompts button:hover,
 .ask-data-prompts button:focus-visible {
   border-color: var(--blue);
-  background: #eef6ff;
+  background: #eaf1f7;
   outline: none;
 }
 
@@ -914,7 +821,7 @@ main {
   max-height: 340px;
   overflow: auto;
   padding: 18px 22px;
-  background: #f8fafc;
+  background: #f5f7fa;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -958,7 +865,7 @@ main {
 
 .chat-followups button {
   border: 1px solid #c3cedb;
-  border-radius: 4px;
+  border-radius: 999px;
   background: #fff;
   color: var(--blue);
   font-family: var(--font);
@@ -971,7 +878,7 @@ main {
 .chat-followups button:hover,
 .chat-followups button:focus-visible {
   border-color: var(--blue);
-  background: #eef6ff;
+  background: #eaf1f7;
   outline: none;
 }
 
@@ -986,7 +893,7 @@ main {
 .ask-data-form input {
   flex: 1;
   border: 1px solid #c3cedb;
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 14px 16px;
   font-family: var(--font);
   font-size: 15px;
@@ -996,25 +903,25 @@ main {
 
 .ask-data-form input:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(0, 95, 152, 0.12);
+  box-shadow: 0 0 0 3px rgba(27, 108, 168, 0.14);
 }
 
 .ask-data-form button {
   border: 0;
-  border-radius: 4px;
-  background: var(--portal-bar);
+  border-radius: 10px;
+  background: var(--navy);
   color: #fff;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0 24px;
+  padding: 0 22px;
   cursor: pointer;
 }
 
 .ask-data-form button:hover {
-  background: #1f2836;
+  background: #24303f;
 }
 
 /* ===== Access gate (password) ===== */
@@ -1046,17 +953,17 @@ body.auth-unlocked .auth-gate {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(2, 21, 33, 0.42);
+  background: rgba(47, 58, 74, 0.45);
 }
 
 .auth-card {
   width: min(440px, 100%);
   background: #fff;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 16px;
   padding: 32px 28px 26px;
   text-align: center;
-  box-shadow: 0 18px 50px rgba(2, 21, 33, 0.22);
+  box-shadow: 0 18px 50px rgba(47, 58, 74, 0.24);
   animation: auth-pop 280ms ease-out;
 }
 
@@ -1081,11 +988,6 @@ body.auth-unlocked .auth-gate {
   display: block;
   width: 180px;
   height: auto;
-}
-
-.auth-card .brand-rule {
-  width: 120px;
-  margin-bottom: 16px;
 }
 
 .auth-eyebrow {
@@ -1124,7 +1026,7 @@ body.auth-unlocked .auth-gate {
 .auth-form input {
   width: 100%;
   border: 1px solid #c3cedb;
-  border-radius: 4px;
+  border-radius: 10px;
   padding: 14px 16px;
   font-family: var(--font);
   font-size: 16px;
@@ -1135,25 +1037,25 @@ body.auth-unlocked .auth-gate {
 
 .auth-form input:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(0, 95, 152, 0.12);
+  box-shadow: 0 0 0 3px rgba(27, 108, 168, 0.14);
 }
 
 .auth-form button {
   border: 0;
-  border-radius: 4px;
-  background: var(--portal-bar);
+  border-radius: 10px;
+  background: var(--navy);
   color: #fff;
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   padding: 14px 18px;
   cursor: pointer;
 }
 
 .auth-form button:hover {
-  background: #1f2836;
+  background: #24303f;
 }
 
 .auth-error {
@@ -1175,19 +1077,16 @@ body.auth-unlocked .auth-gate {
     grid-template-columns: 1fr;
   }
 
-  .app-search {
-    width: auto;
-    flex: 1;
-  }
-
-  .toolbar-inner {
+  .topbar-row {
     flex-direction: column;
-    align-items: flex-start;
   }
 
-  .portal-title h1 {
-    font-size: 17px;
-    letter-spacing: 0.1em;
+  .period {
+    text-align: left;
+  }
+
+  .brand h1 {
+    font-size: 22px;
   }
 
   .ask-data-form {

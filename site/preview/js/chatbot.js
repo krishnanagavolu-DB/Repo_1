@@ -1227,44 +1227,11 @@ function refreshTabPrompts(tabId) {
   }
 }
 
-/** The Portal-style bar search is a shortcut into Ask Data, not a second engine. */
-function wireAppSearch(chatInput) {
-  const searchForm = document.getElementById("app-search-form");
-  const searchInput = document.getElementById("app-search");
-  if (!searchForm || !searchInput) return;
-
-  const handOff = (question) => {
-    const text = String(question || "").trim();
-    searchInput.value = "";
-    if (text) {
-      submitQuestion(text, chatInput);
-      document.getElementById("chat-log")?.scrollIntoView({ block: "center" });
-      return;
-    }
-    chatInput.scrollIntoView({ block: "center" });
-    chatInput.focus();
-  };
-
-  searchForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    handOff(searchInput.value);
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-      event.preventDefault();
-      searchInput.focus();
-      searchInput.select();
-    }
-  });
-}
-
 async function initChatbot() {
   const form = document.getElementById("chat-form");
   const input = document.getElementById("chat-input");
   if (!form || !input) return;
   await loadBenchmarks();
-  wireAppSearch(input);
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();

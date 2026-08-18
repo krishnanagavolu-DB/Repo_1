@@ -488,13 +488,97 @@ function mixLabel(label) {
 
 function findMixItem(items, q) {
   return (items || []).find((item) => {
-    const candidates = [normalize(item.label), normalize(mixLabel(item.label))];
+    const names = [item.label, mixLabel(item.label)];
+    // "Android Pay (Google)" should answer to "Android Pay".
+    const candidates = names
+      .flatMap((name) => [name, String(name).replace(/\s*\([^)]*\)/g, "")])
+      .map(normalize)
+      .filter(Boolean);
     return candidates.some(
       (label) =>
         q.includes(label) ||
         label.split(" ").filter((w) => w.length > 3).every((w) => q.includes(w))
     );
   });
+}
+
+/** How many trailing weeks the question asked for, if it said. */
+function requestedWeekCount(q) {
+  const match = q.match(/\b(?:last|past|previous|trailing)\s+(\d{1,2})\s+weeks?\b/);
+  if (match) return Math.max(2, Number(match[1]));
+  return null;
+}
+
+/**
+ * One mix row (Apple Pay, Contactless, Visa…) followed across the loaded weeks.
+ * Every week carries its own mix array, so this is read, never interpolated.
+ */
+function answerMixItemTrend(kind, q, explicitKind = false) {
+  const config = mixConfig(kind);
+  const weeks = allWeeks();
+  if (!config || weeks.length < 2) return null;
+
+  const latestItems = currentPeriod()?.[config.field] || [];
+  const selected = findMixItem(latestItems, q);
+  if (!selected) return null;
+
+  // "Other" style buckets match too loosely to claim a question on their own.
+  if (!explicitKind && /^(other|card \/ other|other entry|unknown)$/i.test(selected.label)) {
+    return null;
+  }
+
+  const wanted = requestedWeekCount(q);
+  const window = wanted ? weeks.slice(-wanted) : weeks;
+  const series = window
+    .map((week) => {
+      const row = (week[config.field] || []).find((item) => item.label === selected.label);
+      return row ? { label: week.label, pct: Number(row.pct), count: Number(row.count) } : null;
+    })
+    .filter(Boolean);
+
+  if (series.length < 2) {
+    return `I only have one week of ${mixLabel(selected.label)} in the ${config.title.toLowerCase()}, so there isn’t a trend yet.`;
+  }
+
+  chatContext.topic = "mix";
+  chatContext.mixKind = kind;
+
+  const first = series[0];
+  const last = series.at(-1);
+  const changePts = (last.pct - first.pct) * 100;
+  const direction =
+    Math.abs(changePts) < 0.05 ? "held flat" : changePts > 0 ? "grew" : "shrank";
+  const move =
+    Math.abs(changePts) < 0.05
+      ? "no change"
+      : `${changePts > 0 ? "+" : "-"}${Math.abs(changePts).toFixed(2)} pts`;
+  const points = series.map((point) => `${point.label}: **${pct(point.pct, 1)}**`).join("\n• ");
+  const asked = wanted && wanted > weeks.length ? ` I only have ${weeks.length} loaded weeks.` : "";
+
+  rememberView(
+    `${mixLabel(selected.label)} share by week`,
+    series.map((point) => ({
+      label: point.label,
+      value: point.pct,
+      display: pct(point.pct, 1),
+    })),
+    `${mixLabel(selected.label)} ${direction} by ${move} across ${series.length} weeks.`
+  );
+
+  return `**${mixLabel(selected.label)} — ${config.title.toLowerCase()} by week**\n• ${points}\n\nIt **${direction}** over these ${series.length} weeks (**${move}**), from ${pct(first.pct, 1)} to ${pct(last.pct, 1)}. Latest week is **${count(last.count)} transactions**.${asked}`;
+}
+
+/** Try the named mix first, then the others, so "contactless trend" finds entry mix. */
+function answerAnyMixItemTrend(q) {
+  const named = detectMixKind(q);
+  const order = named
+    ? [named, ...["wallet", "entry", "payment"].filter((kind) => kind !== named)]
+    : ["wallet", "entry", "payment"];
+  for (const kind of order) {
+    const answer = answerMixItemTrend(kind, q, kind === named);
+    if (answer) return answer;
+  }
+  return null;
 }
 
 function answerMix(kind, q, forceCounts = false) {
@@ -1024,6 +1108,13 @@ function answerQuestion(raw) {
   if (/\brefunds?\b/.test(q) && (/\bexclud|\binclud|\bnegative\b|\bfiltered\b|\bleft out\b/.test(q))) {
     chatContext.topic = "pos";
     return "Refunds are **not excluded** from All payments — they stay in as **negative** dollars, so `SALES_VOLUME` is net. Tips, change, and payment lines over $10k are what get dropped.";
+  }
+
+  // "Trend of Apple Pay over the last 4 weeks" asks for a series, not a definition,
+  // so it has to be answered before the glossary claims "wallet mix".
+  if (/\b(trend|trending|over time|by week|week by week|over the last|over the past|history|trajectory|changed|changing|growing|declining)\b/.test(q)) {
+    const mixTrend = answerAnyMixItemTrend(q);
+    if (mixTrend) return mixTrend;
   }
 
   // Definitions before POS routing so "What is cash?" / "What is POS sales?" stay definitional.

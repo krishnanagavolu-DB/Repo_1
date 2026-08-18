@@ -214,6 +214,106 @@ body {
   fill: currentColor;
 }
 
+.tab[data-tab]:not(.active):hover {
+  color: var(--blue);
+}
+
+.pos-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  border: 1px solid #f0d27a;
+  border-left: 5px solid #e8b931;
+  border-radius: 8px;
+  background: #fff8e2;
+  color: #6a4e05;
+  font-size: 14px;
+}
+
+.pos-banner-info {
+  border: 1px solid #e0c470;
+  border-radius: 999px;
+  background: #fffdf6;
+  color: #6a4e05;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  cursor: help;
+}
+
+.pos-empty {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 28px;
+  color: var(--muted);
+}
+
+.pos-empty h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.pos-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.pos-empty code {
+  background: #eef2f6;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 13px;
+}
+
+.pos-card .kpi-value {
+  font-size: 30px;
+}
+
+.pos-charts {
+  margin-top: 16px;
+}
+
+.pos-charts .mix-body {
+  justify-content: center;
+}
+
+.pos-charts .chart-wrap {
+  width: 220px;
+  height: 220px;
+  flex-shrink: 0;
+}
+
+.pos-table th {
+  padding: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+}
+
+.pos-table th:not(:first-child),
+.pos-table td:not(:first-child) {
+  text-align: right;
+}
+
+.pos-table td:not(:first-child) {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-total-row td {
+  border-top: 2px solid var(--line);
+  font-weight: 700;
+}
+
 main {
   padding: 28px 28px 48px;
 }

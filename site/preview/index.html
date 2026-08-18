@@ -12,7 +12,7 @@
     <script src="js/dashboard.js?v=20260817a" defer></script>
     <script src="js/pos-sales.js?v=20260817a" defer></script>
     <script src="js/tabs.js?v=20260817a" defer></script>
-    <script src="js/chatbot.js?v=20260817a" defer></script>
+    <script src="js/chatbot.js?v=20260818a" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -224,14 +224,16 @@
           <div class="coming-card">Coming soon · False decline / retry</div>
           <div class="coming-card">Coming soon · Chargebacks</div>
         </section>
+        </section>
 
-        <!-- In-page chatbot: title + chat thread + question bar -->
+        <!-- Shared across every channel tab: definitions, KPIs, POS mix, benchmarks, competitors -->
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p>Explore trends, comparisons, percentages, and payment definitions</p>
+            <p id="ask-data-blurb">Explore trends, definitions, POS tender mix, industry benchmarks, and competitor research</p>
             <div class="ask-data-prompts" aria-label="Suggested questions">
               <button type="button" data-question="Which metrics need attention?">What’s brewing in this week’s metrics?</button>
+              <button type="button" data-question="Show the POS tender mix">How did guests pay at the POS?</button>
               <button type="button" data-question="How does our auth rate compare with industry benchmarks?">How does our auth rate stack up?</button>
               <button type="button" data-question="What competitor research is available for Starbucks, Dunkin, and 7 Brew?">What can our competitors teach us?</button>
               <button type="button" data-question="Is this data certified?">Has this data passed its quality checks?</button>
@@ -244,11 +246,10 @@
               id="chat-input"
               type="text"
               autocomplete="off"
-              placeholder="Type a question — e.g. What is the auth rate?"
+              placeholder="Type a question — e.g. What is the auth rate? or Show the POS tender mix"
             />
             <button type="submit">Ask</button>
           </form>
-        </section>
         </section>
       </main>
     </div>

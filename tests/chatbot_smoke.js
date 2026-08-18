@@ -56,6 +56,9 @@ const checks = [
   ["Show that as visual bars", /█/],
   ["Show wallet mix", /Physical Card/],
   ["Show that as a table", /table view/],
+  ["Show the POS tender mix", /POS sales data isn’t published yet|In Shop POS tender mix/],
+  ["What is In Shop POS sales?", /tender mix for company-owned shops/i],
+  ["help", /every channel tab/i],
 ];
 
 const failures = [];

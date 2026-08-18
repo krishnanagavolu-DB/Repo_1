@@ -69,9 +69,9 @@ const PAYMENT_DEFINITIONS = [
     body: "All loaded weeks in the current calendar year.",
   },
   {
-    terms: ["pos sales", "in shop pos", "tender mix", "tender"],
-    title: "In Shop POS sales",
-    body: "Shop POS tender mix for company-owned shops, sourced from the POS/Snowflake export rather than Worldpay. It shows how sales dollars split across Card, Cash, and Gift Card / Dutch Pass.",
+    terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender"],
+    title: "In Shop · All payments",
+    body: "Every tender taken at company-owned shops, sourced from the POS/Snowflake export rather than Worldpay. It shows how sales dollars split across Card, Cash, and Gift Card / Dutch Pass. Card present is the Worldpay view of the card slice only.",
   },
   {
     terms: ["gift card", "dutch pass"],
@@ -690,14 +690,19 @@ function answerDataQuality() {
 }
 
 function latestPosWeek() {
-  return window.__posSales?.getLatestWeek?.() || window.__posSalesState?.latest || null;
+  return (
+    window.__posSales?.getSelectedWeek?.() ||
+    window.__posSales?.getLatestWeek?.() ||
+    window.__posSalesState?.latest ||
+    null
+  );
 }
 
 function answerPosTender(q = "") {
   const week = latestPosWeek();
   chatContext.topic = "pos";
   if (!week) {
-    return "POS sales data isn’t published yet. Import the Snowflake export with `python3 scripts/import_pos_sales.py <path>` (or attach the JSON here) and I’ll answer tender-mix questions.";
+    return "All payments data isn’t published yet. Import the Snowflake export with `python3 scripts/import_pos_sales.py <path>` (or attach the JSON here) and I’ll answer tender-mix questions.";
   }
   const wantCash = /\bcash\b/.test(q);
   const wantGift = /\bgift card|dutch pass\b/.test(q);
@@ -720,7 +725,7 @@ function answerPosTender(q = "") {
       })),
       `${selected.label}: ${money(selected.amount, 2)} (${pct(selected.pct, 1)} of POS sales).`
     );
-    return `For **${week.label}**, **${selected.label}** was **${money(selected.amount, 2)}** — **${pct(selected.pct, 1)}** of In Shop POS sales.`;
+    return `For **${week.label}**, **${selected.label}** was **${money(selected.amount, 2)}** — **${pct(selected.pct, 1)}** of In Shop All payments.`;
   }
 
   const lines = week.tenders.map(
@@ -736,7 +741,7 @@ function answerPosTender(q = "") {
     })),
     `Total POS sales: ${money(week.tenderTotal, 2)}.`
   );
-  return `**In Shop POS tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.`;
+  return `**In Shop · All payments tender mix — ${week.label}**\n${lines.join("\n")}\n\nTotal: **${money(week.tenderTotal, 2)}**.`;
 }
 
 function answerPosCoverage() {
@@ -922,7 +927,7 @@ function submitQuestion(text, input) {
 
 const TAB_PROMPTS = {
   pos: [
-    { question: "Show the POS tender mix", label: "How did guests pay at the POS?" },
+    { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
     { question: "What share of POS sales was cash?", label: "What’s the cash share?" },
     { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
     { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
@@ -930,7 +935,7 @@ const TAB_PROMPTS = {
   ],
   worldpay: [
     { question: "Which metrics need attention?", label: "What’s brewing in this week’s metrics?" },
-    { question: "Show the POS tender mix", label: "How did guests pay at the POS?" },
+    { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
     { question: "How does our auth rate compare with industry benchmarks?", label: "How does our auth rate stack up?" },
     { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
@@ -955,8 +960,8 @@ function refreshTabPrompts(tabId) {
   if (blurb) {
     blurb.textContent =
       tabId === "pos"
-        ? "Ask about POS tender mix, definitions, industry benchmarks, and competitor research — available on every tab"
-        : "Ask about Worldpay trends, definitions, POS tender mix, industry benchmarks, and competitor research — available on every tab";
+        ? "Ask about tender mix, definitions, industry benchmarks, and competitor research — available on every tab"
+        : "Ask about Card present trends, definitions, tender mix, industry benchmarks, and competitor research — available on every tab";
   }
 }
 

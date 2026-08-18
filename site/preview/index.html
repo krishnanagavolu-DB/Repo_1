@@ -6,14 +6,14 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=20260818c" />
+    <link rel="stylesheet" href="css/dashboard.css?v=20260818d" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=20260818c" defer></script>
-    <script src="js/notices.js?v=20260818c" defer></script>
-    <script src="js/dashboard.js?v=20260818c" defer></script>
-    <script src="js/pos-sales.js?v=20260818c" defer></script>
-    <script src="js/tabs.js?v=20260818c" defer></script>
-    <script src="js/chatbot.js?v=20260818c" defer></script>
+    <script src="js/auth-gate.js?v=20260818d" defer></script>
+    <script src="js/notices.js?v=20260818d" defer></script>
+    <script src="js/dashboard.js?v=20260818d" defer></script>
+    <script src="js/pos-sales.js?v=20260818d" defer></script>
+    <script src="js/tabs.js?v=20260818d" defer></script>
+    <script src="js/chatbot.js?v=20260818d" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -65,8 +65,13 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
-          <button type="button" class="tab active" data-tab="pos" aria-current="page">POS Sales</button>
-          <button type="button" class="tab" data-tab="worldpay">In Shop WorldPay</button>
+          <div class="tab-group" role="group" aria-label="In Shop">
+            <span class="tab-group-label">In Shop</span>
+            <div class="tab-group-items">
+              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
+              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+            </div>
+          </div>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Olo Pay
             <span class="tab-badge">
@@ -106,7 +111,7 @@
       <main>
         <section id="panel-pos" class="tab-panel" data-panel="pos">
           <div class="section-head">
-            <h2>In Shop POS sales</h2>
+            <h2>In Shop · All payments</h2>
             <p>Tender mix for <span id="pos-period-label">the most recent week</span></p>
           </div>
 
@@ -138,7 +143,7 @@
 
         <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
         <div class="section-head">
-          <h2>In Shop performance</h2>
+          <h2>In Shop · Card present</h2>
           <p>Ranked for leadership action — revenue risk first, then cost, then context</p>
         </div>
 

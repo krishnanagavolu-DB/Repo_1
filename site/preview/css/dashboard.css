@@ -158,10 +158,34 @@ body {
 .tabs {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   gap: 4px;
   margin: 0 -28px;
   padding: 0 28px;
+}
+
+/* Channels that share the In Shop footprint sit under one label. */
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  margin-right: 18px;
+  padding-right: 18px;
+  border-right: 1px solid var(--line);
+}
+
+.tab-group-label {
+  padding: 6px 16px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.tab-group-items {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .tab {

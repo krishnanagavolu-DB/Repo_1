@@ -248,7 +248,13 @@ function populatePeriodSelect(data) {
   select.addEventListener("change", () => {
     window.__dashboardState.periodId = select.value;
     renderPeriod(data, select.value);
+    announcePeriod(select.value);
   });
+}
+
+/** Every channel follows this one control, so broadcast the selection. */
+function announcePeriod(periodId) {
+  window.dispatchEvent(new CustomEvent("dashboard:period", { detail: { periodId } }));
 }
 
 function getPeriod(data, id) {
@@ -635,6 +641,7 @@ async function loadDashboard() {
     const periodId = document.getElementById("period-select").value;
     window.__dashboardState = { data: dashboardData, periodId };
     renderPeriod(dashboardData, periodId);
+    announcePeriod(periodId);
   } catch (err) {
     const page = document.querySelector(".page");
     const box = document.createElement("div");

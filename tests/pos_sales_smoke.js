@@ -11,7 +11,7 @@ const sandbox = {
   Array,
   RegExp,
   Date,
-  window: {},
+  window: { addEventListener() {}, dispatchEvent() {} },
   document: {
     addEventListener() {},
     getElementById() {

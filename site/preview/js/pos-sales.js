@@ -10,6 +10,7 @@ const TENDER_COLORS = {
 };
 
 let posChart = null;
+let selectedPeriodId = null;
 
 function firstNumber(source, keys) {
   for (const key of keys) {
@@ -62,14 +63,14 @@ function sharePct(value) {
   return `${share.toFixed(1)}%`;
 }
 
-/** Export week_over_week values are already percentage points (e.g. -2.1). */
-function wowLabel(pctPoints) {
-  const n = Number(pctPoints);
+/** Export week_over_week values are already percent changes (e.g. -2.1). */
+function wowLabel(pctChange) {
+  const n = Number(pctChange);
   if (!Number.isFinite(n)) return null;
   const abs = Math.abs(n).toFixed(1);
-  if (n > 0) return { text: `+${abs} pts vs prior week`, tone: "up" };
-  if (n < 0) return { text: `-${abs} pts vs prior week`, tone: "down" };
-  return { text: "— 0.0 pts vs prior week", tone: "flat" };
+  if (n > 0) return { text: `+${abs}% vs prior week`, tone: "up" };
+  if (n < 0) return { text: `-${abs}% vs prior week`, tone: "down" };
+  return { text: "— 0.0% vs prior week", tone: "flat" };
 }
 
 function tenderColor(label, idx = 0) {
@@ -309,7 +310,7 @@ function renderSummary(week) {
   const txnWow = wowLabel(week.wow?.transactionsPct);
   const cards = [
     {
-      label: "Total POS sales",
+      label: "Total sales",
       value: compactUsd(sales),
       detail: usd(sales),
       delta: salesWow,
@@ -492,11 +493,62 @@ function showReady() {
 
 function notPublishedNotice(technical) {
   showNotice({
-    title: "POS sales for this week aren't published yet",
+    title: "All payments for this week aren't published yet",
     message: "Once the weekly POS export is loaded, tender mix will appear here.",
     technical,
     fix: IMPORT_STEPS,
   });
+}
+
+/** Worldpay period ids are week-start dates, which match the POS sort keys. */
+function findWeekForPeriod(weeks, periodId) {
+  if (!periodId || periodId === "ytd") return null;
+  return weeks.find((week) => week.sortKey === periodId) || null;
+}
+
+function renderWeek(week) {
+  const periodEl = document.getElementById("pos-period-label");
+  if (periodEl) periodEl.textContent = week.label;
+  renderBanner(week);
+  renderSummary(week);
+  renderCards(week);
+  renderChart(week);
+  renderGiftSplit(week);
+  showReady();
+}
+
+function selectPeriod(periodId) {
+  const weeks = window.__posSalesState?.weeks || [];
+  if (!weeks.length) return;
+  selectedPeriodId = periodId;
+
+  if (periodId === "ytd") {
+    const first = weeks[0].label.replace(/\s*–.*$/, "");
+    const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
+    showNotice({
+      title: "Year to date isn't published for All payments yet",
+      message: `Pick a week to see tender mix. Published weeks run ${first} through ${last}.`,
+      technical: `The POS export contains ${weeks.length} week(s) and no year-to-date rollup, so a YTD figure here would not match Card present.`,
+      fix: [
+        "Choose a week from the Period control.",
+        "To publish year to date, add a YTD rollup to the Snowflake export and reimport.",
+      ],
+    });
+    return;
+  }
+
+  const match = findWeekForPeriod(weeks, periodId);
+  if (!match) {
+    const available = weeks.map((week) => week.label).join(", ");
+    showNotice({
+      title: "All payments isn't published for this week yet",
+      message: `Pick another week — tender mix is available for ${available}.`,
+      technical: `No POS week matches period id "${periodId}" in ${POS_DATA_URL}.`,
+      fix: IMPORT_STEPS,
+    });
+    return;
+  }
+  renderWeek(match);
 }
 
 function renderPos(weeks) {
@@ -509,14 +561,9 @@ function renderPos(weeks) {
   }
   const latest = weeks[weeks.length - 1];
   window.__posSalesState = { weeks, latest };
-  const periodEl = document.getElementById("pos-period-label");
-  if (periodEl) periodEl.textContent = latest.label;
-  renderBanner(latest);
-  renderSummary(latest);
-  renderCards(latest);
-  renderChart(latest);
-  renderGiftSplit(latest);
-  showReady();
+  const requested = findWeekForPeriod(weeks, selectedPeriodId);
+  if (selectedPeriodId && !requested) selectPeriod(selectedPeriodId);
+  else renderWeek(requested || latest);
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }
@@ -531,7 +578,7 @@ async function loadPosSales() {
     renderPos(normalizePosData(await res.json()));
   } catch (err) {
     showNotice({
-      title: "POS sales couldn't be displayed right now",
+      title: "All payments couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),
@@ -544,6 +591,7 @@ window.__posSales = {
   normalizePosData,
   normalizeTenderMix,
   normalizeGiftSplit,
+  findWeekForPeriod,
   usd,
   compactUsd,
   compactCount,
@@ -551,8 +599,13 @@ window.__posSales = {
   wowLabel,
   loadPosSales,
   renderPos,
+  selectPeriod,
   getLatestWeek() {
     return window.__posSalesState?.latest || null;
+  },
+  getSelectedWeek() {
+    const weeks = window.__posSalesState?.weeks || [];
+    return findWeekForPeriod(weeks, selectedPeriodId) || window.__posSalesState?.latest || null;
   },
   getWeeks() {
     return window.__posSalesState?.weeks || [];
@@ -566,6 +619,16 @@ function startPosWhenUnlocked() {
   }
   window.addEventListener("dashboard:unlocked", () => loadPosSales(), { once: true });
 }
+
+window.addEventListener("dashboard:period", (event) => {
+  const periodId = event.detail?.periodId;
+  if (!periodId) return;
+  if (!window.__posSalesState?.weeks?.length) {
+    selectedPeriodId = periodId;
+    return;
+  }
+  selectPeriod(periodId);
+});
 
 document.addEventListener("DOMContentLoaded", startPosWhenUnlocked);
 })();

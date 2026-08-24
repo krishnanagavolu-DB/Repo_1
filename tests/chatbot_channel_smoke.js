@@ -107,7 +107,7 @@ expect("clarifier does not state a figure", ambiguous, /^(?![\s\S]*\$\d)/);
 reset(onPos);
 onPos.answerQuestion("What is the average ticket?");
 const pickedPos = onPos.answerQuestion("All payments");
-expect("choosing All payments gives the Xenial ticket", pickedPos, /\$9\.97|AVG_TICKET/);
+expect("choosing All payments gives the Xenial ticket", pickedPos, /\$10\.03|AVG_TICKET/);
 
 reset(onWorldpay);
 onWorldpay.answerQuestion("What is the average ticket?");
@@ -116,7 +116,7 @@ expect("choosing Card present gives Worldpay AOV", pickedWp, /AOV|\$12/);
 
 // Naming the channel up front must never trigger the clarifier.
 const explicitPos = sameOnBothTabs("What is the average ticket on All payments?");
-expect("explicit All payments answers directly", explicitPos, /\$9\.97|payment lines/);
+expect("explicit All payments answers directly", explicitPos, /\$10\.03|payment lines|guest checks/);
 const explicitWp = sameOnBothTabs("What was AOV last week?");
 expect("explicit AOV answers directly", explicitWp, /AOV/);
 

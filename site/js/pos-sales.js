@@ -302,9 +302,15 @@ function aggregateWeeks(weeks) {
   const first = weeks[0].label.replace(/\s*–.*$/, "");
   const last = weeks[weeks.length - 1].label.replace(/^.*–\s*/, "");
 
-  const singleBasis = bases.size === 1 ? [...bases][0] : null;
+  const allWeeksHaveOrders = weeks.every(
+    (week) => Number.isFinite(week.orderCount) && week.orderCount > 0
+  );
+  const allWeeksShareBasis =
+    weeks.every((week) => Boolean(week.avgTicketBasis)) && bases.size === 1;
+  const singleBasis = allWeeksShareBasis ? [...bases][0] : null;
   const useOrders =
-    singleBasis === "distinct_ORDER_ID" || singleBasis === "orders";
+    allWeeksHaveOrders &&
+    (singleBasis === "distinct_ORDER_ID" || singleBasis === "orders");
   let avgTicket = null;
   if (useOrders && hasOrderCount && orderCount) {
     avgTicket = reportedTotal / orderCount;

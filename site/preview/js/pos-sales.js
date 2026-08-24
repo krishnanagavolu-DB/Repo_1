@@ -4,16 +4,15 @@
 const POS_DATA_URL = "data/in_shop_sales_data.json";
 const TENDER_ORDER = ["Card", "Cash", "Gift Card / Dutch Pass"];
 const TENDER_COLORS = {
-  Card: "#005F98",
-  Cash: "#132550",
-  "Gift Card / Dutch Pass": "#FDE021",
+  Card: "#006098",
+  Cash: "#154167",
+  "Gift Card / Dutch Pass": "#F6E300",
 };
 
-/* Brand yellow is unreadable as text or as a small dot on white, so ink uses a
-   darker gold while the chart slice keeps the brand colour. */
+/* Brand yellow fails WCAG as small text, so ink uses official navy. */
 const TENDER_INK = {
-  "Gift Card / Dutch Pass": "#8a6a00",
-  "Gift Card": "#8a6a00",
+  "Gift Card / Dutch Pass": "#154167",
+  "Gift Card": "#154167",
 };
 
 let posChart = null;
@@ -82,7 +81,7 @@ function wowLabel(pctChange) {
 }
 
 function tenderColor(label, idx = 0) {
-  return TENDER_COLORS[label] || ["#005F98", "#132550", "#FDE021"][idx % 3];
+  return TENDER_COLORS[label] || ["#006098", "#154167", "#F6E300"][idx % 3];
 }
 
 function tenderInk(label, idx = 0) {
@@ -510,7 +509,7 @@ function renderTrend(metric, series, activeWeek) {
   const values = series.map((point) => point.value);
   const last = values[values.length - 1];
   const prev = values.length > 1 ? values[values.length - 2] : last;
-  const endColor = last < prev ? "#D7282F" : "#005F98";
+  const endColor = last < prev ? "#D9272D" : "#006098";
   const average = values.reduce((sum, value) => sum + value, 0) / values.length;
   // On YTD every week feeds the aggregate, so no single point is highlighted.
   const currentIndex = series.findIndex((point) => point.label === activeWeek?.label);
@@ -525,12 +524,12 @@ function renderTrend(metric, series, activeWeek) {
         {
           label: "Weekly value",
           data: values,
-          borderColor: "#005F98",
+          borderColor: "#006098",
           backgroundColor: "transparent",
           borderWidth: 3,
           pointRadius: series.map((_, idx) => (idx === currentIndex ? 5 : 3)),
           pointBackgroundColor: series.map((_, idx) =>
-            idx === values.length - 1 ? endColor : "#005F98"
+            idx === values.length - 1 ? endColor : "#006098"
           ),
           tension: 0.25,
         },
@@ -636,7 +635,7 @@ function renderChart(week) {
 }
 
 let giftChart = null;
-const GIFT_COLORS = { "Gift Card": "#FDE021", "Dutch Pass": "#005F98" };
+const GIFT_COLORS = { "Gift Card": "#F6E300", "Dutch Pass": "#006098" };
 
 function renderGiftSplit(week) {
   const panel = document.getElementById("pos-gift-panel");
@@ -658,7 +657,7 @@ function renderGiftSplit(week) {
     note.textContent = `Of the ${compactUsd(split.parentAmount)} Gift Card / Dutch Pass tender`;
   }
   const colors = split.parts.map(
-    (part, idx) => GIFT_COLORS[part.label] || ["#FDE021", "#005F98", "#132550"][idx % 3]
+    (part, idx) => GIFT_COLORS[part.label] || ["#F6E300", "#006098", "#154167"][idx % 3]
   );
   renderLegend(legend, split.parts, colors);
   if (giftChart) giftChart.destroy();

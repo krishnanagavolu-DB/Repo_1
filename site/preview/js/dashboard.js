@@ -101,7 +101,7 @@ window.KPI_ORDER = window.KPI_SECTIONS.flatMap((section) => section.metrics);
 const KPI_ORDER = window.KPI_ORDER;
 const KPI_SECTIONS = window.KPI_SECTIONS;
 
-const MIX_COLORS = ["#005F98", "#132550", "#FDE021", "#D7282F", "#9FE5FA", "#69788b"];
+const MIX_COLORS = ["#006098", "#154167", "#F6E300", "#D9272D", "#4094A7", "#D2DCE5"];
 
 let dashboardData = null;
 window.__dashboardState = { data: null, periodId: null };
@@ -331,7 +331,7 @@ function renderKpis(period) {
     const last = history.length ? history[history.length - 1].value : kpi.value;
     const prev = history.length > 1 ? history[history.length - 2].value : last;
     const improved = meta.invertDelta ? last < prev : last > prev;
-    const endColor = improved ? "#005F98" : last === prev ? "#005F98" : "#D7282F";
+    const endColor = improved ? "#006098" : last === prev ? "#006098" : "#D9272D";
     const average = history.length
       ? history.reduce((sum, h) => sum + Number(h.value), 0) / history.length
       : null;
@@ -343,12 +343,12 @@ function renderKpis(period) {
           {
             label: "Weekly value",
             data: history.map((h) => h.value),
-            borderColor: "#005F98",
+            borderColor: "#006098",
             backgroundColor: "transparent",
             borderWidth: 3,
             pointRadius: 3,
             pointBackgroundColor: history.map((_, i) =>
-              i === history.length - 1 ? endColor : "#005F98"
+              i === history.length - 1 ? endColor : "#006098"
             ),
             tension: 0.25,
           },
@@ -516,7 +516,7 @@ function renderAuthByEntry(items) {
       datasets: [
         {
           data: rows.map((i) => Number(i.auth_rate) * 100),
-          backgroundColor: ["#005F98", "#132550", "#FDE021", "#D7282F", "#69788b", "#9FE5FA"],
+          backgroundColor: ["#006098", "#154167", "#F6E300", "#D9272D", "#D2DCE5", "#4094A7"],
           borderRadius: 4,
         },
       ],
@@ -545,7 +545,7 @@ function renderAuthByEntry(items) {
         },
         y: {
           grid: { display: false },
-          ticks: { color: "#021521" },
+          ticks: { color: "#154167" },
         },
       },
     },
@@ -590,7 +590,7 @@ function renderDeclines(items) {
       datasets: [
         {
           data: top.map((i) => i.count),
-          backgroundColor: ["#D7282F", "#005F98", "#F5D600", "#132550", "#69788b", "#9FE5FA", "#006098", "#ea575d"],
+          backgroundColor: ["#D9272D", "#006098", "#F6E300", "#154167", "#D2DCE5", "#4094A7", "#E99F41", "#DE5C36"],
           borderRadius: 4,
         },
       ],
@@ -607,7 +607,7 @@ function renderDeclines(items) {
         },
         y: {
           grid: { display: false },
-          ticks: { color: "#021521" },
+          ticks: { color: "#154167" },
         },
       },
     },

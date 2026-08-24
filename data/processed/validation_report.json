@@ -2,8 +2,8 @@
   "status": "passed_with_warnings",
   "certified": true,
   "error_count": 0,
-  "warning_count": 9,
-  "weeks_checked": 4,
+  "warning_count": 10,
+  "weeks_checked": 5,
   "checks": [
     {
       "severity": "warning",
@@ -47,6 +47,16 @@
     },
     {
       "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "9.6% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-17",
+      "details": {
+        "unlabeled_count": 3242.0,
+        "decline_count": 33929.0
+      }
+    },
+    {
+      "severity": "warning",
       "code": "week_over_week_outlier",
       "message": "sales_cnt changed -15.4% week over week",
       "week": "2026-07-27",
@@ -78,11 +88,11 @@
     {
       "severity": "warning",
       "code": "multiweek_sales_trend",
-      "message": "Sales changed -25.5% from first to latest loaded week",
-      "week": "2026-08-10",
+      "message": "Sales changed -25.7% from first to latest loaded week",
+      "week": "2026-08-17",
       "details": {
         "first_week": "2026-07-20",
-        "change": -0.25541370280721304
+        "change": -0.2572265310817825
       }
     },
     {
@@ -95,7 +105,8 @@
           "2026-07-20",
           "2026-07-27",
           "2026-08-03",
-          "2026-08-10"
+          "2026-08-10",
+          "2026-08-17"
         ]
       }
     }
@@ -160,6 +171,21 @@
       "interchange_fee": 549128.2,
       "auth_to_sales_count_ratio": 1.000799119630065,
       "auth_to_sales_amount_ratio": 1.0018568376640862
+    },
+    {
+      "week_start": "2026-08-17",
+      "auth_rows": 286,
+      "interchange_rows": 552,
+      "auth_total_cnt": 2388796.0,
+      "auth_approved_cnt": 2354867.0,
+      "auth_rate": 0.9857966105100645,
+      "approved_auth_amt": 28400118.0,
+      "sales_cnt": 2339042.0,
+      "sales_amt": 28125984.96,
+      "return_amt": 28851.14,
+      "interchange_fee": 550451.54,
+      "auth_to_sales_count_ratio": 0.9932798752541014,
+      "auth_to_sales_amount_ratio": 0.9903474682746036
     }
   ]
 }

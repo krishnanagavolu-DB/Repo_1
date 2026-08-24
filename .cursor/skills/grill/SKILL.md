@@ -67,8 +67,8 @@ important gate in the repo, so treat it as non-negotiable. See
    `site/index.html` or the other leadership files at the root of `site/`.
 2. Open a PR, review at the preview link, and get sign-off there.
 3. Promote to the leadership homepage **only** when the user explicitly says "promote"
-   (or "publish to leadership"), and do it as a separate PR that copies the approved
-   preview files up.
+   (or "publish to leadership"). Follow `.cursor/skills/promoting-preview/SKILL.md`
+   and run `python3 scripts/promote_preview.py` — do not copy `site/preview/index.html`.
 
 If a request would edit a leadership file directly, stop and route it through preview
 instead — unless the user has explicitly said to promote.

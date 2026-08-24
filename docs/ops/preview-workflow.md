@@ -17,7 +17,9 @@ Pushing to `main` deploys the whole `site/` folder. Editing only files under `si
 2. Open/merge a PR to `main`.
 3. Review at the **preview** link.
 4. When ready for leadership, say **promote** (or **publish to leadership**).
-5. Then we copy the approved preview files up to the leadership homepage (`site/` root) in a separate PR.
+5. The agent runs `python3 scripts/promote_preview.py` (see
+   `.cursor/skills/promoting-preview/SKILL.md`), which copies preview CSS/JS/assets
+   onto `site/` **without** replacing the leadership HTML shell.
 
 Password gate work also lands on preview first (see `docs/ops/password-gate.md`).
 

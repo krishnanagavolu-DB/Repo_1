@@ -99,7 +99,7 @@ const live = pos.normalizePosData(
   JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"))
 );
 const liveLatest = live[live.length - 1];
-check("live wow sales", liveLatest.wow.salesPct, -2.1);
+check("live wow sales", liveLatest.wow.salesPct, 2.7);
 check("gift split parts", liveLatest.giftSplit.parts.length, 2);
 check("gift split gift label", liveLatest.giftSplit.parts[0].label, "Gift Card");
 check("dutch pass label", liveLatest.giftSplit.parts[1].label, "Dutch Pass");
@@ -110,20 +110,21 @@ if (Math.abs(giftShare - 1) > 0.000001) {
 
 // YTD means the aggregate of every week held by All payments.
 const liveYtd = pos.aggregateWeeks(live);
-check("YTD label", liveYtd.label, "YTD · Jul 27 – Aug 16, 2026");
-check("YTD total sales", liveYtd.reportedTotal, 138569865.15);
-check("YTD tender total reconciles", liveYtd.tenderTotal, 138569865.15);
-check("YTD transactions", liveYtd.transactions, 13825173);
-check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "10.02");
-check("YTD card dollars", liveYtd.tenders[0].amount, 95661242.92);
-check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.0%");
-check("YTD cash dollars", liveYtd.tenders[1].amount, 22352115.8);
-check("YTD gift/Dutch Pass dollars", liveYtd.tenders[2].amount, 20556506.43);
-check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 13724812.45);
-check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 6831693.98);
+check("YTD label", liveYtd.label, "YTD · Jul 27 – Aug 23, 2026");
+check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), 185606077.92);
+check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), 185606077.92);
+check("YTD transactions", liveYtd.transactions, 18588315);
+check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "9.99");
+check("YTD card dollars", liveYtd.tenders[0].amount, 128257222.44);
+check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.1%");
+check("YTD cash dollars", liveYtd.tenders[1].amount, 29713770.54);
+check("YTD gift/Dutch Pass dollars", Number(liveYtd.tenders[2].amount.toFixed(2)), 27635084.94);
+check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 18319210.52);
+check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 9315874.42);
 check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
-check("live orderCount absent until rebuild", liveLatest.orderCount, null);
-check("live avgTicketBasis absent until rebuild", liveLatest.avgTicketBasis, null);
+check("live orderCount on rebuilt week", liveLatest.orderCount, 4688018);
+check("live avgTicketBasis on rebuilt week", liveLatest.avgTicketBasis, "distinct_ORDER_ID");
+check("mixed-basis YTD does not use one week's orders", liveYtd.avgTicketBasis, null);
 
 // Next-publish shape: ORDER_COUNT + AVG_TICKET_BASIS = distinct_ORDER_ID.
 const withOrders = pos.normalizePosData({
@@ -156,17 +157,43 @@ check("YTD orderCount", orderYtd.orderCount, 100);
 check("YTD avgTicket uses orders when basis is ORDER_ID", orderYtd.avgTicket, 10);
 check("YTD avgTicketBasis", orderYtd.avgTicketBasis, "distinct_ORDER_ID");
 
+const mixedBasis = pos.aggregateWeeks([
+  {
+    label: "Jul 27 – Aug 2, 2026",
+    reportedTotal: 200,
+    tenderTotal: 200,
+    transactions: 20,
+    orderCount: null,
+    avgTicketBasis: null,
+    tenders: [{ label: "Card", amount: 200 }],
+    wow: { salesPct: null, transactionsPct: null },
+  },
+  {
+    label: "Aug 17 – Aug 23, 2026",
+    reportedTotal: 300,
+    tenderTotal: 300,
+    transactions: 30,
+    orderCount: 10,
+    avgTicketBasis: "distinct_ORDER_ID",
+    tenders: [{ label: "Card", amount: 300 }],
+    wow: { salesPct: null, transactionsPct: null },
+  },
+]);
+check("mixed YTD avg ticket uses payment lines", mixedBasis.avgTicket, 10);
+check("mixed YTD keeps orderCount for the weeks that have it", mixedBasis.orderCount, 10);
+check("mixed YTD does not claim a single ticket basis", mixedBasis.avgTicketBasis, null);
+
 // Sparkline series for the summary cards, oldest week first.
 const salesTrend = pos.trendSeries(live, "sales");
-check("sales trend length", salesTrend.length, 3);
+check("sales trend length", salesTrend.length, 4);
 check("sales trend starts oldest", salesTrend[0].value, 45989528.17);
-check("sales trend ends newest", salesTrend[2].value, 45799722.66);
+check("sales trend ends newest", salesTrend[3].value, 47036212.77);
 check("sales trend label", salesTrend[0].label, "Jul 27 – Aug 2, 2026");
 
 const paymentsTrend = pos.trendSeries(live, "payments");
-check("payments trend length", paymentsTrend.length, 3);
+check("payments trend length", paymentsTrend.length, 4);
 check("payments trend first", paymentsTrend[0].value, 4548240);
-check("payments trend last", paymentsTrend[2].value, 4594352);
+check("payments trend last", paymentsTrend[3].value, 4763142);
 
 // One week cannot form a line, so no series is offered.
 check("single week has no trend", pos.trendSeries([live[0]], "sales").length, 0);
@@ -174,7 +201,7 @@ check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
 
 // The data start feeds the YTD banner.
 check("pos data start", pos.getDataStart(live).startLabel, "Jul 27, 2026");
-check("pos data week count", pos.getDataStart(live).weekCount, 3);
+check("pos data week count", pos.getDataStart(live).weekCount, 4);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

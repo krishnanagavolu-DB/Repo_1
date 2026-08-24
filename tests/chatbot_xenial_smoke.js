@@ -56,8 +56,8 @@ function check(question, expected) {
   }
 }
 
-check("What is AVG_TICKET on All payments?", /payment lines|distinct orders/i);
-check("What is the average ticket on All payments?", /\$9\.97|payment lines/i);
+check("What is AVG_TICKET on All payments?", /payment lines|distinct ORDER_ID|guest checks/i);
+check("What is the average ticket on All payments?", /\$10\.03|guest checks|payment lines/i);
 check("What is TRANSACTION_COUNT?", /payment lines|SYS_HASH/i);
 check("What is ORDER_COUNT?", /not published|guest checks|ORDER_ID/i);
 check("Why are tips excluded from All payments?", /not drink sales|Worldpay/i);

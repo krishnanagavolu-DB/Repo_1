@@ -45,4 +45,4 @@ Leadership must keep:
 - Eyebrow: `Payments`
 - No `.preview-banner`
 
-Details: `docs/ops/preview-workflow.md`.
+Details: `docs/ops/preview-workflow.md`. One-page note for Krishna: `docs/ops/promote-cheat-sheet.md`.

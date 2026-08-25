@@ -2,6 +2,8 @@
 
 We keep experimental dashboard changes on a **preview** URL until they are approved for leadership.
 
+A one-page note you can save locally: [`docs/ops/promote-cheat-sheet.md`](promote-cheat-sheet.md).
+
 ## Links
 
 | Audience | URL | Files in repo |

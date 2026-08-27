@@ -477,21 +477,13 @@ function renderSummary(week) {
   ];
   grid.innerHTML = cards
     .map((card) => {
-      const series = card.metric ? trendSeries(weeks, card.metric) : [];
-      const trend = series.length
-        ? `<div class="kpi-trend">
-             <div class="trend-label">${series.length}-week trend</div>
-             <canvas id="pos-trend-${card.metric}" height="48"></canvas>
-           </div>`
-        : "";
       return `
-      <article class="kpi-card pos-summary-card">
-        <div class="label">${card.label}</div>
-        <div class="kpi-value">${card.value}</div>
-        ${card.detail ? `<div class="kpi-subvalue">${card.detail}</div>` : ""}
+      <div class="pos-slide-stat">
+        <div class="hero-value">${card.value}</div>
         ${deltaHtml(card.delta)}
-        ${trend}
-      </article>`;
+        <div class="hero-label">${card.label}</div>
+        ${card.detail ? `<div class="hero-sub">${card.detail}</div>` : ""}
+      </div>`;
     })
     .join("");
 
@@ -503,7 +495,7 @@ function renderSummary(week) {
 const trendCharts = {};
 
 function renderTrend(metric, series, activeWeek) {
-  const canvas = document.getElementById(`pos-trend-${metric}`);
+  const canvas = document.getElementById(`chart-pos-${metric}-trend`);
   if (!canvas || typeof Chart === "undefined" || !series.length) return;
   if (trendCharts[metric]) trendCharts[metric].destroy();
   const values = series.map((point) => point.value);
@@ -524,6 +516,8 @@ function renderTrend(metric, series, activeWeek) {
         {
           label: "Weekly value",
           data: values,
+          valueFormatter: (value) =>
+            metric === "sales" ? compactUsd(value) : compactCount(value),
           borderColor: "#006098",
           backgroundColor: "transparent",
           borderWidth: 3,
@@ -534,8 +528,9 @@ function renderTrend(metric, series, activeWeek) {
           tension: 0.25,
         },
         {
-          label: "Average",
+          label: `Average · ${format(average)}`,
           data: values.map(() => average),
+          inlineLabels: false,
           borderColor: "#c3d0dd",
           borderWidth: 1,
           borderDash: [3, 3],
@@ -550,7 +545,13 @@ function renderTrend(metric, series, activeWeek) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        inlineValueLabels: { display: true },
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+          labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
+        },
         tooltip: {
           filter: (item) => item.datasetIndex === 0,
           callbacks: {
@@ -559,7 +560,17 @@ function renderTrend(metric, series, activeWeek) {
           },
         },
       },
-      scales: { x: { display: false }, y: { display: false } },
+      layout: { padding: { top: 14 } },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#5a6f82", font: { size: 10 }, maxRotation: 0 },
+        },
+        y: {
+          display: false,
+          grace: "18%",
+        },
+      },
       elements: { point: { hoverRadius: 4 } },
     },
   });
@@ -571,13 +582,13 @@ function renderCards(week) {
   grid.innerHTML = week.tenders
     .map(
       (tender, idx) => `
-      <article class="kpi-card pos-card">
-        <div class="label">${tender.label}</div>
-        <div class="kpi-share" style="color:${tenderInk(tender.label, idx)}">${sharePct(
+      <div class="pos-tender-row">
+        <span class="pos-tender-label">${tender.label}</span>
+        <span class="pos-tender-value" style="color:${tenderInk(tender.label, idx)}">${sharePct(
           tender.pct
-        )}</div>
-        <div class="kpi-subvalue">${compactUsd(tender.amount)} of total sales</div>
-      </article>`
+        )}</span>
+        <span class="pos-tender-amount">${compactUsd(tender.amount)}</span>
+      </div>`
     )
     .join("");
 }
@@ -602,6 +613,7 @@ function renderChart(week) {
   if (posChart) posChart.destroy();
   const colors = week.tenders.map((t, idx) => tenderColor(t.label, idx));
   renderLegend(legend, week.tenders, colors);
+  renderLegend(document.getElementById("pos-tender-detail"), week.tenders, colors);
   posChart = new Chart(canvas, {
     type: "doughnut",
     data: {
@@ -609,6 +621,7 @@ function renderChart(week) {
       datasets: [
         {
           data: week.tenders.map((t) => t.pct),
+          valueFormatter: (value) => (Number(value) >= 0.05 ? sharePct(value) : ""),
           backgroundColor: colors,
           borderWidth: 0,
         },
@@ -619,6 +632,7 @@ function renderChart(week) {
       maintainAspectRatio: false,
       cutout: "58%",
       plugins: {
+        inlineValueLabels: { display: true },
         legend: { display: false },
         tooltip: {
           callbacks: {
@@ -660,18 +674,27 @@ function renderGiftSplit(week) {
     (part, idx) => GIFT_COLORS[part.label] || ["#F6E300", "#006098", "#154167"][idx % 3]
   );
   renderLegend(legend, split.parts, colors);
+  renderLegend(document.getElementById("pos-gift-detail"), split.parts, colors);
   if (giftChart) giftChart.destroy();
   giftChart = new Chart(canvas, {
     type: "doughnut",
     data: {
       labels: split.parts.map((p) => p.label),
-      datasets: [{ data: split.parts.map((p) => p.pct), backgroundColor: colors, borderWidth: 0 }],
+      datasets: [
+        {
+          data: split.parts.map((p) => p.pct),
+          valueFormatter: (value) => (Number(value) >= 0.05 ? sharePct(value) : ""),
+          backgroundColor: colors,
+          borderWidth: 0,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       cutout: "58%",
       plugins: {
+        inlineValueLabels: { display: true },
         legend: { display: false },
         tooltip: {
           callbacks: {

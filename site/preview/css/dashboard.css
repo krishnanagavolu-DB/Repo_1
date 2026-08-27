@@ -365,6 +365,81 @@ body {
   font-size: 28px;
 }
 
+.pos-slide-grid .slide-kpis {
+  min-height: 330px;
+}
+
+.pos-slide-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.pos-slide-stat {
+  min-width: 0;
+}
+
+.pos-slide-stat .hero-value {
+  font-size: 24px;
+}
+
+.pos-slide-stat .kpi-delta {
+  min-height: 20px;
+  padding: 3px 0 0;
+  font-size: 10px;
+}
+
+.pos-slide-tenders {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.pos-tender-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 9px;
+  padding: 7px 0;
+  border-bottom: 1px dotted #e3eaf1;
+  font-size: 11px;
+}
+
+.pos-tender-label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pos-tender-value,
+.pos-tender-amount {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pos-tender-amount {
+  color: var(--dark);
+}
+
+.pos-slide-grid .compact-legend {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.pos-slide-grid .compact-legend td {
+  padding: 2px 0;
+}
+
+.pos-slide-grid .panel-note {
+  margin: 0 0 2px;
+  font-size: 9px;
+}
+
 .pos-charts {
   margin-top: 16px;
 }
@@ -838,6 +913,10 @@ main {
     flex-direction: row;
     flex-wrap: wrap;
     width: auto;
+  }
+
+  .pos-slide-summary {
+    grid-template-columns: 1fr;
   }
 }
 

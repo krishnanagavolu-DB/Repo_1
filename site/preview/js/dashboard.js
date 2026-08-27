@@ -240,6 +240,13 @@ function shortLabel(text, max = 24) {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
+/** Generic "Decline" is preserved in totals/donut but hides useful reason codes in a ranking. */
+function actionableDeclines(items) {
+  return (items || [])
+    .filter((item) => String(item?.label || "").trim().toLowerCase() !== "decline")
+    .sort((a, b) => Number(b?.count || 0) - Number(a?.count || 0));
+}
+
 window.__dashboardFormat = {
   mixPct,
   signed,
@@ -248,6 +255,7 @@ window.__dashboardFormat = {
   compactCount,
   deltaDisplay,
   mixLabel,
+  actionableDeclines,
 };
 
 function periodTotal(period, field) {
@@ -453,6 +461,10 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
       cutout: "58%",
       plugins: {
         legend: { display: false },
+        inlineValueLabels: {
+          display: true,
+          formatter: (value) => `${Number(value).toFixed(1)}%`,
+        },
         tooltip: {
           callbacks: {
             title(tooltipItems) {
@@ -493,6 +505,7 @@ function renderAuthByEntry(items) {
       datasets: [
         {
           data: rows.map((i) => Number(i.auth_rate) * 100),
+          valueFormatter: (value) => `${Number(value).toFixed(1)}%`,
           backgroundColor: ["#006098", "#154167", "#F6E300", "#D9272D", "#D2DCE5", "#4094A7"],
           borderRadius: 4,
         },
@@ -504,6 +517,7 @@ function renderAuthByEntry(items) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        inlineValueLabels: { display: true },
         tooltip: {
           callbacks: {
             label: (ctx) => `${Number(ctx.raw).toFixed(2)}%`,
@@ -516,7 +530,7 @@ function renderAuthByEntry(items) {
           max: 100,
           grid: { color: "#eef2f6" },
           ticks: {
-            color: "#69788b",
+            color: "#5a6f82",
             callback: (v) => `${v}%`,
           },
         },
@@ -554,7 +568,7 @@ function renderDeclineList(items) {
 function renderDeclines(items) {
   const canvas = document.getElementById("chart-declines");
   if (!canvas) return;
-  const top = (items || []).slice(0, 8);
+  const top = actionableDeclines(items).slice(0, 7);
   if (charts.declines) charts.declines.destroy();
   if (!top.length) {
     charts.declines = null;
@@ -578,6 +592,10 @@ function renderDeclines(items) {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        inlineValueLabels: {
+          display: true,
+          formatter: (value) => window.__chartLabels?.compactCount(value),
+        },
         tooltip: {
           callbacks: {
             title: (items) => top[items[0]?.dataIndex]?.label || "",
@@ -700,6 +718,7 @@ function renderAuthTrend(data) {
         {
           label: trendCategory === "all" ? "All card present" : trendCategory,
           data: values,
+          valueFormatter: (value) => `${Number(value).toFixed(2)}%`,
           borderColor: "#006098",
           backgroundColor: "rgba(0, 96, 152, 0.10)",
           borderWidth: 3,
@@ -713,6 +732,7 @@ function renderAuthTrend(data) {
         ...benchmarkRefs.map((item, idx) => ({
           label: `${item.label} · ${(item.value * 100).toFixed(1)}%`,
           data: weeks.map(() => item.value * 100),
+          inlineLabels: false,
           borderColor: idx === 0 ? "#4094A7" : "#E99F41",
           borderWidth: 2,
           borderDash: [6, 4],
@@ -727,6 +747,7 @@ function renderAuthTrend(data) {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
+        inlineValueLabels: { display: true },
         legend: {
           display: true,
           position: "top",
@@ -784,10 +805,18 @@ function renderDeclineMix(period) {
   charts.declineMix = new Chart(canvas, {
     type: "doughnut",
     data: {
-      labels: rows.map((row) => shortLabel(row.label, 20)),
+      labels: rows.map((row) => {
+        const share = total ? row.count / total : 0;
+        return `${shortLabel(row.label, 16)} · ${mixPct(share)}`;
+      }),
       datasets: [
         {
           data: rows.map((row) => row.count),
+          valueFormatter: (value) => {
+            const count = Number(value) || 0;
+            const share = total ? count / total : 0;
+            return share >= 0.06 ? `${(share * 100).toFixed(0)}%` : "";
+          },
           backgroundColor: rows.map((_, idx) => DECLINE_COLORS[idx % DECLINE_COLORS.length]),
           borderWidth: 0,
         },
@@ -798,6 +827,7 @@ function renderDeclineMix(period) {
       maintainAspectRatio: false,
       cutout: "58%",
       plugins: {
+        inlineValueLabels: { display: true },
         legend: {
           position: "right",
           labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
@@ -863,15 +893,34 @@ function renderDeclinesOverTime(data) {
     yAxisID: "y",
   });
 
+  const requestTotals = weeks.map((week) =>
+    (week.decline_reasons || []).reduce((sum, item) => sum + (Number(item.count) || 0), 0)
+  );
+
   charts.declinesTime = new Chart(canvas, {
     data: {
       labels: weeks.map(shortWeekLabel),
       datasets: [
-        ...stacked,
+        ...stacked.map((dataset) => ({ ...dataset, inlineLabels: false })),
+        {
+          type: "line",
+          label: "Total decline requests",
+          data: requestTotals,
+          borderColor: "transparent",
+          backgroundColor: "transparent",
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          inlineLabels: true,
+          valueFormatter: (value) => window.__chartLabels?.compactCount(value),
+          labelOffset: 8,
+          yAxisID: "y",
+        },
         {
           type: "line",
           label: "Decline $",
           data: weeks.map((week) => Number(week?.totals?.decline_amt) || 0),
+          valueFormatter: (value) => window.__chartLabels?.compactMoney(value),
+          labelOffset: 21,
           borderColor: "#154167",
           backgroundColor: "transparent",
           borderWidth: 2,
@@ -886,10 +935,16 @@ function renderDeclinesOverTime(data) {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
+        inlineValueLabels: { display: true },
         legend: {
           position: "top",
           align: "start",
-          labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
+          labels: {
+            boxWidth: 10,
+            font: { size: 10 },
+            color: "#154167",
+            filter: (item) => item.text !== "Total decline requests",
+          },
         },
         tooltip: {
           callbacks: {

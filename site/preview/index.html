@@ -6,13 +6,14 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=28ad266b68" />
+    <link rel="stylesheet" href="css/dashboard.css?v=7f09e996da" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=9a8d72ee87" defer></script>
-    <script src="js/dashboard.js?v=d3d543581f" defer></script>
-    <script src="js/pos-sales.js?v=d81ad5a848" defer></script>
+    <script src="js/chart-labels.js?v=cd7105563a" defer></script>
+    <script src="js/dashboard.js?v=12714ffffd" defer></script>
+    <script src="js/pos-sales.js?v=9dcca5c9c5" defer></script>
     <script src="js/tabs.js?v=5d677809bc" defer></script>
     <script src="js/chatbot.js?v=ae9778a9cf" defer></script>
   </head>
@@ -115,34 +116,74 @@
         <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
 
         <section id="panel-pos" class="tab-panel" data-panel="pos">
-          <div class="section-head">
-            <h2>In Shop · All payments</h2>
-            <p>Tender mix for <span id="pos-period-label">the most recent week</span></p>
-          </div>
-
           <div id="pos-empty" class="pos-empty" hidden></div>
 
           <div id="pos-content" hidden>
-            <div class="kpi-grid pos-summary" id="pos-summary-grid"></div>
-            <div class="kpi-grid" id="pos-kpi-grid"></div>
+            <section class="slide" aria-label="All payments sales and tender mix">
+              <header class="slide-band">
+                <h2>All payments · Sales &amp; tender mix</h2>
+                <p id="pos-period-label">Most recent week</p>
+              </header>
 
-            <section class="charts-2 pos-charts">
-              <article class="panel">
-                <h3>Tender mix</h3>
-                <div class="mix-body">
-                  <div class="chart-wrap"><canvas id="chart-pos-tender"></canvas></div>
-                  <table class="mix-legend" id="legend-pos-tender" aria-label="Tender mix legend"></table>
-                </div>
-              </article>
-              <article class="panel" id="pos-gift-panel" hidden>
-                <h3>Gift Card / Dutch Pass split</h3>
-                <p class="panel-note" id="pos-gift-note">Share of the Gift Card / Dutch Pass tender</p>
-                <div class="mix-body">
-                  <div class="chart-wrap"><canvas id="chart-pos-gift"></canvas></div>
-                  <table class="mix-legend" id="legend-pos-gift" aria-label="Gift Card versus Dutch Pass"></table>
-                </div>
-              </article>
+              <div class="slide-grid pos-slide-grid">
+                <article class="slide-panel slide-kpis">
+                  <div class="panel-band">Sales KPIs</div>
+                  <div class="panel-body">
+                    <div class="pos-slide-summary" id="pos-summary-grid"></div>
+                    <div class="pos-slide-tenders" id="pos-kpi-grid"></div>
+                  </div>
+                </article>
+
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Sales over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-sales-trend"></canvas></div>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Tender mix</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-tender"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-pos-tender" aria-label="Tender mix legend"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel" id="pos-gift-panel" hidden>
+                  <div class="panel-band">Gift Card / Dutch Pass</div>
+                  <div class="panel-body">
+                    <p class="panel-note" id="pos-gift-note">Share of the Gift Card / Dutch Pass tender</p>
+                    <div class="chart-wrap"><canvas id="chart-pos-gift"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-pos-gift" aria-label="Gift Card versus Dutch Pass"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Payments over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-payments-trend"></canvas></div>
+                  </div>
+                </article>
+              </div>
             </section>
+
+            <details class="slide-detail">
+              <summary>More detail — full tender values</summary>
+              <section class="charts-2 pos-charts">
+                <article class="panel">
+                  <h3>Tender mix</h3>
+                  <div class="mix-body">
+                    <table class="mix-legend" id="pos-tender-detail" aria-label="Full tender values"></table>
+                  </div>
+                </article>
+                <article class="panel">
+                  <h3>Gift Card / Dutch Pass split</h3>
+                  <div class="mix-body">
+                    <table class="mix-legend" id="pos-gift-detail" aria-label="Full Gift Card versus Dutch Pass values"></table>
+                  </div>
+                </article>
+              </section>
+            </details>
           </div>
         </section>
 
@@ -178,7 +219,7 @@
             </article>
 
             <article class="slide-panel slide-reasons">
-              <div class="panel-band">Decline reasons by volume</div>
+              <div class="panel-band">Actionable decline reasons</div>
               <div class="panel-body">
                 <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
               </div>

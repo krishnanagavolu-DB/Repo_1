@@ -46,6 +46,7 @@ jobs:
           node tests/format_smoke.js
           node tests/slide_layout_smoke.js
           node tests/pos_sales_smoke.js
+          node tests/olo_pay_smoke.js
           node tests/notices_smoke.js
           node tests/ytd_banner_smoke.js
           python3 scripts/stamp_asset_versions.py --check

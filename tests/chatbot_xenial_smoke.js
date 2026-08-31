@@ -58,12 +58,12 @@ function check(question, expected) {
 
 check("What is AVG_TICKET on All payments?", /payment lines|distinct ORDER_ID|guest checks/i);
 check("What is the average ticket on All payments?", /\$10\.03|guest checks|payment lines/i);
-check("What is TRANSACTION_COUNT?", /payment lines|SYS_HASH/i);
+check("What is TRANSACTION_COUNT?", /payment-fact|payment rows|Gold/i);
 check("What is ORDER_COUNT?", /not published|guest checks|ORDER_ID/i);
 check("Why are tips excluded from All payments?", /not drink sales|Worldpay/i);
 check("Why is change excluded?", /cash handed back|not sales/i);
 check("Why is Worldpay average ticket higher than POS?", /sale \+ tip|\$12\.15|tips/i);
-check("Where does All payments data come from?", /Xenial|ORDER_DETAILS_FEED|company-owned|CO/i);
+check("Where does All payments data come from?", /Gold|Xenial|company-owned/i);
 check("Is Apple Pay in the All payments tender mix?", /not|Worldpay|not in this KPI/i);
 check("What is Dutch Pass?", /CUSTOM|window|wallet/i);
 check("Will AVG_TICKET change next week?", /distinct.?ORDER_ID|orders|payment lines/i);

@@ -68,24 +68,24 @@ function check(question, expected) {
 }
 
 // Exclusions — the filters applied before a number reaches the page.
-check("Explain the exclusions in the data", /tips|change|\$10k|Legacy/i);
-check("What is excluded?", /tips|change|\$10k/i);
-check("What is filtered out?", /Legacy|unmapped|CHECK|UNKNOWN|\$10k/i);
+check("Explain the exclusions in the data", /tips|change|UNKNOWN|quarantine/i);
+check("What is excluded?", /tips|change/i);
+check("What is filtered out?", /UNKNOWN|quarantine|tips|change/i);
 check("What is left out of the numbers?", /tips|change/i);
 check("What does this data not include?", /tips|change|discount|item/i);
 
 // Assumptions — judgement calls a reader should be able to challenge.
-check("What are the assumptions?", /mapping|CREDIT|CUSTOM|0OS957/i);
-check("What assumptions were made in this data?", /mapping|CREDIT|CUSTOM|0OS957/i);
-check("What caveats should I know?", /assumption|exclu|tips|mapping/i);
-check("What are the data limitations?", /assumption|exclu|tips|mapping/i);
-check("What should I know before sharing this with leadership?", /assumption|exclu|tips|mapping/i);
+check("What are the assumptions?", /Gold|CREDIT|CUSTOM|0OS957/i);
+check("What assumptions were made in this data?", /Gold|CREDIT|CUSTOM|0OS957/i);
+check("What caveats should I know?", /assumption|exclu|tips|Gold/i);
+check("What are the data limitations?", /assumption|exclu|tips|Gold/i);
+check("What should I know before sharing this with leadership?", /assumption|exclu|tips|Gold/i);
 
 // The specific judgement calls from the source spec.
 const assumptions = ask("What are the assumptions?");
 for (const [label, pattern] of [
-  ["CO/Legacy authority", /mapping/i],
-  ["$10k line filter", /\$10k/i],
+  ["Gold store list", /Gold|OWNERSHIP|Company Owned/i],
+  ["$10k line filter not applied", /\$10k/i],
   ["card is all CREDIT", /CREDIT/i],
   ["Dutch Pass is CUSTOM", /CUSTOM/i],
   ["Worldpay chain not confirmed equal", /0OS957|not confirmed/i],
@@ -99,9 +99,8 @@ const exclusions = ask("Explain the exclusions in the data");
 for (const [label, pattern] of [
   ["tips", /tips/i],
   ["change", /change/i],
-  ["$10k lines", /\$10k/i],
-  ["Legacy / unmapped shops", /Legacy|unmapped/i],
-  ["CHECK / UNKNOWN", /CHECK|UNKNOWN/i],
+  ["UNKNOWN tenders", /UNKNOWN/i],
+  ["quarantine", /quarantine/i],
 ]) {
   if (!pattern.test(exclusions)) {
     failures.push({ question: "exclusions content", problem: `missing ${label}`, answer: exclusions });

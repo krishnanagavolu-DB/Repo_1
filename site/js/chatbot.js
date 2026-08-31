@@ -22,22 +22,22 @@ const PAYMENT_DEFINITIONS = [
       "sales_volume",
     ],
     title: "SALES_VOLUME",
-    body: "Net company-owned Xenial payment dollars. Refunds are negative. Tips and change are excluded. Lines over $10k are dropped. No Legacy, no unmapped shops, no CHECK/UNKNOWN tender types.",
+    body: "Net company-owned payment dollars from Gold Semantic Sales (Xenial-sourced). Refunds are already signed negatives. Tips and change are excluded. UNKNOWN tenders are left out of the mix. Quarantine rows are not in the extract.",
   },
   {
     terms: ["avg ticket", "average ticket", "avg payment", "average payment", "avg_ticket", "average check"],
     title: "AVG_TICKET (All payments)",
-    body: "On All payments (Xenial): sales dollars divided by the published ticket basis. Published weeks currently use sales ÷ payment lines. A later rebuild will switch to sales ÷ distinct ORDER_ID (guest checks) and publish AVG_TICKET_BASIS = distinct_ORDER_ID. Older weeks keep their original basis until rebuilt. This is all tenders, not card-only, and not Worldpay.",
+    body: "On All payments: sales dollars divided by distinct ORDER_ID (guest checks). Every published week carries AVG_TICKET_BASIS = distinct_ORDER_ID. This is all tenders, not card-only, and not Worldpay.",
   },
   {
     terms: ["transaction_count", "transaction count", "payment lines", "payments count"],
     title: "TRANSACTION_COUNT",
-    body: "Count of Xenial payment lines after SYS_HASH dedupe. Two tenders on one guest check count as two lines. This is not distinct ORDER_ID.",
+    body: "Count of Gold payment-fact rows. Two tenders on one guest check count as two rows. This is not distinct ORDER_ID.",
   },
   {
     terms: ["order_count", "order count", "guest checks", "guest check", "distinct orders"],
     title: "ORDER_COUNT",
-    body: "Distinct Xenial ORDER_ID values — one guest check. Not published in the current All payments weeks; it arrives with the AVG_TICKET rebuild that switches the average to sales ÷ orders.",
+    body: "Distinct ORDER_ID values on Gold payment-fact rows — one guest check, even if paid with two tenders. This is the AVG_TICKET denominator.",
   },
   {
     terms: ["returns as % of sales", "return rate", "refund rate"],
@@ -97,22 +97,22 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender", "xenial"],
     title: "In Shop · All payments",
-    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Xenial SILVER_CLEANSED.XENIAL_BULK.ORDER_DETAILS_FEED joined to Shop_Type_Mapping on STAND_NUMBER = NewCoID #. Weeks are completed Monday–Sunday on BUSINESS_DATE. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
+    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Gold Semantic Sales (Xenial-sourced). Shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
   },
   {
     terms: ["gift card", "dutch pass", "custom"],
     title: "Gift Card / Dutch Pass",
-    body: "Xenial PAYMENT_TYPE GIFT plus CUSTOM. CUSTOM is Dutch Pass — the loyalty-app / digital-wallet scan at the window. Together they form one tender bucket in the mix.",
+    body: "ORDER_PAYMENT_TYPE_FORM GIFT plus CUSTOM. CUSTOM is Dutch Pass — the loyalty-app / digital-wallet scan at the window. Together they form one tender bucket in the mix.",
   },
   {
     terms: ["cash"],
     title: "Cash",
-    body: "Xenial PAYMENT_TYPE = CASH at company-owned shops. Cash never appears on Worldpay.",
+    body: "ORDER_PAYMENT_TYPE_FORM = CASH at company-owned shops. Cash never appears on Worldpay.",
   },
   {
     terms: ["card", "credit"],
     title: "Card",
-    body: "Xenial PAYMENT_TYPE = CREDIT. All credit is one Card bucket here — no debit split, and Visa/MC/Amex/Discover brand mix is not published in this JSON.",
+    body: "ORDER_PAYMENT_TYPE_FORM = CREDIT. All credit is one Card bucket here — no debit split, and Visa/MC/Amex/Discover brand mix is not published in this JSON.",
   },
   {
     terms: ["tips", "tip", "gratuity"],
@@ -127,7 +127,7 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["missing shops", "shop coverage", "legacy/co mapping", "legacy co mapping", "company owned", "company-owned"],
     title: "Company-owned shops only",
-    body: "Every channel on this dashboard is limited to company-owned shops. Shop_Type_Mapping.xlsx is the CO/Legacy authority. Non-CO stands are filtered out so POS, Worldpay, and future feeds stay on the same footprint.",
+    body: "Every channel on this dashboard is limited to company-owned shops. All payments uses the Gold store list (OWNERSHIP = Company Owned). The Excel mapping file is not used.",
   },
 ];
 
@@ -873,7 +873,7 @@ function answerPosTender(q = "") {
 
 function answerPosCoverage() {
   chatContext.topic = "pos";
-  return "Every channel on this dashboard is **company-owned shops only**. Shop_Type_Mapping.xlsx is the CO/Legacy authority. Non-CO stands are filtered out so POS, Worldpay, and future feeds stay on the same footprint.";
+  return "Every channel on this dashboard is **company-owned shops only**. All payments uses the Gold store list (`OWNERSHIP = Company Owned`). The Excel mapping file is not used.";
 }
 
 function ticketBasisLabel(week) {
@@ -888,7 +888,7 @@ function answerPosAvgTicket() {
   const week = latestPosWeek();
   chatContext.topic = "pos";
   if (!week || week.avgTicket == null) {
-    return `**AVG_TICKET (All payments)** — Xenial sales dollars divided by the published ticket basis. Current published weeks use **sales ÷ payment lines**. A later rebuild will switch to **sales ÷ distinct ORDER_ID** and publish \`AVG_TICKET_BASIS = distinct_ORDER_ID\`. Older weeks keep their original basis until rebuilt. This is all tenders — not card-only, and not Worldpay.`;
+    return `**AVG_TICKET (All payments)** — sales dollars divided by distinct guest checks (\`ORDER_ID\`). Every published week uses that basis. This is all tenders — not card-only and not Worldpay.`;
   }
   return `For **${week.label}**, All payments **AVG_TICKET** is **$${Number(week.avgTicket).toFixed(2)}** (${ticketBasisLabel(week)}).\n\nThis is Xenial sales across Card + Cash + Gift Card / Dutch Pass — not card-only and not Worldpay. Worldpay AOV stays higher because networks authorize **sale + tip**.`;
 }
@@ -897,9 +897,9 @@ function answerPosPaymentsCount() {
   const week = latestPosWeek();
   chatContext.topic = "pos";
   if (!week || week.transactions == null) {
-    return "**TRANSACTION_COUNT** is the count of Xenial payment **lines** after `SYS_HASH` dedupe. Two tenders on one guest check count as two lines. It is not distinct `ORDER_ID`.";
+    return "**TRANSACTION_COUNT** is the count of Gold payment-fact **rows**. Two tenders on one guest check count as two rows. It is not distinct `ORDER_ID`.";
   }
-  return `For **${week.label}**, All payments recorded **${Number(week.transactions).toLocaleString("en-US")}** payment lines (\`TRANSACTION_COUNT\` after \`SYS_HASH\` dedupe).\n\nTwo tenders on one guest check count as two lines. Distinct guest checks (\`ORDER_COUNT\`) are not published in these weeks yet.`;
+  return `For **${week.label}**, All payments recorded **${Number(week.transactions).toLocaleString("en-US")}** payment-fact rows (\`TRANSACTION_COUNT\`).\n\nTwo tenders on one guest check count as two rows. Guest checks are \`ORDER_COUNT\` (distinct \`ORDER_ID\`).`;
 }
 
 function answerPosOrderCount() {
@@ -937,7 +937,7 @@ function answerPosWorldpayTicketGap() {
 
 function answerPosSource() {
   chatContext.topic = "pos";
-  return "**All payments** is Xenial POS tender mix from \`SILVER_CLEANSED.XENIAL_BULK.ORDER_DETAILS_FEED\`, limited to company-owned shops via \`Shop_Type_Mapping.xlsx\` (\`STAND_NUMBER\` = \`NewCoID #\`). Weeks are completed Monday–Sunday on \`BUSINESS_DATE\`. Sales are net CO payment dollars after \`SYS_HASH\` dedupe — refunds negative, tips/change out, lines over $10k dropped, no Legacy/unmapped shops, no CHECK/UNKNOWN.";
+  return "**All payments** is POS tender mix from **Gold Semantic Sales** (Xenial-sourced: `GOLD_SEMANTIC.SALES`), limited to company-owned shops via `VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned`. Weeks are completed Monday–Sunday. Sales are net payment dollars — refunds already signed, tips/change out, UNKNOWN tenders out of the mix. The Silver Xenial feed, Excel shop mapping, `SYS_HASH` dedupe, and the $10k line drop are not used.";
 }
 
 function answerPosNotInKpi(q) {
@@ -946,7 +946,7 @@ function answerPosNotInKpi(q) {
     return "Apple Pay / Google Pay / Samsung Pay do **not** appear as their own buckets in All payments. Those wallets show clearly on **Card present** (Worldpay). In Xenial they typically land inside \`CREDIT\` when present at all.";
   }
   if (/\btax|discount|item|category|quantity\b/.test(q)) {
-    return "Item names/categories, quantities, taxes, and discounts sit on the Xenial table but are **not** in this All payments KPI. The published mix is Card / Cash / Gift Card · Dutch Pass only.";
+    return "Item names/categories, quantities, taxes, and discounts sit on the source tables but are **not** in this All payments KPI. The published mix is Card / Cash / Gift Card · Dutch Pass only.";
   }
   return "All payments publishes Card / Cash / Gift Card · Dutch Pass only. Item mix, taxes, discounts, and mobile-wallet brand detail are not in this KPI — wallets show on Card present (Worldpay).";
 }
@@ -954,17 +954,15 @@ function answerPosNotInKpi(q) {
 function answerPosExclusions() {
   chatContext.topic = "pos";
   return [
-    "**What is excluded from All payments (Xenial)**",
+    "**What is excluded from All payments**",
     "• **Tips** — not drink sales. Card networks still authorize sale + tip, so Worldpay average ticket stays higher.",
     "• **Change** — cash handed back to the guest, not sales. Never appears on Worldpay.",
-    "• **Payment lines over $10k** — dropped as bad data. The filter is any line over $10k, not cash-only.",
-    "• **Legacy and unmapped shops** — company-owned only, per `Shop_Type_Mapping.xlsx`.",
-    "• **CHECK and UNKNOWN payment types** — left out of the tender mix.",
-    "• **Duplicate payment rows** — deduped on `SYS_HASH`. `TRANSACTION_ID` is not unique, so it is never used to dedupe.",
+    "• **UNKNOWN payment types** — left out of the tender mix.",
+    "• **Quarantine rows** — not included in the Gold semantic sales extract.",
     "",
-    "**Kept, not excluded:** refunds stay in as **negative** dollars, so sales are net.",
+    "**Kept, not excluded:** refunds stay in as **negative** dollars (`ORDER_PAYMENT_AMOUNT` is already signed).",
     "",
-    "**On the Xenial table but not in this KPI:** item names/categories, quantities, taxes, and discounts (about **$8.5M** company-wide item + order discounts in the week of 8/10). Apple / Google / Samsung Pay are not broken out here — those show on **Card present** (Worldpay).",
+    "**On the source but not in this KPI:** item names/categories, quantities, taxes, and discounts. Apple / Google / Samsung Pay are not broken out here — those show on **Card present** (Worldpay).",
     "",
     "Ask **“What are the assumptions?”** for the judgement calls behind these rules.",
   ].join("\n");
@@ -973,14 +971,14 @@ function answerPosExclusions() {
 function answerPosAssumptions() {
   chatContext.topic = "pos";
   return [
-    "**Assumptions behind All payments (Xenial)** — each of these is a judgement call, not a fact from the source system:",
-    "• `Shop_Type_Mapping.xlsx` is treated as the **authority** on which shops are company-owned vs Legacy. Join is `STAND_NUMBER` = column B (`NewCoID #`); that file's headers are swapped versus its values.",
-    "• The **$10k** filter drops **any** payment line over $10k, not just cash lines.",
-    "• **Card** = all `CREDIT`. There is no debit split, and Visa/MC/Amex/Discover brand mix is not published here (`CREDIT_CARD_TYPE` exists but is blank on many rows).",
+    "**Assumptions behind All payments** — each of these is a judgement call, not a fact from the source system:",
+    "• The Gold store dimension (`VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned`) is treated as the shop list. The Excel mapping file is **not** used.",
+    "• The old **$10k** line drop and `SYS_HASH` dedupe from the Silver Xenial extract are **not** applied on Gold.",
+    "• **Card** = all `CREDIT`. There is no debit split, and Visa/MC/Amex/Discover brand mix is not published here.",
     "• **`CUSTOM` is the only Dutch Pass mapping** — Dutch Pass is the window wallet scan, grouped with `GIFT` into one tender bucket.",
     "• Worldpay chain **`0OS957`** is **not confirmed** to cover the same shop list as the company-owned footprint, so Card present and All payments totals are not guaranteed to reconcile shop-for-shop.",
-    "• Weeks are completed **Monday–Sunday** on `BUSINESS_DATE`.",
-    "• `AVG_TICKET` basis can differ by week: published weeks use sales ÷ payment lines, and older weeks keep that basis until they are rebuilt on distinct orders.",
+    "• Weeks are completed **Monday–Sunday**.",
+    "• `AVG_TICKET` is **sales ÷ distinct ORDER_ID** on every published week.",
     "",
     "Ask **“Explain the exclusions in the data”** for what gets filtered out before these numbers.",
   ].join("\n");
@@ -988,7 +986,7 @@ function answerPosAssumptions() {
 
 function answerPosAvgTicketChange() {
   chatContext.topic = "pos";
-  return "Yes — for the next published build, **AVG_TICKET** moves from **sales ÷ payment lines** to **sales ÷ distinct ORDER_ID** (guest checks), and the file will carry \`AVG_TICKET_BASIS = distinct_ORDER_ID\` plus \`ORDER_COUNT\`. \`TRANSACTION_COUNT\` stays payment lines. Older weeks already in the rolling file keep their original average until rebuilt.";
+  return "Every published All payments week already uses **sales ÷ distinct ORDER_ID** (guest checks), with `AVG_TICKET_BASIS = distinct_ORDER_ID` and `ORDER_COUNT` in the file. `TRANSACTION_COUNT` stays payment-fact rows, not orders.";
 }
 
 function wantsPosKnowledge(q) {
@@ -1015,7 +1013,7 @@ const CHANNEL_CHOICES = {
   ticket: {
     ask:
       "Two lanes, two different answers here — which one do you want?\n\n" +
-      "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ payment lines, with tips and change left out.\n" +
+      "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ guest checks, with tips and change left out.\n" +
       "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n\n" +
       "Say **All payments** or **Card present** and I’ll pull it.",
   },
@@ -1111,7 +1109,7 @@ function answerQuestion(raw) {
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments (Xenial)** tender mix, AVG_TICKET basis, and why Worldpay ticket differs\n• List the **exclusions** (tips, change, $10k lines, Legacy shops) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   // Anyone about to share these numbers should be able to ask what was left out.
@@ -1209,7 +1207,7 @@ function answerQuestion(raw) {
   }
   if (/\brefunds?\b/.test(q) && (/\bexclud|\binclud|\bnegative\b|\bfiltered\b|\bleft out\b/.test(q))) {
     chatContext.topic = "pos";
-    return "Refunds are **not excluded** from All payments — they stay in as **negative** dollars, so `SALES_VOLUME` is net. Tips, change, and payment lines over $10k are what get dropped.";
+    return "Refunds are **not excluded** from All payments — they stay in as **negative** dollars (`ORDER_PAYMENT_AMOUNT` is already signed), so `SALES_VOLUME` is net. Tips, change, UNKNOWN tenders, and quarantine rows are what get dropped.";
   }
 
   // Definitions before POS routing so "What is cash?" / "What is POS sales?" stay definitional.

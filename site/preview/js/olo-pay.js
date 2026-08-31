@@ -388,7 +388,6 @@ function aggregateWeeks(weeks) {
 const TREND_METRICS = {
   sales: (week) => week.sales,
   auth: (week) => week.authRatePct,
-  orders: (week) => week.orders,
 };
 
 function trendSeries(weeks, metric) {
@@ -639,14 +638,14 @@ function renderDetail(week) {
     </table>
     <table class="mix-legend olo-detail-table" aria-label="Olo Pay supporting totals">
       <tbody>
-        <tr><td>Digital sales</td><td colspan="3">${usd(week.sales)}</td></tr>
-        <tr><td>Auth rate</td><td colspan="3">${authPct(week.authRatePct)}</td></tr>
-        <tr><td>Approved</td><td colspan="3">${count(week.approved)}</td></tr>
-        <tr><td>Declined</td><td colspan="3">${count(week.declined)}</td></tr>
-        <tr><td>Failed</td><td colspan="3">${count(week.failed)}</td></tr>
-        <tr><td>Avg ticket</td><td colspan="3">${ticket(week.avgTicket)}</td></tr>
-        <tr><td>Refunds</td><td colspan="3">${usd(week.refunds)}</td></tr>
-        <tr><td>Voids</td><td colspan="3">${usd(week.voids)}</td></tr>
+        <tr><th scope="row">Digital sales</th><td colspan="3">${usd(week.sales)}</td></tr>
+        <tr><th scope="row">Auth rate</th><td colspan="3">${authPct(week.authRatePct)}</td></tr>
+        <tr><th scope="row">Approved</th><td colspan="3">${count(week.approved)}</td></tr>
+        <tr><th scope="row">Declined</th><td colspan="3">${count(week.declined)}</td></tr>
+        <tr><th scope="row">Failed</th><td colspan="3">${count(week.failed)}</td></tr>
+        <tr><th scope="row">Avg ticket</th><td colspan="3">${ticket(week.avgTicket)}</td></tr>
+        <tr><th scope="row">Refunds</th><td colspan="3">${usd(week.refunds)}</td></tr>
+        <tr><th scope="row">Voids</th><td colspan="3">${usd(week.voids)}</td></tr>
       </tbody>
     </table>
   `;

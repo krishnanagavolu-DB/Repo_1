@@ -1,6 +1,5 @@
 const fs = require("fs");
 const vm = require("vm");
-const path = require("path");
 
 const failures = [];
 
@@ -34,12 +33,21 @@ check("chart-olo-auth-trend id", html.includes('id="chart-olo-auth-trend"'), tru
 check("chart-olo-brand id", html.includes('id="chart-olo-brand"'), true);
 check("legend-olo-brand id", html.includes('id="legend-olo-brand"'), true);
 check("olo-detail id", html.includes('id="olo-detail"'), true);
+check("olo detail uses olo-charts class", html.includes("olo-charts"), true);
 check("olo slide aria-label", html.includes('aria-label="Olo Pay digital approval and sales"'), true);
 check("olo slide title", html.includes("OLO PAY · DIGITAL APPROVAL &amp; SALES") || html.includes("OLO PAY · DIGITAL APPROVAL & SALES"), true);
 check("company owned shops only copy", html.includes("Company owned shops only"), true);
 check("olo-pay.js is loaded", /src="js\/olo-pay\.js/.test(html), true);
 check("no invented wallet chart id", html.includes("chart-olo-wallet"), false);
 check("no invented decline chart id", html.includes("chart-olo-declines"), false);
+
+const css = fs.readFileSync("site/preview/css/dashboard.css", "utf8");
+check(
+  "olo-charts forces one full-width column",
+  /\.olo-charts\s*\{[^}]*grid-template-columns:\s*1fr/.test(css),
+  true
+);
+check("olo support row uses --line token", /\.olo-support-row\s*\{[^}]*border-bottom:\s*1px dotted var\(--line\)/.test(css), true);
 
 if (!fs.existsSync(scriptPath)) {
   failures.push({ name: "olo-pay.js exists", expected: scriptPath, actual: "missing" });
@@ -130,6 +138,15 @@ check("find published week", olo.findWeekForPeriod(weeks, "2026-08-24").label, l
 check("missing period returns null", olo.findWeekForPeriod(weeks, "2025-01-01"), null);
 check("olo data start label", olo.getDataStart(weeks).startLabel, "Jun 15, 2026");
 check("olo data week count", olo.getDataStart(weeks).weekCount, 11);
+
+const oloJs = fs.readFileSync(scriptPath, "utf8");
+check(
+  "supporting totals use th scope=row",
+  oloJs.includes('<th scope="row">Refunds</th>') && oloJs.includes('<th scope="row">Voids</th>'),
+  true
+);
+check("supporting Digital sales uses th scope=row", oloJs.includes('<th scope="row">Digital sales</th>'), true);
+check("unused orders trend metric removed", /orders:\s*\(week\)\s*=>\s*week\.orders/.test(oloJs), false);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

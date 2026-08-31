@@ -394,7 +394,7 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 4px 0;
-  border-bottom: 1px dotted #e3eaf1;
+  border-bottom: 1px dotted var(--line);
   font-size: 11px;
 }
 
@@ -427,6 +427,10 @@ body {
 .olo-detail-table td {
   padding: 4px 0;
   font-size: 12px;
+}
+
+.olo-charts {
+  grid-template-columns: 1fr;
 }
 
 .olo-charts .mix-body {

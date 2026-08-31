@@ -2,7 +2,7 @@
   "meta": {
     "channel": "In Shop \u00b7 Worldpay",
     "scope": "Company owned shops only",
-    "generated_at": "2026-08-24T15:57:46Z",
+    "generated_at": "2026-08-31T17:47:08Z",
     "brand": {
       "blue": "#005F98",
       "red": "#D7282F",
@@ -12,8 +12,8 @@
     "data_quality": {
       "status": "passed_with_warnings",
       "certified": true,
-      "weeks_checked": 5,
-      "warning_count": 10
+      "weeks_checked": 6,
+      "warning_count": 11
     }
   },
   "periods": {
@@ -47,6 +47,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
               }
             ]
           },
@@ -73,6 +77,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
               }
             ]
           },
@@ -99,6 +107,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
               }
             ]
           },
@@ -125,6 +137,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
               }
             ]
           },
@@ -151,6 +167,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
               }
             ]
           },
@@ -177,6 +197,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
               }
             ]
           },
@@ -203,6 +227,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
               }
             ]
           },
@@ -229,6 +257,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
               }
             ]
           },
@@ -255,6 +287,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
               }
             ]
           }
@@ -543,6 +579,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
               }
             ]
           },
@@ -569,6 +609,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
               }
             ]
           },
@@ -595,6 +639,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
               }
             ]
           },
@@ -621,6 +669,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
               }
             ]
           },
@@ -647,6 +699,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
               }
             ]
           },
@@ -673,6 +729,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
               }
             ]
           },
@@ -699,6 +759,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
               }
             ]
           },
@@ -725,6 +789,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
               }
             ]
           },
@@ -751,6 +819,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
               }
             ]
           }
@@ -1043,6 +1115,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
               }
             ]
           },
@@ -1069,6 +1145,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
               }
             ]
           },
@@ -1095,6 +1175,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
               }
             ]
           },
@@ -1121,6 +1205,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
               }
             ]
           },
@@ -1147,6 +1235,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
               }
             ]
           },
@@ -1173,6 +1265,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
               }
             ]
           },
@@ -1199,6 +1295,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
               }
             ]
           },
@@ -1225,6 +1325,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
               }
             ]
           },
@@ -1251,6 +1355,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
               }
             ]
           }
@@ -1542,6 +1650,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
               }
             ]
           },
@@ -1568,6 +1680,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
               }
             ]
           },
@@ -1594,6 +1710,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
               }
             ]
           },
@@ -1620,6 +1740,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
               }
             ]
           },
@@ -1646,6 +1770,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
               }
             ]
           },
@@ -1672,6 +1800,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
               }
             ]
           },
@@ -1698,6 +1830,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
               }
             ]
           },
@@ -1724,6 +1860,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
               }
             ]
           },
@@ -1750,6 +1890,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
               }
             ]
           }
@@ -2037,6 +2181,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
               }
             ]
           },
@@ -2063,6 +2211,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
               }
             ]
           },
@@ -2089,6 +2241,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
               }
             ]
           },
@@ -2115,6 +2271,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
               }
             ]
           },
@@ -2141,6 +2301,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
               }
             ]
           },
@@ -2167,6 +2331,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
               }
             ]
           },
@@ -2193,6 +2361,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
               }
             ]
           },
@@ -2219,6 +2391,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
               }
             ]
           },
@@ -2245,6 +2421,10 @@
               {
                 "week_start": "2026-08-17",
                 "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
               }
             ]
           }
@@ -2494,6 +2674,542 @@
           "surcharged_amt": 210394.73000000004,
           "surcharged_cnt": 15466.0
         }
+      },
+      {
+        "id": "2026-08-24",
+        "label": "Aug 24 \u2013 Aug 30, 2026",
+        "week_start": "2026-08-24",
+        "week_end": "2026-08-30",
+        "kpis": {
+          "auth_rate": {
+            "value": 0.9863704678694095,
+            "delta": 0.0005738573593450091,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.9865828139270321
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.9860388311988993
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.98708039996459
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 0.9864147006217528
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 0.9857966105100645
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.9863704678694095
+              }
+            ]
+          },
+          "aov": {
+            "value": 12.015195550049286,
+            "delta": -0.009379023643704798,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 12.232337795288055
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 12.37099477169506
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 12.187304202503839
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 12.162556271164506
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 12.024574573692991
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 12.015195550049286
+              }
+            ]
+          },
+          "returns_pct_of_sales": {
+            "value": 0.0010145008313315195,
+            "delta": -1.128155605975914e-05,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.0009387271508434653
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.0009315330553654074
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.0009560011220551966
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 0.0010046257099608196
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 0.0010257823873912786
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.0010145008313315195
+              }
+            ]
+          },
+          "sales_volume": {
+            "value": 27998685.78,
+            "delta": -127299.1799999997,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 37866168.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 32397433.27
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 28316860.07
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 28194629.82
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 28125984.96
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 27998685.78
+              }
+            ]
+          },
+          "transaction_volume": {
+            "value": 2330273.0,
+            "delta": -8769.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 3095579.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 2618822.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 2323472.0
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 2318150.0
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 2339042.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 2330273.0
+              }
+            ]
+          },
+          "ic_rate": {
+            "value": 0.019577159239079118,
+            "delta": 6.2343174155009284e-06,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.01938601233692303
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.01927050654898995
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.019443125354964542
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 0.01947634012241839
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 0.019570924921663617
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.019577159239079118
+              }
+            ]
+          },
+          "decline_volume": {
+            "value": 1149525.0,
+            "delta": -222803.0,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 525652.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 459586.0
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 383643.0
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 413923.0
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 1372328.0
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 1149525.0
+              }
+            ]
+          },
+          "ic_fee": {
+            "value": 548134.7300000001,
+            "delta": -2316.8099999999395,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 734074.0
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 624314.95
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 550568.26
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 549128.2
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 550451.54
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 548134.7300000001
+              }
+            ]
+          },
+          "downgrade_rate": {
+            "value": 0.007346194804147697,
+            "delta": -0.00013424473598636858,
+            "history": [
+              {
+                "week_start": "2026-07-20",
+                "value": 0.007466982135609814
+              },
+              {
+                "week_start": "2026-07-27",
+                "value": 0.006997687073251282
+              },
+              {
+                "week_start": "2026-08-03",
+                "value": 0.007265752964537638
+              },
+              {
+                "week_start": "2026-08-10",
+                "value": 0.007404260007411579
+              },
+              {
+                "week_start": "2026-08-17",
+                "value": 0.007480439540134065
+              },
+              {
+                "week_start": "2026-08-24",
+                "value": 0.007346194804147697
+              }
+            ]
+          }
+        },
+        "entry_method_mix": [
+          {
+            "label": "Contactless",
+            "count": 2212697,
+            "pct": 0.9495441092095218
+          },
+          {
+            "label": "Chip / Dip",
+            "count": 107749,
+            "pct": 0.046238788330809306
+          },
+          {
+            "label": "Swipe",
+            "count": 9740,
+            "pct": 0.004179767778281772
+          },
+          {
+            "label": "Other",
+            "count": 62,
+            "pct": 2.6606324666680685e-05
+          },
+          {
+            "label": "Key entered",
+            "count": 25,
+            "pct": 1.072835672043576e-05
+          }
+        ],
+        "payment_type_mix": [
+          {
+            "label": "Visa",
+            "count": 1755210,
+            "pct": 0.753220759971042
+          },
+          {
+            "label": "Mastercard",
+            "count": 456983,
+            "pct": 0.1961070655669958
+          },
+          {
+            "label": "Discover",
+            "count": 65928,
+            "pct": 0.02829196407459555
+          },
+          {
+            "label": "Amex",
+            "count": 52152,
+            "pct": 0.02238021038736663
+          }
+        ],
+        "wallet_mix": [
+          {
+            "label": "Card / Other",
+            "count": 1351622,
+            "pct": 0.580027318687553
+          },
+          {
+            "label": "Apple Pay",
+            "count": 916269,
+            "pct": 0.39320242735507815
+          },
+          {
+            "label": "Android Pay (Google)",
+            "count": 48127,
+            "pct": 0.020652944955376472
+          },
+          {
+            "label": "Samsung Pay",
+            "count": 14137,
+            "pct": 0.006066671158272014
+          },
+          {
+            "label": "Garmin Pay",
+            "count": 84,
+            "pct": 3.6047278580664155e-05
+          },
+          {
+            "label": "Fitbit",
+            "count": 21,
+            "pct": 9.011819645166039e-06
+          },
+          {
+            "label": "Bronco",
+            "count": 9,
+            "pct": 3.862208419356874e-06
+          },
+          {
+            "label": "Samsung Electronics Co., Ltd",
+            "count": 3,
+            "pct": 1.2874028064522912e-06
+          },
+          {
+            "label": "Deutscher Sparkassen- Und Giroverband",
+            "count": 1,
+            "pct": 4.291342688174304e-07
+          }
+        ],
+        "auth_rate_by_entry": [
+          {
+            "label": "Contactless",
+            "auth_rate": 0.9870997094593896,
+            "approved_cnt": 2197816.0,
+            "total_cnt": 2226539.0
+          },
+          {
+            "label": "Chip / Dip",
+            "auth_rate": 0.982584057074823,
+            "approved_cnt": 106462.0,
+            "total_cnt": 108349.0
+          },
+          {
+            "label": "Swipe",
+            "auth_rate": 0.8797595190380761,
+            "approved_cnt": 9658.0,
+            "total_cnt": 10978.0
+          },
+          {
+            "label": "Other",
+            "auth_rate": 0.9407894736842105,
+            "approved_cnt": 143.0,
+            "total_cnt": 152.0
+          },
+          {
+            "label": "Key entered",
+            "auth_rate": 0.421875,
+            "approved_cnt": 27.0,
+            "total_cnt": 64.0
+          }
+        ],
+        "decline_reasons": [
+          {
+            "label": "Decline",
+            "count": 21707
+          },
+          {
+            "label": "Do not honor",
+            "count": 1207
+          },
+          {
+            "label": "Suspected fraud",
+            "count": 1157
+          },
+          {
+            "label": "Restricted card",
+            "count": 953
+          },
+          {
+            "label": "Exceeds withdrawal count limit",
+            "count": 770
+          },
+          {
+            "label": "Invalid/nonexistent Account specified (general)",
+            "count": 749
+          },
+          {
+            "label": "Transaction not permitted to Issuer/Cardholder",
+            "count": 447
+          },
+          {
+            "label": "Security violation",
+            "count": 261
+          },
+          {
+            "label": "Lost Card",
+            "count": 257
+          },
+          {
+            "label": "Stolen Card",
+            "count": 230
+          },
+          {
+            "label": "Expired Card",
+            "count": 200
+          },
+          {
+            "label": "Exceeds withdrawal amount limit",
+            "count": 194
+          },
+          {
+            "label": "Invalid Card Number",
+            "count": 166
+          },
+          {
+            "label": "Invalid Merchant",
+            "count": 91
+          },
+          {
+            "label": "Allowable number of PIN tries exceeded",
+            "count": 63
+          },
+          {
+            "label": "Pick-up Card, special condition",
+            "count": 43
+          },
+          {
+            "label": "Invalid Transaction",
+            "count": 20
+          },
+          {
+            "label": "Capture Card",
+            "count": 19
+          },
+          {
+            "label": "Re-enter transaction",
+            "count": 17
+          },
+          {
+            "label": "Invalid Amount",
+            "count": 12
+          },
+          {
+            "label": "Refer to Card Issuer",
+            "count": 10
+          },
+          {
+            "label": "Decline for AVS or CID mismatch",
+            "count": 7
+          },
+          {
+            "label": "Invalid Issuer",
+            "count": 5
+          },
+          {
+            "label": "System malfunction",
+            "count": 5
+          },
+          {
+            "label": "Authorization system or Issuer system inoperative",
+            "count": 2
+          },
+          {
+            "label": "Invalid PIN",
+            "count": 2
+          },
+          {
+            "label": "Transaction cannot be completed, violation of law",
+            "count": 2
+          },
+          {
+            "label": "No credit Account",
+            "count": 1
+          },
+          {
+            "label": "Invalid/nonexistent 'from' Account specified",
+            "count": 1
+          }
+        ],
+        "totals": {
+          "auth_approved_cnt": 2314106.0,
+          "auth_total_cnt": 2346082.0,
+          "sales_amt": 27998685.78,
+          "sales_cnt": 2330273.0,
+          "sales_fee": 548134.7300000001,
+          "return_amt": 28404.68999999999,
+          "return_cnt": 3053.0,
+          "decline_amt": 1149525.0,
+          "surcharged_amt": 205683.80000000002,
+          "surcharged_cnt": 15422.0
+        }
       }
     ],
     "ytd": {
@@ -2501,7 +3217,7 @@
       "label": "YTD",
       "kpis": {
         "auth_rate": {
-          "value": 0.9863864565181475,
+          "value": 0.9863839850748884,
           "delta": null,
           "history": [
             {
@@ -2523,11 +3239,15 @@
             {
               "week_start": "2026-08-17",
               "value": 0.9857966105100645
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 0.9863704678694095
             }
           ]
         },
         "aov": {
-          "value": 12.201676487674542,
+          "value": 12.172755241845476,
           "delta": null,
           "history": [
             {
@@ -2549,11 +3269,15 @@
             {
               "week_start": "2026-08-17",
               "value": 12.024574573692991
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 12.015195550049286
             }
           ]
         },
         "returns_pct_of_sales": {
-          "value": 0.0009681819116854821,
+          "value": 0.0009752725107292771,
           "delta": null,
           "history": [
             {
@@ -2575,11 +3299,15 @@
             {
               "week_start": "2026-08-17",
               "value": 0.0010257823873912786
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 0.0010145008313315195
             }
           ]
         },
         "sales_volume": {
-          "value": 154901076.12,
+          "value": 182899761.9,
           "delta": null,
           "history": [
             {
@@ -2601,11 +3329,15 @@
             {
               "week_start": "2026-08-17",
               "value": 28125984.96
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 27998685.78
             }
           ]
         },
         "transaction_volume": {
-          "value": 12695065.0,
+          "value": 15025338.0,
           "delta": null,
           "history": [
             {
@@ -2627,11 +3359,15 @@
             {
               "week_start": "2026-08-17",
               "value": 2339042.0
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 2330273.0
             }
           ]
         },
         "ic_rate": {
-          "value": 0.01942231148652139,
+          "value": 0.019446015910860516,
           "delta": null,
           "history": [
             {
@@ -2653,11 +3389,15 @@
             {
               "week_start": "2026-08-17",
               "value": 0.019570924921663617
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 0.019577159239079118
             }
           ]
         },
         "decline_volume": {
-          "value": 3155132.0,
+          "value": 4304657.0,
           "delta": null,
           "history": [
             {
@@ -2679,11 +3419,15 @@
             {
               "week_start": "2026-08-17",
               "value": 1372328.0
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 1149525.0
             }
           ]
         },
         "ic_fee": {
-          "value": 3008536.95,
+          "value": 3556671.68,
           "delta": null,
           "history": [
             {
@@ -2705,11 +3449,15 @@
             {
               "week_start": "2026-08-17",
               "value": 550451.54
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 548134.7300000001
             }
           ]
         },
         "downgrade_rate": {
-          "value": 0.007323070558407428,
+          "value": 0.007326610467282407,
           "delta": null,
           "history": [
             {
@@ -2731,6 +3479,10 @@
             {
               "week_start": "2026-08-17",
               "value": 0.007480439540134065
+            },
+            {
+              "week_start": "2026-08-24",
+              "value": 0.007346194804147697
             }
           ]
         }
@@ -2738,259 +3490,259 @@
       "entry_method_mix": [
         {
           "label": "Contactless",
-          "count": 12013713,
-          "pct": 0.9463293807475582
+          "count": 14226410,
+          "pct": 0.9468279515575623
         },
         {
           "label": "Chip / Dip",
-          "count": 626953,
-          "pct": 0.04938556832911056
+          "count": 734702,
+          "pct": 0.048897535616170495
         },
         {
           "label": "Swipe",
-          "count": 53902,
-          "pct": 0.004245901852412729
+          "count": 63642,
+          "pct": 0.004235645148215634
         },
         {
           "label": "Other",
-          "count": 303,
-          "pct": 2.386754222999252e-05
+          "count": 365,
+          "pct": 2.429229878223039e-05
         },
         {
           "label": "Key entered",
-          "count": 194,
-          "pct": 1.5281528688510063e-05
+          "count": 219,
+          "pct": 1.4575379269338234e-05
         }
       ],
       "payment_type_mix": [
         {
           "label": "Visa",
-          "count": 9534794,
-          "pct": 0.7510630311857402
+          "count": 11290004,
+          "pct": 0.7513976723851403
         },
         {
           "label": "Mastercard",
-          "count": 2506157,
-          "pct": 0.1974119076979913
+          "count": 2963140,
+          "pct": 0.19720954031117302
         },
         {
           "label": "Discover",
-          "count": 364157,
-          "pct": 0.028684925992895665
+          "count": 430085,
+          "pct": 0.028623981703439882
         },
         {
           "label": "Amex",
-          "count": 289957,
-          "pct": 0.022840135123372744
+          "count": 342109,
+          "pct": 0.02276880560024673
         }
       ],
       "wallet_mix": [
         {
           "label": "Card / Other",
-          "count": 7504909,
-          "pct": 0.591167433959574
+          "count": 8856531,
+          "pct": 0.5894397184276321
         },
         {
           "label": "Apple Pay",
-          "count": 4865209,
-          "pct": 0.3832362417994709
+          "count": 5781478,
+          "pct": 0.3847818930928542
         },
         {
           "label": "Android Pay (Google)",
-          "count": 250414,
-          "pct": 0.019725302706209067
+          "count": 298541,
+          "pct": 0.019869170330810527
         },
         {
           "label": "Samsung Pay",
-          "count": 73928,
-          "pct": 0.005823365221052433
+          "count": 88065,
+          "pct": 0.005861099430841422
         },
         {
           "label": "Garmin Pay",
-          "count": 430,
-          "pct": 3.387142956731612e-05
+          "count": 514,
+          "pct": 3.420888102483951e-05
         },
         {
           "label": "Fitbit",
-          "count": 113,
-          "pct": 8.901096607224934e-06
+          "count": 134,
+          "pct": 8.918268594024307e-06
         },
         {
           "label": "Bronco",
-          "count": 49,
-          "pct": 3.859767555345325e-06
+          "count": 58,
+          "pct": 3.8601461078612675e-06
         },
         {
           "label": "Samsung Electronics Co., Ltd",
-          "count": 11,
-          "pct": 8.664784307918077e-07
+          "count": 14,
+          "pct": 9.317594053458232e-07
         },
         {
           "label": "Deutscher Sparkassen- Und Giroverband",
-          "count": 2,
-          "pct": 1.5754153287123775e-07
+          "count": 3,
+          "pct": 1.9966272971696212e-07
         }
       ],
       "auth_rate_by_entry": [
         {
           "label": "Contactless",
-          "auth_rate": 0.9872264524261936,
-          "approved_cnt": 11978911.0,
-          "total_cnt": 12133904.0
+          "auth_rate": 0.9872068013500698,
+          "approved_cnt": 14176727.0,
+          "total_cnt": 14360443.0
         },
         {
           "label": "Chip / Dip",
-          "auth_rate": 0.9822011754446552,
-          "approved_cnt": 622856.0,
-          "total_cnt": 634143.0
+          "auth_rate": 0.9822570478873847,
+          "approved_cnt": 729318.0,
+          "total_cnt": 742492.0
         },
         {
           "label": "Swipe",
-          "auth_rate": 0.8687780628608082,
-          "approved_cnt": 54177.0,
-          "total_cnt": 62360.0
+          "auth_rate": 0.8704218822438572,
+          "approved_cnt": 63835.0,
+          "total_cnt": 73338.0
         },
         {
           "label": "Other",
-          "auth_rate": 0.9390862944162437,
-          "approved_cnt": 740.0,
-          "total_cnt": 788.0
+          "auth_rate": 0.9393617021276596,
+          "approved_cnt": 883.0,
+          "total_cnt": 940.0
         },
         {
           "label": "Key entered",
-          "auth_rate": 0.5287671232876713,
-          "approved_cnt": 193.0,
-          "total_cnt": 365.0
+          "auth_rate": 0.5128205128205128,
+          "approved_cnt": 220.0,
+          "total_cnt": 429.0
         }
       ],
       "decline_reasons": [
         {
           "label": "Decline",
-          "count": 116574
+          "count": 138281
         },
         {
           "label": "Do not honor",
-          "count": 6942
+          "count": 8149
         },
         {
           "label": "Suspected fraud",
-          "count": 6451
+          "count": 7608
         },
         {
           "label": "Restricted card",
-          "count": 4931
+          "count": 5884
         },
         {
           "label": "Invalid/nonexistent Account specified (general)",
-          "count": 4102
+          "count": 4851
         },
         {
           "label": "Exceeds withdrawal count limit",
-          "count": 3440
+          "count": 4210
         },
         {
           "label": "Transaction not permitted to Issuer/Cardholder",
-          "count": 2624
+          "count": 3071
         },
         {
           "label": "Expired Card",
-          "count": 1715
+          "count": 1915
         },
         {
           "label": "Security violation",
-          "count": 1466
+          "count": 1727
         },
         {
           "label": "Stolen Card",
-          "count": 1389
+          "count": 1619
         },
         {
           "label": "Lost Card",
-          "count": 1247
-        },
-        {
-          "label": "System malfunction",
-          "count": 1123
+          "count": 1504
         },
         {
           "label": "Exceeds withdrawal amount limit",
-          "count": 1084
+          "count": 1278
         },
         {
-          "label": "Invalid Transaction",
-          "count": 1020
+          "label": "System malfunction",
+          "count": 1128
         },
         {
           "label": "Invalid Card Number",
-          "count": 907
+          "count": 1073
+        },
+        {
+          "label": "Invalid Transaction",
+          "count": 1040
         },
         {
           "label": "Invalid Merchant",
-          "count": 487
+          "count": 578
         },
         {
           "label": "Allowable number of PIN tries exceeded",
-          "count": 357
+          "count": 420
         },
         {
           "label": "Pick-up Card, special condition",
-          "count": 236
+          "count": 279
         },
         {
           "label": "Re-enter transaction",
-          "count": 133
+          "count": 150
         },
         {
           "label": "Capture Card",
-          "count": 122
+          "count": 141
         },
         {
           "label": "Refer to Card Issuer",
-          "count": 81
+          "count": 91
         },
         {
           "label": "Invalid Issuer",
-          "count": 74
-        },
-        {
-          "label": "Authorization system or Issuer system inoperative",
-          "count": 54
+          "count": 79
         },
         {
           "label": "Invalid Amount",
-          "count": 51
+          "count": 63
+        },
+        {
+          "label": "Authorization system or Issuer system inoperative",
+          "count": 56
         },
         {
           "label": "No credit Account",
-          "count": 42
+          "count": 43
         },
         {
           "label": "Transaction not permitted to Acquirer/terminal",
           "count": 41
         },
         {
-          "label": "Invalid/nonexistent 'from' Account specified",
-          "count": 7
+          "label": "Decline for AVS or CID mismatch",
+          "count": 9
         },
         {
           "label": "Transaction cannot be completed, violation of law",
-          "count": 6
+          "count": 8
+        },
+        {
+          "label": "Invalid/nonexistent 'from' Account specified",
+          "count": 8
         },
         {
           "label": "No savings Account",
           "count": 6
         },
         {
+          "label": "Invalid PIN",
+          "count": 4
+        },
+        {
           "label": "Refer to Card Issuer's special condition",
           "count": 3
-        },
-        {
-          "label": "Decline for AVS or CID mismatch",
-          "count": 2
-        },
-        {
-          "label": "Invalid PIN",
-          "count": 2
         },
         {
           "label": "Duplicated transmission detected",

@@ -280,6 +280,47 @@ if (/Olo Pay \*\*|Approved ÷ \(Approved/i.test(explicitWpAuth)) {
   });
 }
 
+// After an Olo answer, explicitly named other-channel metrics must not leak Olo.
+ask("What is Olo Pay sales volume?");
+const stickyWpAuth = ask("What is the Card present auth rate?");
+if (!/\b98\.\d+%/.test(stickyWpAuth)) {
+  failures.push({
+    name: "after Olo, Card present auth returns Worldpay KPI",
+    answer: stickyWpAuth,
+  });
+}
+if (/Olo Pay|Approved ÷ \(Approved|96\.78%|billing total Olo/i.test(stickyWpAuth)) {
+  failures.push({
+    name: "after Olo, Card present auth does not leak Olo",
+    answer: stickyWpAuth,
+  });
+}
+
+ask("What is Olo Pay sales volume?");
+const stickyPosTicket = ask("What is the average ticket on All payments?");
+if (!/\$10\.\d+/.test(stickyPosTicket)) {
+  failures.push({
+    name: "after Olo, All payments ticket returns POS ticket",
+    answer: stickyPosTicket,
+  });
+}
+if (/Olo Pay|\$11\.30|ORDER_COUNT|tips are not subtracted|Approved ÷/i.test(stickyPosTicket)) {
+  failures.push({
+    name: "after Olo, All payments ticket does not leak Olo",
+    answer: stickyPosTicket,
+  });
+}
+
+// Unnamed Olo follow-ups such as brand mix still stay on Olo.
+ask("What is Olo Pay sales volume?");
+const stickyBrand = ask("Show brand mix");
+if (!/Visa|ACCOUNT_ISSUER|card brand/i.test(stickyBrand)) {
+  failures.push({
+    name: "after Olo, unnamed brand mix still answers Olo",
+    answer: stickyBrand,
+  });
+}
+
 // Help copy mentions Olo Pay and Phase 1 limits.
 reset();
 const help = ask("help");

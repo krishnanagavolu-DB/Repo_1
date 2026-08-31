@@ -964,13 +964,19 @@ function answerOloBrandMix() {
   );
 }
 
+
+/** Explicitly names Worldpay/POS (and not Olo) — sticky Olo must yield. */
+function namesOtherChannel(q) {
+  if (/\b(olo pay|olo)\b/.test(q)) return false;
+  return /\b(all payments|xenial|pos|tender mix|card present|worldpay|aov|average order value)\b/.test(q);
+}
+
 function answerOloQuestion(q, raw = "") {
   const named = wantsOloKnowledge(q);
   const followUp = chatContext.topic === "olo";
   if (!named && !followUp) return null;
-  // A sticky Olo topic must not swallow a fresh ambiguous sales/ticket/auth
-  // question — those still need the channel clarifier.
-  if (!named && followUp && ambiguousChannelMetric(q, raw)) return null;
+  // Sticky Olo must not swallow ambiguous asks or explicitly named other channels.
+  if (!named && followUp && (ambiguousChannelMetric(q, raw) || namesOtherChannel(q))) return null;
 
   if (
     /\b(wallet|apple pay|google pay|samsung pay|android pay)\b/.test(q) ||

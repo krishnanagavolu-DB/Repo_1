@@ -231,7 +231,7 @@ def test_rejects_non_monday_week_start():
 def test_rejects_incorrect_sunday_end_date():
     payload = _week_payload("2026-08-24", week_end="2026-08-29")  # Saturday
     errors = validate_week(payload, "2026-08-24")
-    assert _error_codes(errors) & {"week_end_not_sunday", "incorrect_week_end"}
+    assert "incorrect_week_end" in _error_codes(errors)
 
 
 def test_rejects_multiple_weeks_per_file():
@@ -269,6 +269,39 @@ def test_rejects_shop_filter_without_company_owned():
     assert _error_codes(errors) & {
         "shop_filter_not_company_owned",
         "missing_company_owned_filter",
+    }
+
+
+def test_rejects_manual_excel_shop_filter_even_if_company_owned_mentioned():
+    """Company Owned alone is insufficient — Gold VW_DIM_STORE_CURATED.OWNERSHIP required."""
+    payload = _week_payload(
+        shop_filter="Company Owned shops from the Excel mapping file / manual store list."
+    )
+    errors = validate_week(payload, "2026-08-24")
+    assert _error_codes(errors) & {
+        "shop_filter_missing_gold_ownership",
+        "shop_filter_not_vw_dim_store_curated",
+        "shop_filter_manual_list",
+    }
+
+
+def test_rejects_missing_ownership_split():
+    payload = _week_payload()
+    del payload["weeks"][0]["ownership_split"]
+    errors = validate_week(payload, "2026-08-24")
+    assert _error_codes(errors) & {
+        "missing_ownership_split",
+        "ownership_split_required",
+    }
+
+
+def test_rejects_ownership_split_missing_required_fields():
+    payload = _week_payload()
+    payload["weeks"][0]["ownership_split"] = {"company_owned_sales": 1000.0}
+    errors = validate_week(payload, "2026-08-24")
+    assert _error_codes(errors) & {
+        "incomplete_ownership_split",
+        "ownership_split_missing_fields",
     }
 
 
@@ -374,3 +407,36 @@ def test_validate_week_expected_week_mismatch():
         "week_mismatch",
         "expected_week_mismatch",
     }
+
+
+def test_cli_fail_closed_writes_report_only(tmp_path: Path):
+    from scripts.import_olo_pay import main
+
+    bad = _week_payload(franchised=12.0)
+    weekly = _write_week(tmp_path / "olo_pay_data_20260824.json", bad)
+    methodology = tmp_path / "olo_pay_methodology.json"
+    methodology.write_text(json.dumps(_methodology()), encoding="utf-8")
+    out = tmp_path / "out.json"
+    preview = tmp_path / "preview.json"
+    report = tmp_path / "report.json"
+
+    rc = main(
+        [
+            str(weekly),
+            "--methodology",
+            str(methodology),
+            "--out",
+            str(out),
+            "--report",
+            str(report),
+            "--preview-copy",
+            str(preview),
+        ]
+    )
+    assert rc == 1
+    assert report.is_file()
+    assert not out.exists()
+    assert not preview.exists()
+    payload = json.loads(report.read_text(encoding="utf-8"))
+    assert payload["status"] == "failed"
+    assert payload["error_count"] >= 1

@@ -84,12 +84,25 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
             )
         )
 
-    shop_filter = filt.get("shop_filter") or ""
-    if "Company Owned" not in str(shop_filter):
+    shop_filter = str(filt.get("shop_filter") or "")
+    if "Company Owned" not in shop_filter:
         errors.append(
             _issue(
                 "shop_filter_not_company_owned",
                 "filter.shop_filter must mention Company Owned",
+                week=expected_week,
+            )
+        )
+    elif (
+        "VW_DIM_STORE_CURATED" not in shop_filter
+        or "OWNERSHIP" not in shop_filter
+    ):
+        # Require Gold curated ownership — a manual/Excel "Company Owned" list is not enough.
+        errors.append(
+            _issue(
+                "shop_filter_missing_gold_ownership",
+                "filter.shop_filter must identify VW_DIM_STORE_CURATED and OWNERSHIP "
+                "(not a manual/Excel store list)",
                 week=expected_week,
             )
         )
@@ -148,6 +161,7 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
             )
         expected_end = (start + timedelta(days=6)).isoformat()
         week_end = week.get("week_end_date")
+        # expected_end is always Sunday (Monday + 6); a mismatch covers non-Sunday ends.
         if week_end != expected_end:
             errors.append(
                 _issue(
@@ -156,17 +170,9 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
                     week=str(week_start),
                 )
             )
-        elif _parse_week_start(str(week_end)) and _parse_week_start(str(week_end)).weekday() != 6:
-            errors.append(
-                _issue(
-                    "week_end_not_sunday",
-                    f"week_end_date {week_end} is not a Sunday",
-                    week=str(week_start),
-                )
-            )
 
     totals = week.get("totals") or {}
-    ownership = week.get("ownership_split") or {}
+    ownership = week.get("ownership_split")
     auth = week.get("authorization") or {}
     brands = week.get("card_brand_mix") or {}
 
@@ -185,9 +191,47 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
         )
         return errors
 
-    franchised = float(ownership.get("franchised_sales") or 0.0)
-    unmapped = float(ownership.get("unmapped_or_other_sales") or 0.0)
-    company_owned = ownership.get("company_owned_sales")
+    if not isinstance(ownership, dict):
+        errors.append(
+            _issue(
+                "missing_ownership_split",
+                "weeks[].ownership_split object is required",
+                week=expected_week,
+            )
+        )
+        return errors
+
+    required_ownership_fields = (
+        "company_owned_sales",
+        "franchised_sales",
+        "unmapped_or_other_sales",
+    )
+    missing_ownership = [f for f in required_ownership_fields if f not in ownership]
+    if missing_ownership:
+        errors.append(
+            _issue(
+                "incomplete_ownership_split",
+                "ownership_split missing required numeric fields: "
+                + ", ".join(missing_ownership),
+                week=expected_week,
+            )
+        )
+        return errors
+
+    try:
+        company_owned = float(ownership["company_owned_sales"])
+        franchised = float(ownership["franchised_sales"])
+        unmapped = float(ownership["unmapped_or_other_sales"])
+    except (TypeError, ValueError):
+        errors.append(
+            _issue(
+                "incomplete_ownership_split",
+                "ownership_split fields company_owned_sales, franchised_sales, "
+                "and unmapped_or_other_sales must be numeric",
+                week=expected_week,
+            )
+        )
+        return errors
 
     if franchised != 0.0:
         errors.append(
@@ -205,7 +249,7 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
                 week=expected_week,
             )
         )
-    if company_owned is not None and abs(float(company_owned) - sales) > AMOUNT_TOL:
+    if abs(company_owned - sales) > AMOUNT_TOL:
         errors.append(
             _issue(
                 "company_owned_sales_mismatch",

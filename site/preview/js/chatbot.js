@@ -825,6 +825,195 @@ function latestPosWeek() {
   );
 }
 
+function latestOloWeek() {
+  return (
+    window.__oloPay?.getSelectedWeek?.() ||
+    window.__oloPay?.getLatestWeek?.() ||
+    window.__oloPayState?.latest ||
+    null
+  );
+}
+
+function oloFmt() {
+  return window.__oloPay || {};
+}
+
+function wantsOloKnowledge(q) {
+  return /\b(olo pay|olo)\b/.test(q);
+}
+
+function answerOloUnavailable(kind) {
+  chatContext.topic = "olo";
+  if (kind === "wallet") {
+    return (
+      "**Olo Pay · Phase 1:** wallet mix (Apple Pay, Google Pay, and similar) is **not available**. " +
+      "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is the card brand, not the wallet. " +
+      "I won’t invent wallet shares."
+    );
+  }
+  return (
+    "**Olo Pay · Phase 1:** decline reasons / decline codes are **not available** in the published extract. " +
+    "Authorization rate is published as Approved ÷ (Approved + Declined + Failure) Sale attempts, without a reason breakdown. " +
+    "I won’t invent decline reasons."
+  );
+}
+
+function answerOloSource() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay** comes from **Olo billing transactions** processed by **Stripe** (`PROCESSOR = Stripe`). " +
+    "Scope is **company-owned** shops only. " +
+    "**SALES_VOLUME** is approved Stripe Sale amount, including the billing total Olo stored (tips are not subtracted). " +
+    "Auth rate uses Approved ÷ (Approved + Declined + Failure) Sale attempts. **AVG_TICKET** is sales ÷ order count."
+  );
+}
+
+function answerOloScope() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay** on this dashboard is **company-owned** shops only — the same CO footprint as the other channels. " +
+    "Franchise and unmapped shops are excluded."
+  );
+}
+
+function answerOloSales() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.sales)) {
+    return "Olo Pay has no published week loaded right now.";
+  }
+  const fmt = oloFmt();
+  const sales = fmt.usd ? fmt.usd(week.sales) : money(week.sales, 2);
+  return (
+    `For **${week.label}**, Olo Pay **SALES_VOLUME** is **${sales}** — approved Stripe Sale dollars on company-owned shops, ` +
+    `including the billing total Olo stored (tips are not subtracted).`
+  );
+}
+
+function answerOloAuth() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.authRatePct)) {
+    return "Olo Pay has no published authorization rate for this period.";
+  }
+  const fmt = oloFmt();
+  const auth = fmt.authPct ? fmt.authPct(week.authRatePct) : `${Number(week.authRatePct).toFixed(2)}%`;
+  return (
+    `For **${week.label}**, Olo Pay **authorization rate** is **${auth}** — ` +
+    `Approved ÷ (Approved + Declined + Failure) Sale attempts on company-owned Stripe billing transactions.`
+  );
+}
+
+function answerOloOrders() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.orders)) {
+    return "Olo Pay has no published order count for this period.";
+  }
+  const fmt = oloFmt();
+  const orders = fmt.count ? fmt.count(week.orders) : Number(week.orders).toLocaleString("en-US");
+  return (
+    `For **${week.label}**, Olo Pay **ORDER_COUNT** is **${orders}** approved orders ` +
+    `(company-owned Stripe Sale captures on Olo billing transactions).`
+  );
+}
+
+function answerOloAvgTicket() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.avgTicket)) {
+    return "Olo Pay has no published average ticket for this period.";
+  }
+  const fmt = oloFmt();
+  const ticket = fmt.ticket ? fmt.ticket(week.avgTicket) : `$${Number(week.avgTicket).toFixed(2)}`;
+  return (
+    `For **${week.label}**, Olo Pay **AVG_TICKET** is **${ticket}** — SALES_VOLUME ÷ ORDER_COUNT ` +
+    `(approved Stripe Sale dollars ÷ approved orders). Tips are not subtracted from the billing total.`
+  );
+}
+
+function answerOloBrandMix() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week?.brands?.length) {
+    return "Olo Pay has no published card brand mix for this period.";
+  }
+  const fmt = oloFmt();
+  const lines = week.brands.map((brand) => {
+    const amount = fmt.usd ? fmt.usd(brand.amount) : money(brand.amount, 2);
+    const share = fmt.sharePct
+      ? fmt.sharePct((brand.pctOfSales || 0) / 100)
+      : `${Number(brand.pctOfSales || 0).toFixed(1)}%`;
+    return `• ${brand.label}: **${amount}** (${share})`;
+  });
+  rememberView(
+    `Olo card brand mix — ${week.label}`,
+    week.brands.map((brand) => ({
+      label: brand.label,
+      value: Number(brand.amount),
+      display: fmt.usd ? fmt.usd(brand.amount) : money(brand.amount, 2),
+      secondary: fmt.sharePct
+        ? fmt.sharePct((brand.pctOfSales || 0) / 100)
+        : `${Number(brand.pctOfSales || 0).toFixed(1)}%`,
+    })),
+    "Card brand is ACCOUNT_ISSUER — not wallet."
+  );
+  return (
+    `**Olo Pay card brand mix — ${week.label}** (ACCOUNT_ISSUER, not wallet)\n` +
+    `${lines.join("\n")}\n\nWallet split is not published in Phase 1.`
+  );
+}
+
+function answerOloQuestion(q, raw = "") {
+  const named = wantsOloKnowledge(q);
+  const followUp = chatContext.topic === "olo";
+  if (!named && !followUp) return null;
+  // A sticky Olo topic must not swallow a fresh ambiguous sales/ticket/auth
+  // question — those still need the channel clarifier.
+  if (!named && followUp && ambiguousChannelMetric(q, raw)) return null;
+
+  if (
+    /\b(wallet|apple pay|google pay|samsung pay|android pay)\b/.test(q) ||
+    (/\bbrand mix\b/.test(q) && /\b(apple|google|samsung|android|wallet)\b/.test(q))
+  ) {
+    return answerOloUnavailable("wallet");
+  }
+  if (/\b(decline reasons?|decline codes?|why.*declin|declines as|decline breakdown)\b/.test(q)) {
+    return answerOloUnavailable("declines");
+  }
+  if (
+    /\b(where does|where do|source|comes from|come from)\b/.test(q) ||
+    (/\bsource\b/.test(q) && /\b(olo|sales|data)\b/.test(q))
+  ) {
+    return answerOloSource();
+  }
+  if (/\b(scope|company owned|company-owned)\b/.test(q)) {
+    return answerOloScope();
+  }
+  if (/\b(card brand|brand mix|issuer|account_issuer|visa|mastercard|amex|discover)\b/.test(q)) {
+    return answerOloBrandMix();
+  }
+  if (/\b(auth|authorization|approval)\s*rate\b|\bauthorization rate\b/.test(q)) {
+    return answerOloAuth();
+  }
+  if (/\b(order[_\s]?count|how many orders|orders?\b)/.test(q) && !/\b(transaction|payment lines)\b/.test(q)) {
+    return answerOloOrders();
+  }
+  if (/\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q)) {
+    return answerOloAvgTicket();
+  }
+  if (
+    /\b(sales?[_\s]?volume|sales volume|sales dollars|revenue|how much.*sales|what.*sales)\b/.test(q) ||
+    /\bsales\b/.test(q)
+  ) {
+    return answerOloSales();
+  }
+  if (/\b(olo pay|olo)\b/.test(q) && /\b(what is|what's|explain|tell me about)\b/.test(q)) {
+    return answerOloSource();
+  }
+  return null;
+}
+
 function answerPosTender(q = "") {
   const week = latestPosWeek();
   chatContext.topic = "pos";
@@ -1012,24 +1201,34 @@ function wantsPosKnowledge(q) {
 const CHANNEL_CHOICES = {
   ticket: {
     ask:
-      "Two lanes, two different answers here — which one do you want?\n\n" +
+      "Three lanes, three different answers here — which one do you want?\n\n" +
       "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ guest checks, with tips and change left out.\n" +
-      "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n\n" +
-      "Say **All payments** or **Card present** and I’ll pull it.",
+      "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n" +
+      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved sales ÷ orders (tips not subtracted).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay** and I’ll pull it.",
   },
   sales: {
     ask:
       "Happy to pull that — which set of sales?\n\n" +
       "• **All payments (Xenial)** — net tender dollars taken at company-owned shops.\n" +
-      "• **Card present (Worldpay)** — card sales the network settled, tips included.\n\n" +
-      "Say **All payments** or **Card present**.",
+      "• **Card present (Worldpay)** — card sales the network settled, tips included.\n" +
+      "• **Olo Pay** — approved Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay**.",
   },
   count: {
     ask:
       "Depends which counter we’re standing at — which one?\n\n" +
       "• **All payments (Xenial)** — payment **lines** after dedupe, so two tenders on one check count twice.\n" +
-      "• **Card present (Worldpay)** — card sales transactions the network saw.\n\n" +
-      "Say **All payments** or **Card present**.",
+      "• **Card present (Worldpay)** — card sales transactions the network saw.\n" +
+      "• **Olo Pay** — approved Olo/Stripe order count (ORDER_COUNT).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay**.",
+  },
+  auth: {
+    ask:
+      "Authorization rate depends on the lane — which one?\n\n" +
+      "• **Card present (Worldpay)** — approved card auth requests ÷ all auth requests at company-owned shops.\n" +
+      "• **Olo Pay** — Approved ÷ (Approved + Declined + Failure) Stripe Sale attempts on Olo billing.\n\n" +
+      "Say **Card present** or **Olo Pay**.",
   },
 };
 
@@ -1063,6 +1262,12 @@ function ambiguousChannelMetric(q, raw) {
   ) {
     return "sales";
   }
+  if (
+    /\b(auth|authorization|approval)\s+rate\b/.test(q) &&
+    !/\b(trend|over time|best|worst|benchmark|industry|compare|qsr|peer)\b/.test(q)
+  ) {
+    return "auth";
+  }
   return null;
 }
 
@@ -1071,8 +1276,10 @@ function detectChannelReply(q) {
   if (q.split(" ").length > 6) return null;
   if (/^(the )?(all payments|xenial)( one| please)?[.!?]?$/.test(q)) return "pos";
   if (/^(the )?(card present|worldpay)( one| please)?[.!?]?$/.test(q)) return "worldpay";
+  if (/^(the )?(olo pay|olo)( one| please)?[.!?]?$/.test(q)) return "olo";
   if (/^(first|the first one)[.!?]?$/.test(q)) return "pos";
   if (/^(second|the second one)[.!?]?$/.test(q)) return "worldpay";
+  if (/^(third|the third one)[.!?]?$/.test(q)) return "olo";
   return null;
 }
 
@@ -1081,14 +1288,24 @@ function answerChannelChoice(kind, channel) {
   if (channel === "pos") {
     if (kind === "ticket") return answerPosAvgTicket();
     if (kind === "count") return answerPosPaymentsCount();
+    if (kind === "auth") {
+      return "All payments does not publish an authorization rate — that lives on **Card present (Worldpay)** and **Olo Pay**. Say which of those you want.";
+    }
     const week = latestPosWeek();
     chatContext.topic = "pos";
     if (!week) return "All payments has no published week loaded right now.";
     const sales = week.reportedTotal ?? week.tenderTotal;
     return `For **${week.label}**, All payments took **${money(sales, 2)}** in net tender at company-owned shops — card, cash, and gift card / Dutch Pass together.`;
   }
+  if (channel === "olo") {
+    if (kind === "ticket") return answerOloAvgTicket();
+    if (kind === "count") return answerOloOrders();
+    if (kind === "auth") return answerOloAuth();
+    return answerOloSales();
+  }
   if (kind === "ticket") return answerKpi("aov");
   if (kind === "count") return answerKpi("transaction_volume");
+  if (kind === "auth") return answerKpi("auth_rate");
   return answerKpi("sales_volume");
 }
 
@@ -1139,6 +1356,11 @@ function answerQuestion(raw) {
     const mixTrend = answerAnyMixItemTrend(q);
     if (mixTrend) return mixTrend;
   }
+
+  // Olo-named questions must resolve before Worldpay/POS aliases steal sales,
+  // ticket, auth, or order wording — and before the channel clarifier.
+  const oloAnswer = answerOloQuestion(q, raw);
+  if (oloAnswer) return oloAnswer;
 
   const ambiguous = ambiguousChannelMetric(q, raw);
   if (ambiguous) {

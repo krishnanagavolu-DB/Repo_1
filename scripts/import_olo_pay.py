@@ -15,7 +15,7 @@ import argparse
 import json
 import re
 import sys
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -456,7 +456,7 @@ def combine_weekly_files(paths: list[Path], methodology: dict) -> dict:
         summary = "; ".join(f"{e['code']}: {e['message']}" for e in hard_errors[:8])
         raise ValueError(f"validation failed ({len(hard_errors)} errors): {summary}")
 
-    # Prefer chronological order by week start; keep first payload's metadata shell.
+    # Prefer chronological order by week start; keep latest payload's metadata shell.
     by_start = sorted(loaded, key=lambda item: item[0])
     shell = by_start[-1][2]
     weeks_out = []
@@ -464,7 +464,8 @@ def combine_weekly_files(paths: list[Path], methodology: dict) -> dict:
         # Source-derived: copy the week object as published, do not recompute KPIs.
         weeks_out.append(copy_week(payload["weeks"][0]))
 
-    certified_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    # Deterministic: reuse source generated_at exactly (no wall-clock now()).
+    certified_at = shell.get("generated_at")
     combined = {
         "generated_at": shell.get("generated_at"),
         "week_cadence": shell.get("week_cadence", "Monday-Sunday"),

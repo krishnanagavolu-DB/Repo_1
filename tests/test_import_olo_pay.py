@@ -221,6 +221,30 @@ def test_combine_valid_weeks_chronologically_source_derived(tmp_path: Path):
     assert combined["certification"]["status"] in {"ok", "certified", "pass"}
 
 
+def test_combine_weekly_files_is_deterministic(tmp_path: Path):
+    """Same inputs must yield byte-equivalent output including certification metadata."""
+    import time
+
+    methodology = _methodology()
+    starts = ["2026-08-10", "2026-08-17", "2026-08-24"]
+    paths = []
+    for i, start in enumerate(starts):
+        payload = _week_payload(start, sales=1000.0 + i, txn=100 + i)
+        path = tmp_path / f"olo_pay_data_{start.replace('-', '')}.json"
+        _write_week(path, payload)
+        paths.append(path)
+
+    first = combine_weekly_files(paths, methodology)
+    time.sleep(1.05)
+    second = combine_weekly_files(paths, methodology)
+
+    assert first == second
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+    # If certified_at is present, it must come from stable source metadata — not wall clock.
+    if "certified_at" in first.get("certification", {}):
+        assert first["certification"]["certified_at"] == first.get("generated_at")
+
+
 def test_rejects_non_monday_week_start():
     payload = _week_payload("2026-08-25")  # Tuesday
     # week_end still +6 from that date so only Monday check fires cleanly

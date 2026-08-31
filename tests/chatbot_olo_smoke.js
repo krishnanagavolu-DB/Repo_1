@@ -174,6 +174,122 @@ if (!new RegExp(escapeRegExp(ticketFmt)).test(pickedOlo)) {
 check("What was AOV last week?", /AOV|\$12/i);
 check("What is the average ticket on All payments?", /\$10\.\d+|guest checks|payment lines/i);
 
+// Auth clarifier: Card present first, then Olo. Ordinals are kind-aware.
+reset();
+const authAsk = ask("What is the auth rate?");
+if (!/Card present/i.test(authAsk) || !/Olo/i.test(authAsk)) {
+  failures.push({ name: "bare auth clarifier names Card present and Olo", answer: authAsk });
+}
+if (/\$\d|\d+\.\d+%/.test(authAsk) && !/\?/.test(authAsk)) {
+  failures.push({ name: "bare auth clarifier states no figure", answer: authAsk });
+}
+const cardIdx = authAsk.search(/Card present/i);
+const oloIdx = authAsk.search(/Olo/i);
+if (!(cardIdx >= 0 && oloIdx > cardIdx)) {
+  failures.push({ name: "auth clarifier lists Card present before Olo", answer: authAsk });
+}
+
+reset();
+ask("What is the auth rate?");
+const authFirst = ask("first");
+if (!/\b98\.\d+%/.test(authFirst) || /does not publish|Olo Pay \*\*/i.test(authFirst)) {
+  failures.push({
+    name: "auth ordinal first selects Worldpay",
+    answer: authFirst,
+  });
+}
+
+reset();
+ask("What is the auth rate?");
+const authSecond = ask("second");
+if (!new RegExp(escapeRegExp(authFmt)).test(authSecond)) {
+  failures.push({
+    name: "auth ordinal second selects Olo",
+    expected: authFmt,
+    answer: authSecond,
+  });
+}
+
+// Invalid All payments on auth re-arms pending; next Olo/Card reply resolves.
+reset();
+ask("What is the auth rate?");
+const invalidLane = ask("All payments");
+if (!/Card present|Olo/i.test(invalidLane)) {
+  failures.push({ name: "invalid All payments on auth reminds of valid lanes", answer: invalidLane });
+}
+const afterInvalidOlo = ask("Olo Pay");
+if (!new RegExp(escapeRegExp(authFmt)).test(afterInvalidOlo)) {
+  failures.push({
+    name: "Olo after invalid All payments still resolves auth",
+    expected: authFmt,
+    answer: afterInvalidOlo,
+  });
+}
+
+reset();
+ask("What is the auth rate?");
+ask("All payments");
+const afterInvalidCard = ask("Card present");
+if (!/\b98\.\d+%/.test(afterInvalidCard) || /does not publish/i.test(afterInvalidCard)) {
+  failures.push({
+    name: "Card present after invalid All payments resolves Worldpay auth",
+    answer: afterInvalidCard,
+  });
+}
+
+// Sticky Olo topic must not swallow bare sales — still clarify three lanes.
+reset();
+ask("What is Olo Pay sales volume?");
+const bareAboutSales = ask("What about sales?");
+if (!/All payments/i.test(bareAboutSales) || !/Card present/i.test(bareAboutSales) || !/Olo/i.test(bareAboutSales)) {
+  failures.push({
+    name: "after Olo, What about sales? asks three-lane clarifier",
+    answer: bareAboutSales,
+  });
+}
+if (new RegExp(escapeRegExp(salesFmt)).test(bareAboutSales) && !/\?/.test(bareAboutSales)) {
+  failures.push({
+    name: "after Olo, What about sales? does not assume Olo figure",
+    answer: bareAboutSales,
+  });
+}
+
+reset();
+ask("What is Olo Pay sales volume?");
+const bareSales = ask("sales?");
+if (!/All payments/i.test(bareSales) || !/Card present/i.test(bareSales) || !/Olo/i.test(bareSales)) {
+  failures.push({
+    name: "after Olo, sales? asks three-lane clarifier",
+    answer: bareSales,
+  });
+}
+
+// Explicit Card present auth still returns Worldpay KPI, not a definition-only gloss.
+reset();
+const explicitWpAuth = ask("What is the Card present auth rate?");
+if (!/\b98\.\d+%/.test(explicitWpAuth)) {
+  failures.push({
+    name: "explicit Card present auth returns Worldpay auth rate",
+    answer: explicitWpAuth,
+  });
+}
+if (/Olo Pay \*\*|Approved ÷ \(Approved/i.test(explicitWpAuth)) {
+  failures.push({
+    name: "explicit Card present auth is not Olo",
+    answer: explicitWpAuth,
+  });
+}
+
+// Help copy mentions Olo Pay and Phase 1 limits.
+reset();
+const help = ask("help");
+if (!/Olo Pay/i.test(help)) {
+  failures.push({ name: "help mentions Olo Pay", answer: help });
+}
+if (!/Phase 1|wallet|decline/i.test(help)) {
+  failures.push({ name: "help mentions Phase 1 limitations", answer: help });
+}
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

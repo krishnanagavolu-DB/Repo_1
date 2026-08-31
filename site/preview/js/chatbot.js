@@ -1258,7 +1258,9 @@ function ambiguousChannelMetric(q, raw) {
   }
   if (
     /\b(sales|revenue)\b/.test(q) &&
-    /\b(total|how much|what were|what was|this week|volume)\b/.test(q)
+    (/\b(total|how much|what were|what was|this week|volume|about)\b/.test(q) ||
+      /^(what about )?sales\??$/.test(q) ||
+      /^sales\??$/.test(q))
   ) {
     return "sales";
   }
@@ -1272,14 +1274,15 @@ function ambiguousChannelMetric(q, raw) {
 }
 
 /** Only a short, direct reply counts as picking a lane. */
-function detectChannelReply(q) {
+function detectChannelReply(q, kind = null) {
   if (q.split(" ").length > 6) return null;
   if (/^(the )?(all payments|xenial)( one| please)?[.!?]?$/.test(q)) return "pos";
   if (/^(the )?(card present|worldpay)( one| please)?[.!?]?$/.test(q)) return "worldpay";
   if (/^(the )?(olo pay|olo)( one| please)?[.!?]?$/.test(q)) return "olo";
-  if (/^(first|the first one)[.!?]?$/.test(q)) return "pos";
-  if (/^(second|the second one)[.!?]?$/.test(q)) return "worldpay";
-  if (/^(third|the third one)[.!?]?$/.test(q)) return "olo";
+  // Ordinals follow the order shown in that kind's clarifier.
+  if (/^(first|the first one)[.!?]?$/.test(q)) return kind === "auth" ? "worldpay" : "pos";
+  if (/^(second|the second one)[.!?]?$/.test(q)) return kind === "auth" ? "olo" : "worldpay";
+  if (/^(third|the third one)[.!?]?$/.test(q)) return kind === "auth" ? null : "olo";
   return null;
 }
 
@@ -1289,6 +1292,8 @@ function answerChannelChoice(kind, channel) {
     if (kind === "ticket") return answerPosAvgTicket();
     if (kind === "count") return answerPosPaymentsCount();
     if (kind === "auth") {
+      // Re-arm so the next Card present / Olo reply still resolves this ask.
+      chatContext.pendingChoice = "auth";
       return "All payments does not publish an authorization rate — that lives on **Card present (Worldpay)** and **Olo Pay**. Say which of those you want.";
     }
     const week = latestPosWeek();
@@ -1321,12 +1326,12 @@ function answerQuestion(raw) {
   if (chatContext.pendingChoice) {
     const pending = chatContext.pendingChoice;
     chatContext.pendingChoice = null;
-    const channel = detectChannelReply(q);
+    const channel = detectChannelReply(q, pending);
     if (channel) return answerChannelChoice(pending, channel);
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); Phase 1 has no wallet mix or decline reasons\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   // Anyone about to share these numbers should be able to ask what was left out.
@@ -1367,6 +1372,15 @@ function answerQuestion(raw) {
     chatContext.topic = "clarify";
     chatContext.pendingChoice = ambiguous;
     return CHANNEL_CHOICES[ambiguous].ask;
+  }
+
+  // Named Card present / Worldpay auth should return the KPI, not only the glossary gloss.
+  if (
+    /\b(auth|authorization|approval)\s*rate\b/.test(q) &&
+    /\b(card present|worldpay)\b/.test(q) &&
+    !/\bolo\b/.test(q)
+  ) {
+    return answerKpi("auth_rate");
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();

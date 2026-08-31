@@ -429,10 +429,6 @@ body {
   font-size: 12px;
 }
 
-.olo-charts {
-  grid-template-columns: 1fr;
-}
-
 .olo-charts .mix-body {
   display: block;
   width: 100%;
@@ -990,6 +986,11 @@ main {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+/* Higher specificity than .charts-2 so the single Olo detail panel stays full-width. */
+.charts-2.olo-charts {
+  grid-template-columns: 1fr;
 }
 
 .panel {

@@ -42,9 +42,14 @@ check("no invented wallet chart id", html.includes("chart-olo-wallet"), false);
 check("no invented decline chart id", html.includes("chart-olo-declines"), false);
 
 const css = fs.readFileSync("site/preview/css/dashboard.css", "utf8");
+const charts2Idx = css.search(/\.charts-2\s*\{[^}]*grid-template-columns:\s*1fr\s+1fr/);
+const oloOverrideIdx = css.search(
+  /\.charts-2\.olo-charts\s*\{[^}]*grid-template-columns:\s*1fr(?:\s|;|\n|\})/
+);
+check("olo full-width uses charts-2.olo-charts compound", oloOverrideIdx >= 0, true);
 check(
-  "olo-charts forces one full-width column",
-  /\.olo-charts\s*\{[^}]*grid-template-columns:\s*1fr/.test(css),
+  "olo full-width compound follows .charts-2 so it cannot lose",
+  charts2Idx >= 0 && oloOverrideIdx > charts2Idx,
   true
 );
 check("olo support row uses --line token", /\.olo-support-row\s*\{[^}]*border-bottom:\s*1px dotted var\(--line\)/.test(css), true);
@@ -147,6 +152,35 @@ check(
 );
 check("supporting Digital sales uses th scope=row", oloJs.includes('<th scope="row">Digital sales</th>'), true);
 check("unused orders trend metric removed", /orders:\s*\(week\)\s*=>\s*week\.orders/.test(oloJs), false);
+check(
+  "orders does not fall back to transactions",
+  !/orders:\s*Number\.isFinite\(orders\)\s*\?\s*orders\s*:\s*transactions/.test(oloJs),
+  true
+);
+
+const missingOrders = olo.normalizeOloData({
+  weeks: [
+    {
+      week_start_date: "2026-08-24",
+      week_end_date: "2026-08-30",
+      totals: {
+        SALES_VOLUME: 100,
+        TRANSACTION_COUNT: 10,
+        AVG_TICKET: 10,
+      },
+      authorization: { approved: 10, declined: 0, failed: 0, auth_rate_pct: 100 },
+      card_brand_mix: {
+        Visa: { amount: 100, pct_of_digital_sales: 100, TRANSACTION_COUNT: 10 },
+      },
+    },
+  ],
+});
+check("missing ORDER_COUNT stays null", missingOrders[0]?.orders, null);
+check(
+  "missing ORDER_COUNT is not inferred from transactions",
+  missingOrders[0]?.orders === missingOrders[0]?.transactions,
+  false
+);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

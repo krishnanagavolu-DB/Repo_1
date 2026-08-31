@@ -273,7 +273,7 @@ function normalizeWeek(week, brandOrder) {
     sortKey: weekSortKey(week),
     sales,
     transactions,
-    orders: Number.isFinite(orders) ? orders : transactions,
+    orders: Number.isFinite(orders) ? orders : null,
     avgTicket,
     avgTicketBasis:
       firstString(totals, ["AVG_TICKET_BASIS", "avg_ticket_basis", "ticket_basis"]) || null,

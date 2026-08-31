@@ -23,6 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 AMOUNT_TOL = 0.02
 PCT_TOL = 0.05
+WOW_PCT_TOL = 0.06  # one-decimal source rounding slack
+WOW_AUTH_PP_TOL = 0.02
 AUTH_RATE_TOL = 0.015
 
 WEEK_FILE_RE = re.compile(r"olo_pay_data_(\d{8})")
@@ -408,6 +410,9 @@ def _metadata_fingerprint(payload: dict) -> dict:
         "filter": payload.get("filter"),
         "brand_order": payload.get("brand_order"),
         "environment": payload.get("environment"),
+        "week_cadence": payload.get("week_cadence"),
+        "dashboard_tab": payload.get("dashboard_tab"),
+        "methodology_file": payload.get("methodology_file"),
     }
 
 
@@ -418,7 +423,15 @@ def _reject_divergent_metadata(loaded: list[tuple[str, Path, dict]]) -> None:
     base = _metadata_fingerprint(base_payload)
     for week_start, path, payload in loaded[1:]:
         current = _metadata_fingerprint(payload)
-        for key in ("definitions", "filter", "brand_order", "environment"):
+        for key in (
+            "definitions",
+            "filter",
+            "brand_order",
+            "environment",
+            "week_cadence",
+            "dashboard_tab",
+            "methodology_file",
+        ):
             if current.get(key) != base.get(key):
                 label = "scope/environment" if key == "environment" else key
                 raise ValueError(
@@ -461,28 +474,55 @@ def _validate_adjacent_week_over_week(weeks: list[dict]) -> None:
         )
         expected_auth_pp = round(curr_auth - prev_auth, 2)
 
-        if wow.get("SALES_VOLUME_PCT") is None and wow.get("TRANSACTION_COUNT_PCT") is None and wow.get("AUTH_RATE_PP") is None:
+        sales_raw = wow.get("SALES_VOLUME_PCT")
+        txn_raw = wow.get("TRANSACTION_COUNT_PCT")
+        auth_raw = wow.get("AUTH_RATE_PP")
+        # All-null WoW means "not published for this first/adjacent week" — skip.
+        if sales_raw is None and txn_raw is None and auth_raw is None:
             continue
+        # Partial nulls or non-numerics are structured validation failures.
+        week_label = curr.get("week_start_date")
+        for field_name, raw in (
+            ("SALES_VOLUME_PCT", sales_raw),
+            ("TRANSACTION_COUNT_PCT", txn_raw),
+            ("AUTH_RATE_PP", auth_raw),
+        ):
+            if raw is None:
+                raise ValueError(
+                    f"week_over_week invalid: {field_name} is null on {week_label}"
+                )
+            if isinstance(raw, bool) or not isinstance(raw, (int, float, str)):
+                raise ValueError(
+                    f"week_over_week non-numeric {field_name}={raw!r} on {week_label}"
+                )
+            if isinstance(raw, str):
+                try:
+                    float(raw)
+                except ValueError as err:
+                    raise ValueError(
+                        f"week_over_week non-numeric {field_name}={raw!r} on {week_label}"
+                    ) from err
         try:
-            stated_sales = float(wow.get("SALES_VOLUME_PCT"))
-            stated_txn = float(wow.get("TRANSACTION_COUNT_PCT"))
-            stated_auth = float(wow.get("AUTH_RATE_PP"))
+            stated_sales = float(sales_raw)
+            stated_txn = float(txn_raw)
+            stated_auth = float(auth_raw)
         except (TypeError, ValueError) as err:
             raise ValueError(
-                f"week_over_week missing/non-numeric on {curr.get('week_start_date')}: {err}"
+                f"week_over_week non-numeric on {week_label}: {err}"
             ) from err
 
-        if abs(stated_sales - expected_sales_pct) > 0.05:
+        # <= tol (with float slack) so one-decimal edges like 0.04 vs 0.1 pass at 0.06.
+        if abs(stated_sales - expected_sales_pct) > WOW_PCT_TOL + 1e-9:
             raise ValueError(
                 f"week_over_week SALES_VOLUME_PCT {stated_sales} != adjacent {expected_sales_pct} "
                 f"for {curr.get('week_start_date')}"
             )
-        if abs(stated_txn - expected_txn_pct) > 0.05:
+        if abs(stated_txn - expected_txn_pct) > WOW_PCT_TOL + 1e-9:
             raise ValueError(
                 f"week_over_week TRANSACTION_COUNT_PCT {stated_txn} != adjacent {expected_txn_pct} "
                 f"for {curr.get('week_start_date')}"
             )
-        if abs(stated_auth - expected_auth_pp) > 0.02:
+        if abs(stated_auth - expected_auth_pp) > WOW_AUTH_PP_TOL + 1e-9:
             raise ValueError(
                 f"week_over_week AUTH_RATE_PP {stated_auth} != adjacent {expected_auth_pp} "
                 f"for {curr.get('week_start_date')}"

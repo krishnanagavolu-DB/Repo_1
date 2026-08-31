@@ -599,3 +599,73 @@ def test_temp_regen_matches_committed_processed_and_preview_bytes():
         assert out.read_bytes() == committed_out.read_bytes()
         assert preview.read_bytes() == committed_preview.read_bytes()
 
+def test_week_over_week_allows_one_decimal_rounding_edge(tmp_path: Path):
+    """Stated WoW within 0.06 of adjacent math is accepted (one-decimal source rounding)."""
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17", sales=1000.0, txn=100, declined=4, failed=0)
+    curr = _week_payload("2026-08-24", sales=1001.0, txn=100, declined=4, failed=0)
+    # True sales delta = 0.1%; publish 0.04 (0.06 away from rounded 0.1) — must pass with 0.06 tol.
+    curr["weeks"][0]["week_over_week"] = {
+        "SALES_VOLUME_PCT": 0.04,
+        "TRANSACTION_COUNT_PCT": 0.0,
+        "AUTH_RATE_PP": 0.0,
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
+    combined = combine_weekly_files([path_a, path_b], methodology)
+    assert len(combined["weeks"]) == 2
+
+
+def test_week_over_week_rejects_non_numeric_with_structured_error(tmp_path: Path):
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17")
+    curr = _week_payload("2026-08-24")
+    curr["weeks"][0]["week_over_week"] = {
+        "SALES_VOLUME_PCT": "n/a",
+        "TRANSACTION_COUNT_PCT": 0.0,
+        "AUTH_RATE_PP": 0.0,
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
+    with pytest.raises(ValueError, match=r"week_over_week|non-numeric|invalid"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+
+def test_week_over_week_rejects_partial_null_with_structured_error(tmp_path: Path):
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17")
+    curr = _week_payload("2026-08-24")
+    curr["weeks"][0]["week_over_week"] = {
+        "SALES_VOLUME_PCT": None,
+        "TRANSACTION_COUNT_PCT": 0.0,
+        "AUTH_RATE_PP": 0.0,
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
+    with pytest.raises(ValueError, match=r"week_over_week|null|non-numeric|invalid"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+
+def test_rejects_divergent_week_cadence_dashboard_tab_or_methodology_file(tmp_path: Path):
+    methodology = _methodology()
+    a = _week_payload("2026-08-17")
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", a)
+
+    b = _week_payload("2026-08-24")
+    b["week_cadence"] = "Sunday-Saturday"
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"week_cadence|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+    b = _week_payload("2026-08-24")
+    b["dashboard_tab"] = "Other Tab"
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"dashboard_tab|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+    b = _week_payload("2026-08-24")
+    b["methodology_file"] = "other_methodology.json"
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"methodology_file|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+

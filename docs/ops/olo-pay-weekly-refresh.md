@@ -38,8 +38,14 @@ python3 scripts/import_olo_pay.py data/raw/olo-pay/olo_pay_data_*.json \
   --out "$tmpdir/olo_pay_data.json" \
   --report "$tmpdir/olo_pay_validation_report.json" \
   --preview-copy "$tmpdir/preview_olo_pay_data.json"
-cmp -s "$tmpdir/olo_pay_data.json" data/processed/olo_pay_data.json
-cmp -s "$tmpdir/preview_olo_pay_data.json" site/preview/data/olo_pay_data.json
+if ! cmp "$tmpdir/olo_pay_data.json" data/processed/olo_pay_data.json; then
+  echo "Processed JSON drifted from raw regen. Re-run import_olo_pay.py and commit data/processed/olo_pay_data.json." >&2
+  exit 1
+fi
+if ! cmp "$tmpdir/preview_olo_pay_data.json" site/preview/data/olo_pay_data.json; then
+  echo "Preview JSON drifted from raw regen. Re-run import_olo_pay.py and commit site/preview/data/olo_pay_data.json." >&2
+  exit 1
+fi
 ```
 
 6. Commit the new raw week plus updated processed/preview/report files. Preview UI assets do not need a restamp unless `site/preview/js|css` changed.

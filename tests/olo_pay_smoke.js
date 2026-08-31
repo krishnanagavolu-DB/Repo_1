@@ -188,13 +188,6 @@ check(
   false
 );
 
-if (failures.length) {
-  console.error(JSON.stringify(failures, null, 2));
-  process.exit(1);
-}
-
-console.log("Olo Pay smoke checks passed");
-
 const oloSrc = fs.readFileSync(scriptPath, "utf8");
 check(
   "brand legend bullets are aria-hidden",
@@ -209,3 +202,11 @@ check(
     || /destroy\(\)[\s\S]{0,80}if\s*\(!canvas[\s\S]{0,60}!series\.length/.test(oloSrc),
   true
 );
+
+
+if (failures.length) {
+  console.error(JSON.stringify(failures, null, 2));
+  process.exit(1);
+}
+
+console.log("Olo Pay smoke checks passed");

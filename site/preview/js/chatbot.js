@@ -994,15 +994,36 @@ function answerOloVoids() {
   return `For **${week.label}**, Olo Pay **VOID_VOLUME** is **${amount}** (company-owned Stripe VoidSale dollars on Olo billing transactions).`;
 }
 
+function escapeChatText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function oloLimitationBullets() {
+  const published =
+    window.__oloPayState?.methodology?.not_in_this_extract ||
+    window.__oloPay?.methodology?.not_in_this_extract ||
+    null;
+  if (Array.isArray(published) && published.length) {
+    return published.map((item) => `• ${escapeChatText(item)}`);
+  }
+  return [
+    "• **Franchised shops** and **unmapped shops** (no Gold NEWCOID match) are out of scope — company-owned only.",
+    "• **Apple Pay / Google Pay wallet identifiers** are not published — Phase 2.",
+    "• **Network decline reason codes** are not published — Phase 2.",
+    "• **Dutch Pass / Paytronix** and **Worldpay** traffic are not in this extract.",
+    "• No line-level dump of every billing transaction.",
+  ];
+}
+
 function answerOloExclusions() {
   chatContext.topic = "olo";
   return [
     "**Olo Pay · Phase 1 methodology limitations**",
-    "• **Franchised shops** and **unmapped shops** (no Gold NEWCOID match) are out of scope — company-owned only.",
-    "• **Apple Pay / Google Pay wallet identifiers** (`BILLING_SCHEME_NM`) are not published — Phase 2.",
-    "• **Network decline reason codes** are not published — Phase 2.",
-    "• **Dutch Pass / Paytronix** and **Worldpay** traffic are not in this extract.",
-    "• No line-level dump of every billing transaction.",
+    ...oloLimitationBullets(),
     "",
     "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is not a wallet split.",
   ].join("\n");
@@ -1048,13 +1069,17 @@ function answerOloQuestion(q, raw = "") {
   if (/\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q)) {
     return answerOloAvgTicket();
   }
+  // Refund *rate* is a Worldpay/All-payments KPI — sticky Olo must not steal it.
+  if (/\b(refund|return)\s*rate\b|\breturns as %\b/.test(q)) {
+    return null;
+  }
   if (/\brefunds?\b/.test(q) || /\brefund[_\s]?volume\b/.test(q)) {
     return answerOloRefunds();
   }
   if (/\bvoids?\b/.test(q) || /\bvoid[_\s]?volume\b/.test(q)) {
     return answerOloVoids();
   }
-  if (/\b(exclud|left out|not in|limitations?|methodology)\b/.test(q)) {
+  if (/\b(exclud|left out|not in|limitations?|caveats?|methodology)\b/.test(q)) {
     return answerOloExclusions();
   }
   if (
@@ -1415,6 +1440,7 @@ function answerQuestion(raw) {
     /\b(assumptions?|assumed|caveats?|limitations?|gotchas?|footnotes?|fine print)\b/.test(q) ||
     /\b(what should i know|need to know|before (i )?shar)\b/.test(q)
   ) {
+    if (wantsOloKnowledge(q)) return answerOloExclusions();
     return answerPosAssumptions();
   }
 

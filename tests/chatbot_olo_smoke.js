@@ -51,7 +51,8 @@ const posWeeks = sandbox.window.__posSales.normalizePosData(posRaw);
 sandbox.window.__posSalesState = { weeks: posWeeks, latest: posWeeks.at(-1) };
 vm.runInContext(fs.readFileSync("site/preview/js/olo-pay.js", "utf8"), sandbox);
 const oloWeeks = sandbox.window.__oloPay.normalizeOloData(oloRaw);
-sandbox.window.__oloPayState = { weeks: oloWeeks, latest: oloWeeks.at(-1) };
+sandbox.window.__oloPayState = { weeks: oloWeeks, latest: oloWeeks.at(-1), methodology: oloRaw.methodology || null };
+if (sandbox.window.__oloPay) sandbox.window.__oloPay.methodology = oloRaw.methodology || null;
 vm.runInContext(fs.readFileSync("site/preview/js/chatbot.js", "utf8"), sandbox);
 
 const chat = sandbox.window.__paymentsChat;
@@ -442,9 +443,77 @@ if (!/Phase 1|wallet|decline|franchise|Apple Pay|Google Pay|not in this extract|
   });
 }
 
+
+// Sticky Olo must yield generic refund rate to Worldpay; explicit Olo refunds stay Olo.
+reset();
+ask("What is Olo Pay sales volume?");
+const stickyRefundRate = ask("refund rate");
+if (!/Returns as % of sales|Return\/refund dollars|0\.\d+%/i.test(stickyRefundRate)) {
+  failures.push({
+    name: "after Olo, refund rate returns Worldpay returns KPI",
+    answer: stickyRefundRate,
+  });
+}
+if (/Olo Pay \*\*REFUND_VOLUME\*\*|REFUND_VOLUME is/i.test(stickyRefundRate)) {
+  failures.push({
+    name: "after Olo, refund rate is not Olo refund volume",
+    answer: stickyRefundRate,
+  });
+}
+check("What is Olo Pay refund volume?", new RegExp(escapeRegExp(olo.usd(latest.refunds))));
+
+// Olo-named limitations/caveats/methodology must not fall through to POS assumptions.
+for (const q of ["Olo Pay limitations", "Olo Pay caveats", "Olo Pay methodology"]) {
+  reset();
+  const answer = ask(q);
+  if (/Assumptions behind All payments|judgement call/i.test(answer)) {
+    failures.push({ name: `${q} is not POS assumptions`, answer });
+  }
+  if (!/Phase 1|methodology|not in this extract|franchise|wallet|decline|Apple Pay|Google Pay/i.test(answer)) {
+    failures.push({ name: `${q} returns Olo methodology limitations`, answer });
+  }
+}
+
+// Limitation bullets prefer published methodology.not_in_this_extract; HTML is escaped.
+const publishedLimits = (oloRaw.methodology && oloRaw.methodology.not_in_this_extract) || [];
+if (publishedLimits.length) {
+  reset();
+  const lim = ask("Olo Pay limitations");
+  const sample = String(publishedLimits[0]).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  if (!new RegExp(sample).test(lim)) {
+    failures.push({
+      name: "Olo limitations use published not_in_this_extract text",
+      answer: lim,
+      expectedSample: publishedLimits[0],
+    });
+  }
+}
+{
+  const prev = sandbox.window.__oloPayState.methodology;
+  sandbox.window.__oloPayState.methodology = {
+    not_in_this_extract: ['<script>alert("x")</script>', "Safe franchise note"],
+  };
+  reset();
+  const injected = ask("Olo Pay limitations");
+  if (/<script>/i.test(injected) || !/&lt;script&gt;/.test(injected)) {
+    failures.push({
+      name: "Olo limitation bullets HTML-escape published extract items",
+      answer: injected,
+    });
+  }
+  if (!/Safe franchise note/.test(injected)) {
+    failures.push({
+      name: "Olo limitation bullets include safe published extract items",
+      answer: injected,
+    });
+  }
+  sandbox.window.__oloPayState.methodology = prev;
+}
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);
 }
 
 console.log("Olo chatbot smoke checks passed");
+

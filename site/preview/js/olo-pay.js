@@ -289,7 +289,10 @@ function normalizeWeek(week, brandOrder) {
 }
 
 /** Accepts the published wrapper object or a bare weeks array. */
+let cachedMethodology = null;
+
 function normalizeOloData(raw) {
+  cachedMethodology = raw && typeof raw === "object" ? raw.methodology || null : null;
   let weeks = [];
   if (Array.isArray(raw)) weeks = raw;
   else if (Array.isArray(raw?.weeks)) weeks = raw.weeks;
@@ -720,7 +723,7 @@ function selectPeriod(periodId) {
 
 function renderOlo(weeks) {
   if (!weeks.length) {
-    window.__oloPayState = { weeks: [], latest: null };
+    window.__oloPayState = { weeks: [], latest: null, methodology: null };
     showNotice({
       title: "Olo Pay for this preview isn't published yet",
       message: "Once the certified weekly Olo files are loaded, digital approval metrics will appear here.",
@@ -730,7 +733,8 @@ function renderOlo(weeks) {
     return;
   }
   const latest = weeks[weeks.length - 1];
-  window.__oloPayState = { weeks, latest };
+  window.__oloPayState = { weeks, latest, methodology: cachedMethodology };
+  if (window.__oloPay) window.__oloPay.methodology = cachedMethodology;
   window.__ytdBanner?.register("olo", getDataStart(weeks));
   const requested = findWeekForPeriod(weeks, selectedPeriodId);
   if (selectedPeriodId && selectedPeriodId !== "ytd" && !requested) {

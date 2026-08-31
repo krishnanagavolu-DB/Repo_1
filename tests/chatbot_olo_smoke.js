@@ -331,6 +331,117 @@ if (!/Phase 1|wallet|decline/i.test(help)) {
   failures.push({ name: "help mentions Phase 1 limitations", answer: help });
 }
 
+// Required: sticky Olo must yield generic wallet/decline asks to Worldpay.
+reset();
+ask("What is Olo Pay sales volume?");
+const stickyWallet = ask("Show wallet mix");
+if (!/\*\*Wallet mix/i.test(stickyWallet)) {
+  failures.push({
+    name: "after Olo, Show wallet mix returns Worldpay wallet mix",
+    answer: stickyWallet,
+  });
+}
+if (/Olo Pay · Phase 1|Phase 1:.*wallet/i.test(stickyWallet)) {
+  failures.push({
+    name: "after Olo, Show wallet mix is not Olo Phase 1 unavailable",
+    answer: stickyWallet,
+  });
+}
+
+reset();
+ask("What is Olo Pay sales volume?");
+const stickyDeclines = ask("What are the decline reasons?");
+if (!/\*\*Decline reasons/i.test(stickyDeclines)) {
+  failures.push({
+    name: "after Olo, decline reasons returns Worldpay declines",
+    answer: stickyDeclines,
+  });
+}
+if (/Olo Pay · Phase 1|Phase 1:.*decline/i.test(stickyDeclines)) {
+  failures.push({
+    name: "after Olo, decline reasons is not Olo Phase 1 unavailable",
+    answer: stickyDeclines,
+  });
+}
+
+// Explicit Olo-named wallet/decline asks keep Phase 1 unavailable.
+check("Olo Pay wallet mix", /unavailable|not (available|in)|Phase 1|phase 1/i);
+check("Olo Pay decline reasons", /unavailable|not (available|in)|Phase 1|phase 1/i);
+
+// Clarifier chips include Olo; auth offers Card present + Olo only.
+reset();
+ask("What is the auth rate?");
+if (typeof chat.suggestedFollowUps !== "function") {
+  failures.push({ name: "suggestedFollowUps is exported for chip checks" });
+} else {
+  const authChips = chat.suggestedFollowUps();
+  const authLabels = authChips.map((c) => c.label).join(" | ");
+  if (!/Card present/i.test(authLabels) || !/Olo/i.test(authLabels)) {
+    failures.push({ name: "auth clarifier chips include Card present and Olo", chips: authChips });
+  }
+  if (/All payments/i.test(authLabels)) {
+    failures.push({ name: "auth clarifier chips do not offer All payments", chips: authChips });
+  }
+}
+
+reset();
+ask("What were sales this week?");
+if (typeof chat.suggestedFollowUps === "function") {
+  const salesChips = chat.suggestedFollowUps();
+  const salesLabels = salesChips.map((c) => c.label).join(" | ");
+  if (!/Olo/i.test(salesLabels)) {
+    failures.push({ name: "sales clarifier chips include Olo", chips: salesChips });
+  }
+  if (!/All payments/i.test(salesLabels) || !/Card present/i.test(salesLabels)) {
+    failures.push({
+      name: "sales clarifier chips reflect All payments and Card present lanes",
+      chips: salesChips,
+    });
+  }
+}
+
+// Auth ordinal "third" must not silently clear the pending choice.
+reset();
+ask("What is the auth rate?");
+const beforeThird = chat.chatContext.pendingChoice;
+ask("third");
+if (chat.chatContext.pendingChoice !== beforeThird || beforeThird !== "auth") {
+  failures.push({
+    name: "auth ordinal third keeps pendingChoice=auth",
+    before: beforeThird,
+    after: chat.chatContext.pendingChoice,
+  });
+}
+const afterThirdFirst = ask("first");
+if (!/\b98\.\d+%/.test(afterThirdFirst) || /does not publish|Olo Pay \*\*/i.test(afterThirdFirst)) {
+  failures.push({
+    name: "after invalid third, first still selects Worldpay auth",
+    answer: afterThirdFirst,
+  });
+}
+
+// Olo refund and void values from selected-period state.
+const refundFmt = olo.usd(latest.refunds);
+const voidFmt = olo.usd(latest.voids);
+check("What is Olo Pay refund volume?", new RegExp(escapeRegExp(refundFmt)));
+check("What is Olo Pay void volume?", new RegExp(escapeRegExp(voidFmt)));
+
+// Olo exclusions are methodology limitations, not All payments exclusions.
+reset();
+const oloExclude = ask("What does Olo Pay exclude?");
+if (/What is excluded from All payments|Tips — not drink sales|UNKNOWN payment types/i.test(oloExclude)) {
+  failures.push({
+    name: "Olo Pay exclude is not All payments exclusions list",
+    answer: oloExclude,
+  });
+}
+if (!/Phase 1|wallet|decline|franchise|Apple Pay|Google Pay|not in this extract|methodology/i.test(oloExclude)) {
+  failures.push({
+    name: "Olo Pay exclude returns Olo methodology limitations",
+    answer: oloExclude,
+  });
+}
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

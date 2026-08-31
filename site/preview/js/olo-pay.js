@@ -477,8 +477,11 @@ function renderSupport(week) {
 
 function renderTrend(metric, series, activeWeek) {
   const canvas = document.getElementById(`chart-olo-${metric}-trend`);
+  if (trendCharts[metric]) {
+    trendCharts[metric].destroy();
+    trendCharts[metric] = null;
+  }
   if (!canvas || typeof Chart === "undefined" || !series.length) return;
-  if (trendCharts[metric]) trendCharts[metric].destroy();
 
   const values = series.map((point) => point.value);
   const last = values[values.length - 1];
@@ -562,7 +565,7 @@ function renderLegend(el, rows) {
     .map(
       (row, idx) => `
       <tr>
-        <td><span style="color:${brandInk(row.label, idx)}">●</span> ${row.label}</td>
+        <td><span style="color:${brandInk(row.label, idx)}" aria-hidden="true">●</span> ${row.label}</td>
         <td>${sharePct(row.pctOfSales / 100)} <span class="mix-hint">${compactUsd(row.amount)}</span></td>
       </tr>`
     )
@@ -617,7 +620,7 @@ function renderDetail(week) {
     .map(
       (brand, idx) => `
       <tr>
-        <td><span style="color:${brandInk(brand.label, idx)}">●</span> ${brand.label}</td>
+        <td><span style="color:${brandInk(brand.label, idx)}" aria-hidden="true">●</span> ${brand.label}</td>
         <td>${usd(brand.amount)}</td>
         <td>${sharePct(brand.pctOfSales / 100)}</td>
         <td>${count(brand.transactions)}</td>

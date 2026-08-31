@@ -38,6 +38,12 @@ check("olo slide aria-label", html.includes('aria-label="Olo Pay digital approva
 check("olo slide title", html.includes("OLO PAY · DIGITAL APPROVAL &amp; SALES") || html.includes("OLO PAY · DIGITAL APPROVAL & SALES"), true);
 check("company owned shops only copy", html.includes("Company owned shops only"), true);
 check("olo-pay.js is loaded", /src="js\/olo-pay\.js/.test(html), true);
+
+const labelsRef = html.indexOf('src="js/chart-labels.js');
+const oloRef = html.indexOf('src="js/olo-pay.js');
+check("chart-labels.js is loaded", labelsRef >= 0, true);
+check("chart-labels.js loads before olo-pay.js", labelsRef >= 0 && oloRef > labelsRef, true);
+
 check("no invented wallet chart id", html.includes("chart-olo-wallet"), false);
 check("no invented decline chart id", html.includes("chart-olo-declines"), false);
 
@@ -188,3 +194,18 @@ if (failures.length) {
 }
 
 console.log("Olo Pay smoke checks passed");
+
+const oloSrc = fs.readFileSync(scriptPath, "utf8");
+check(
+  "brand legend bullets are aria-hidden",
+  /aria-hidden="true"[^>]*>●|●[^<]*aria-hidden="true"|<span[^>]*aria-hidden="true"[^>]*>●/.test(oloSrc),
+  true
+);
+check(
+  "empty trend series destroys stale charts before return",
+  /if\s*\(\s*trendCharts\[metric\]\s*\)\s*trendCharts\[metric\]\.destroy\(\)\s*;\s*\n\s*if\s*\([^)]*series\.length/.test(oloSrc)
+    || /trendCharts\[metric\]\.destroy\(\)[\s\S]{0,120}!series\.length/.test(oloSrc)
+    || /if\s*\(!series\.length\)[\s\S]{0,80}destroy\(\)/.test(oloSrc)
+    || /destroy\(\)[\s\S]{0,80}if\s*\(!canvas[\s\S]{0,60}!series\.length/.test(oloSrc),
+  true
+);

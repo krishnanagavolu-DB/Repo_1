@@ -93,8 +93,9 @@ def _week_payload(
             "unmapped_or_other_sales": unmapped,
         },
         "week_over_week": {
-            "SALES_VOLUME_PCT": -1.0,
-            "TRANSACTION_COUNT_PCT": -1.0,
+            # Defaults assume identical adjacent weeks in multi-week combine fixtures.
+            "SALES_VOLUME_PCT": 0.0,
+            "TRANSACTION_COUNT_PCT": 0.0,
             "AUTH_RATE_PP": 0.0,
         },
     }
@@ -143,6 +144,36 @@ def _week_payload(
     }
 
 
+
+def _stamp_week_over_week(payload: dict, prior: dict | None) -> dict:
+    """Set week_over_week from adjacent prior week totals/auth (source-style)."""
+    week = payload["weeks"][0]
+    if prior is None:
+        week["week_over_week"] = {
+            "SALES_VOLUME_PCT": None,
+            "TRANSACTION_COUNT_PCT": None,
+            "AUTH_RATE_PP": None,
+        }
+        return payload
+    prev = prior["weeks"][0]
+    prev_sales = float(prev["totals"]["SALES_VOLUME"])
+    curr_sales = float(week["totals"]["SALES_VOLUME"])
+    prev_txn = int(prev["totals"]["TRANSACTION_COUNT"])
+    curr_txn = int(week["totals"]["TRANSACTION_COUNT"])
+    prev_auth = float(prev["authorization"]["auth_rate_pct"])
+    curr_auth = float(week["authorization"]["auth_rate_pct"])
+    week["week_over_week"] = {
+        "SALES_VOLUME_PCT": None
+        if prev_sales == 0
+        else round((curr_sales - prev_sales) / prev_sales * 100.0, 1),
+        "TRANSACTION_COUNT_PCT": None
+        if prev_txn == 0
+        else round((curr_txn - prev_txn) / prev_txn * 100.0, 1),
+        "AUTH_RATE_PP": round(curr_auth - prev_auth, 2),
+    }
+    return payload
+
+
 def _methodology() -> dict:
     return {
         "title": "Olo Pay — data notes",
@@ -188,12 +219,15 @@ def test_combine_valid_weeks_chronologically_source_derived(tmp_path: Path):
         "2026-08-24",
     ]
     paths = []
+    prior = None
     for i, start in enumerate(starts):
         sales = 1000.0 + i
         payload = _week_payload(start, sales=sales, txn=100 + i)
+        payload = _stamp_week_over_week(payload, prior)
         path = tmp_path / f"olo_pay_data_{start.replace('-', '')}.json"
         _write_week(path, payload)
         paths.append(path)
+        prior = payload
 
     # Pass paths out of order to prove chronological combine.
     shuffled = [paths[i] for i in (3, 0, 10, 1, 5, 2, 8, 4, 7, 6, 9)]
@@ -228,11 +262,15 @@ def test_combine_weekly_files_is_deterministic(tmp_path: Path):
     methodology = _methodology()
     starts = ["2026-08-10", "2026-08-17", "2026-08-24"]
     paths = []
+    prior = None
     for i, start in enumerate(starts):
-        payload = _week_payload(start, sales=1000.0 + i, txn=100 + i)
+        payload = _stamp_week_over_week(
+            _week_payload(start, sales=1000.0 + i, txn=100 + i), prior
+        )
         path = tmp_path / f"olo_pay_data_{start.replace('-', '')}.json"
         _write_week(path, payload)
         paths.append(path)
+        prior = payload
 
     first = combine_weekly_files(paths, methodology)
     time.sleep(1.05)
@@ -464,3 +502,100 @@ def test_cli_fail_closed_writes_report_only(tmp_path: Path):
     payload = json.loads(report.read_text(encoding="utf-8"))
     assert payload["status"] == "failed"
     assert payload["error_count"] >= 1
+
+def test_non_numeric_mix_checksum_is_structured_error():
+    payload = _week_payload(mix_checksum="not-a-number")
+    errors = validate_week(payload, "2026-08-24")
+    codes = _error_codes(errors)
+    assert codes & {
+        "mix_checksum_mismatch",
+        "mix_checksum_invalid",
+        "invalid_mix_checksum",
+    }
+    assert all(isinstance(e, dict) and e.get("code") for e in errors)
+
+
+def test_rejects_divergent_definitions_filter_brand_order_or_scope(tmp_path: Path):
+    methodology = _methodology()
+    a = _week_payload("2026-08-17")
+    b = _week_payload("2026-08-24")
+    b["definitions"] = {
+        **b["definitions"],
+        "SALES_VOLUME": "CHANGED DEFINITION — should not combine silently",
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", a)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"definitions|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+    b = _week_payload("2026-08-24")
+    b["filter"] = {
+        **b["filter"],
+        "shop_filter": "Company Owned via a different mapping table. Franchised excluded.",
+    }
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"filter|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+    b = _week_payload("2026-08-24")
+    b["brand_order"] = ["Discover", "Visa", "Mastercard", "Amex"]
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"brand_order|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+    b = _week_payload("2026-08-24")
+    b["environment"] = "staging"
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", b)
+    with pytest.raises(ValueError, match=r"environment|scope|metadata|diverg"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+
+def test_validates_published_week_over_week_against_adjacent_weeks(tmp_path: Path):
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17", sales=1000.0, txn=100, declined=4, failed=0)
+    curr = _week_payload("2026-08-24", sales=900.0, txn=90, declined=5, failed=0)
+    curr["weeks"][0]["week_over_week"] = {
+        "SALES_VOLUME_PCT": 50.0,
+        "TRANSACTION_COUNT_PCT": 50.0,
+        "AUTH_RATE_PP": 5.0,
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
+    with pytest.raises(ValueError, match=r"week_over_week|wow|adjacent"):
+        combine_weekly_files([path_a, path_b], methodology)
+
+
+def test_temp_regen_matches_committed_processed_and_preview_bytes():
+    """CI parity: regenerating from committed raw weeks must match published JSON bytes."""
+    import tempfile
+    from scripts.import_olo_pay import main
+
+    raw_files = sorted(Path("data/raw/olo-pay").glob("olo_pay_data_*.json"))
+    assert raw_files, "raw weekly files required"
+    methodology = Path("data/raw/olo-pay/olo_pay_methodology.json")
+    committed_out = Path("data/processed/olo_pay_data.json")
+    committed_preview = Path("site/preview/data/olo_pay_data.json")
+    assert committed_out.is_file() and committed_preview.is_file()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        out = tmp_path / "olo_pay_data.json"
+        preview = tmp_path / "preview_olo_pay_data.json"
+        report = tmp_path / "report.json"
+        rc = main(
+            [
+                *[str(p) for p in raw_files],
+                "--methodology",
+                str(methodology),
+                "--out",
+                str(out),
+                "--report",
+                str(report),
+                "--preview-copy",
+                str(preview),
+            ]
+        )
+        assert rc == 0
+        assert out.read_bytes() == committed_out.read_bytes()
+        assert preview.read_bytes() == committed_preview.read_bytes()
+

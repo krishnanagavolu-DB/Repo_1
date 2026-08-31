@@ -971,6 +971,43 @@ function namesOtherChannel(q) {
   return /\b(all payments|xenial|pos|tender mix|card present|worldpay|aov|average order value)\b/.test(q);
 }
 
+
+function answerOloRefunds() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.refunds)) {
+    return "Olo Pay has no published refund volume for this period.";
+  }
+  const fmt = oloFmt();
+  const amount = fmt.usd ? fmt.usd(week.refunds) : money(week.refunds, 2);
+  return `For **${week.label}**, Olo Pay **REFUND_VOLUME** is **${amount}** (company-owned Stripe RefundSale dollars on Olo billing transactions).`;
+}
+
+function answerOloVoids() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.voids)) {
+    return "Olo Pay has no published void volume for this period.";
+  }
+  const fmt = oloFmt();
+  const amount = fmt.usd ? fmt.usd(week.voids) : money(week.voids, 2);
+  return `For **${week.label}**, Olo Pay **VOID_VOLUME** is **${amount}** (company-owned Stripe VoidSale dollars on Olo billing transactions).`;
+}
+
+function answerOloExclusions() {
+  chatContext.topic = "olo";
+  return [
+    "**Olo Pay · Phase 1 methodology limitations**",
+    "• **Franchised shops** and **unmapped shops** (no Gold NEWCOID match) are out of scope — company-owned only.",
+    "• **Apple Pay / Google Pay wallet identifiers** (`BILLING_SCHEME_NM`) are not published — Phase 2.",
+    "• **Network decline reason codes** are not published — Phase 2.",
+    "• **Dutch Pass / Paytronix** and **Worldpay** traffic are not in this extract.",
+    "• No line-level dump of every billing transaction.",
+    "",
+    "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is not a wallet split.",
+  ].join("\n");
+}
+
 function answerOloQuestion(q, raw = "") {
   const named = wantsOloKnowledge(q);
   const followUp = chatContext.topic === "olo";
@@ -982,9 +1019,12 @@ function answerOloQuestion(q, raw = "") {
     /\b(wallet|apple pay|google pay|samsung pay|android pay)\b/.test(q) ||
     (/\bbrand mix\b/.test(q) && /\b(apple|google|samsung|android|wallet)\b/.test(q))
   ) {
+    // Generic wallet asks after an Olo turn must yield to Worldpay; only explicit Olo keeps Phase 1.
+    if (!named && followUp) return null;
     return answerOloUnavailable("wallet");
   }
   if (/\b(decline reasons?|decline codes?|why.*declin|declines as|decline breakdown)\b/.test(q)) {
+    if (!named && followUp) return null;
     return answerOloUnavailable("declines");
   }
   if (
@@ -1007,6 +1047,15 @@ function answerOloQuestion(q, raw = "") {
   }
   if (/\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q)) {
     return answerOloAvgTicket();
+  }
+  if (/\brefunds?\b/.test(q) || /\brefund[_\s]?volume\b/.test(q)) {
+    return answerOloRefunds();
+  }
+  if (/\bvoids?\b/.test(q) || /\bvoid[_\s]?volume\b/.test(q)) {
+    return answerOloVoids();
+  }
+  if (/\b(exclud|left out|not in|limitations?|methodology)\b/.test(q)) {
+    return answerOloExclusions();
   }
   if (
     /\b(sales?[_\s]?volume|sales volume|sales dollars|revenue|how much.*sales|what.*sales)\b/.test(q) ||
@@ -1331,9 +1380,16 @@ function answerQuestion(raw) {
   // and the offer expires after one turn so it cannot capture a later question.
   if (chatContext.pendingChoice) {
     const pending = chatContext.pendingChoice;
-    chatContext.pendingChoice = null;
     const channel = detectChannelReply(q, pending);
-    if (channel) return answerChannelChoice(pending, channel);
+    if (channel) {
+      chatContext.pendingChoice = null;
+      return answerChannelChoice(pending, channel);
+    }
+    // Invalid lane pick (e.g. auth ordinal "third") must not silently clear the pending choice.
+    if (/^(first|second|third|the first one|the second one|the third one)[.!?]?$/.test(q)) {
+      return CHANNEL_CHOICES[pending].ask;
+    }
+    chatContext.pendingChoice = null;
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
@@ -1352,6 +1408,7 @@ function answerQuestion(raw) {
     (/\bexclusions?\b|\bexclud/.test(q) ||
       /\b(filtered out|filter out|left out|leave out|not include|doesn't include|does not include|removed from|dropped from)\b/.test(q))
   ) {
+    if (wantsOloKnowledge(q)) return answerOloExclusions();
     return answerPosExclusions();
   }
   if (
@@ -1579,13 +1636,21 @@ function suggestedFollowUps() {
       { label: "What gets checked before these numbers go live?", question: "What data sanity checks run before publish?" },
       { label: "How did this week move versus last week?", question: "Compare this week with the prior week" },
     ],
-    clarify: [
-      { label: "All payments (Xenial)", question: "All payments" },
-      { label: "Card present (Worldpay)", question: "Card present" },
-    ],
+    clarify: chatContext.pendingChoice === "auth"
+      ? [
+          { label: "Card present (Worldpay)", question: "Card present" },
+          { label: "Olo Pay", question: "Olo Pay" },
+        ]
+      : [
+          { label: "All payments (Xenial)", question: "All payments" },
+          { label: "Card present (Worldpay)", question: "Card present" },
+          { label: "Olo Pay", question: "Olo Pay" },
+        ],
     kpi: commonFormats,
   };
-  return (byTopic[chatContext.topic] || commonFormats).slice(0, 2);
+  const chips = byTopic[chatContext.topic] || commonFormats;
+  const limit = chatContext.topic === "clarify" ? chips.length : 2;
+  return chips.slice(0, limit);
 }
 
 function appendFollowUps(input) {
@@ -1696,6 +1761,6 @@ function startChatbotWhenUnlocked() {
   window.addEventListener("dashboard:unlocked", () => initChatbot(), { once: true });
 }
 
-window.__paymentsChat = { answerQuestion, normalize, chatContext };
+window.__paymentsChat = { answerQuestion, normalize, chatContext, suggestedFollowUps };
 document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);
 })();

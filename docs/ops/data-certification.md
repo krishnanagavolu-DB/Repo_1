@@ -75,3 +75,7 @@ Report: `data/processed/validation_report.json`
 - No shop/store identifier exists, so shop-level anomaly detection is unavailable.
 - Amex interchange fee is reported as $0/pass-through, so IC rate understates full acceptance cost.
 - Competitor payment KPIs are not public on comparable definitions; the chatbot labels competitor facts as context, not direct benchmarks.
+
+## Olo Pay
+
+Weekly refresh steps: [`olo-pay-weekly-refresh.md`](olo-pay-weekly-refresh.md).

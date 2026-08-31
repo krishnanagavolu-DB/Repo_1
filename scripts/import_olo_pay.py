@@ -369,14 +369,26 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
         )
 
     mix_checksum = week.get("mix_checksum")
-    if mix_checksum is not None and abs(float(mix_checksum) - 100.0) > PCT_TOL:
-        errors.append(
-            _issue(
-                "mix_checksum_mismatch",
-                f"mix_checksum {mix_checksum} != 100",
-                week=expected_week,
+    if mix_checksum is not None:
+        try:
+            checksum_val = float(mix_checksum)
+        except (TypeError, ValueError):
+            errors.append(
+                _issue(
+                    "mix_checksum_invalid",
+                    f"mix_checksum {mix_checksum!r} is not numeric",
+                    week=expected_week,
+                )
             )
-        )
+        else:
+            if abs(checksum_val - 100.0) > PCT_TOL:
+                errors.append(
+                    _issue(
+                        "mix_checksum_mismatch",
+                        f"mix_checksum {mix_checksum} != 100",
+                        week=expected_week,
+                    )
+                )
 
     # Intentionally do NOT require error_log source_rows_after_dedupe to equal
     # this week's TRANSACTION_COUNT — that field is cumulative extract metadata.
@@ -386,6 +398,95 @@ def validate_week(payload: dict, expected_week: str) -> list[dict]:
 
 def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+
+def _metadata_fingerprint(payload: dict) -> dict:
+    """Shell fields that must stay identical across weekly source files."""
+    return {
+        "definitions": payload.get("definitions"),
+        "filter": payload.get("filter"),
+        "brand_order": payload.get("brand_order"),
+        "environment": payload.get("environment"),
+    }
+
+
+def _reject_divergent_metadata(loaded: list[tuple[str, Path, dict]]) -> None:
+    if len(loaded) < 2:
+        return
+    base_week, base_path, base_payload = loaded[0]
+    base = _metadata_fingerprint(base_payload)
+    for week_start, path, payload in loaded[1:]:
+        current = _metadata_fingerprint(payload)
+        for key in ("definitions", "filter", "brand_order", "environment"):
+            if current.get(key) != base.get(key):
+                label = "scope/environment" if key == "environment" else key
+                raise ValueError(
+                    f"divergent {label} metadata between {base_path.name} and {path.name}"
+                )
+
+
+def _auth_rate_from_week(week: dict) -> float | None:
+    auth = week.get("authorization") or {}
+    try:
+        approved = int(auth.get("approved"))
+        declined = int(auth.get("declined"))
+        failed = int(auth.get("failed"))
+    except (TypeError, ValueError):
+        return None
+    return _auth_rate(approved, declined, failed)
+
+
+def _validate_adjacent_week_over_week(weeks: list[dict]) -> None:
+    """Published week_over_week deltas must match adjacent source weeks."""
+    for prev, curr in zip(weeks, weeks[1:]):
+        wow = curr.get("week_over_week") or {}
+        try:
+            prev_sales = float((prev.get("totals") or {}).get("SALES_VOLUME"))
+            curr_sales = float((curr.get("totals") or {}).get("SALES_VOLUME"))
+            prev_txn = int((prev.get("totals") or {}).get("TRANSACTION_COUNT"))
+            curr_txn = int((curr.get("totals") or {}).get("TRANSACTION_COUNT"))
+        except (TypeError, ValueError) as err:
+            raise ValueError(f"adjacent week totals unreadable for week_over_week: {err}") from err
+        prev_auth = _auth_rate_from_week(prev)
+        curr_auth = _auth_rate_from_week(curr)
+        if prev_auth is None or curr_auth is None:
+            raise ValueError("adjacent week authorization unreadable for week_over_week")
+
+        expected_sales_pct = (
+            0.0 if prev_sales == 0 else round((curr_sales - prev_sales) / prev_sales * 100.0, 1)
+        )
+        expected_txn_pct = (
+            0.0 if prev_txn == 0 else round((curr_txn - prev_txn) / prev_txn * 100.0, 1)
+        )
+        expected_auth_pp = round(curr_auth - prev_auth, 2)
+
+        if wow.get("SALES_VOLUME_PCT") is None and wow.get("TRANSACTION_COUNT_PCT") is None and wow.get("AUTH_RATE_PP") is None:
+            continue
+        try:
+            stated_sales = float(wow.get("SALES_VOLUME_PCT"))
+            stated_txn = float(wow.get("TRANSACTION_COUNT_PCT"))
+            stated_auth = float(wow.get("AUTH_RATE_PP"))
+        except (TypeError, ValueError) as err:
+            raise ValueError(
+                f"week_over_week missing/non-numeric on {curr.get('week_start_date')}: {err}"
+            ) from err
+
+        if abs(stated_sales - expected_sales_pct) > 0.05:
+            raise ValueError(
+                f"week_over_week SALES_VOLUME_PCT {stated_sales} != adjacent {expected_sales_pct} "
+                f"for {curr.get('week_start_date')}"
+            )
+        if abs(stated_txn - expected_txn_pct) > 0.05:
+            raise ValueError(
+                f"week_over_week TRANSACTION_COUNT_PCT {stated_txn} != adjacent {expected_txn_pct} "
+                f"for {curr.get('week_start_date')}"
+            )
+        if abs(stated_auth - expected_auth_pp) > 0.02:
+            raise ValueError(
+                f"week_over_week AUTH_RATE_PP {stated_auth} != adjacent {expected_auth_pp} "
+                f"for {curr.get('week_start_date')}"
+            )
 
 
 def combine_weekly_files(paths: list[Path], methodology: dict) -> dict:
@@ -458,11 +559,14 @@ def combine_weekly_files(paths: list[Path], methodology: dict) -> dict:
 
     # Prefer chronological order by week start; keep latest payload's metadata shell.
     by_start = sorted(loaded, key=lambda item: item[0])
+    _reject_divergent_metadata(by_start)
     shell = by_start[-1][2]
     weeks_out = []
     for week_start, _path, payload in by_start:
         # Source-derived: copy the week object as published, do not recompute KPIs.
         weeks_out.append(copy_week(payload["weeks"][0]))
+
+    _validate_adjacent_week_over_week(weeks_out)
 
     # Deterministic: reuse source generated_at exactly (no wall-clock now()).
     certified_at = shell.get("generated_at")

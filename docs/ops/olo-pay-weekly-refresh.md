@@ -48,7 +48,17 @@ if ! cmp "$tmpdir/preview_olo_pay_data.json" site/preview/data/olo_pay_data.json
 fi
 ```
 
-6. Commit the new raw week plus updated processed/preview/report files. Preview UI assets do not need a restamp unless `site/preview/js|css` changed.
+6. Run every CI check locally before pushing:
+
+```bash
+scripts/run_ci_checks.sh
+```
+
+   Use that script rather than assembling commands by hand. It calls the bare
+   `pytest` entrypoint that CI uses; `python3 -m pytest` puts the repo root on
+   `sys.path` and hides import errors that fail the deploy.
+
+7. Commit the new raw week plus updated processed/preview/report files. Preview UI assets do not need a restamp unless `site/preview/js|css` changed.
 
 ## Guardrails
 

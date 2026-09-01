@@ -462,6 +462,22 @@ if (/Olo Pay \*\*REFUND_VOLUME\*\*|REFUND_VOLUME is/i.test(stickyRefundRate)) {
 }
 check("What is Olo Pay refund volume?", new RegExp(escapeRegExp(olo.usd(latest.refunds))));
 
+// Explicit Olo Pay refund rate stays on Olo — Phase 1 publishes volume, not a rate.
+reset();
+const oloRefundRate = ask("Olo Pay refund rate");
+if (/Returns as % of sales|Return\/refund dollars/i.test(oloRefundRate) && !/Olo Pay/i.test(oloRefundRate)) {
+  failures.push({
+    name: "Olo Pay refund rate does not cross to Worldpay returns KPI",
+    answer: oloRefundRate,
+  });
+}
+if (!/Phase 1|refund volume|not (a |an )?refund rate|does not publish.*rate|no refund rate/i.test(oloRefundRate)) {
+  failures.push({
+    name: "Olo Pay refund rate explains Phase 1 publishes volume not rate",
+    answer: oloRefundRate,
+  });
+}
+
 // Olo-named limitations/caveats/methodology must not fall through to POS assumptions.
 for (const q of ["Olo Pay limitations", "Olo Pay caveats", "Olo Pay methodology"]) {
   reset();
@@ -474,7 +490,17 @@ for (const q of ["Olo Pay limitations", "Olo Pay caveats", "Olo Pay methodology"
   }
 }
 
-// Limitation bullets prefer published methodology.not_in_this_extract; HTML is escaped.
+// Limitation bullets prefer published methodology.not_in_this_extract; renderer escapes HTML.
+function renderChatHtml(text) {
+  // Mirrors appendMessage's escape-then-markup pipeline (no pre-escape in answer text).
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    .replace(/\n/g, "<br>");
+}
 const publishedLimits = (oloRaw.methodology && oloRaw.methodology.not_in_this_extract) || [];
 if (publishedLimits.length) {
   reset();
@@ -495,10 +521,19 @@ if (publishedLimits.length) {
   };
   reset();
   const injected = ask("Olo Pay limitations");
-  if (/<script>/i.test(injected) || !/&lt;script&gt;/.test(injected)) {
+  // Answer text must stay raw (no pre-escape) so appendMessage does not double-escape.
+  if (/&lt;script&gt;/.test(injected) || !/<script>alert\("x"\)<\/script>/.test(injected)) {
     failures.push({
-      name: "Olo limitation bullets HTML-escape published extract items",
+      name: "Olo limitation answer text is not pre-escaped",
       answer: injected,
+    });
+  }
+  const rendered = renderChatHtml(injected);
+  if (/<script>/i.test(rendered) || !/&lt;script&gt;/.test(rendered) || !/&lt;\/script&gt;/.test(rendered)) {
+    failures.push({
+      name: "Olo limitation rendered HTML escapes script tags",
+      answer: injected,
+      rendered,
     });
   }
   if (!/Safe franchise note/.test(injected)) {

@@ -600,13 +600,13 @@ def test_temp_regen_matches_committed_processed_and_preview_bytes():
         assert preview.read_bytes() == committed_preview.read_bytes()
 
 def test_week_over_week_allows_one_decimal_rounding_edge(tmp_path: Path):
-    """Stated WoW within 0.06 of adjacent math is accepted (one-decimal source rounding)."""
+    """Stated one-decimal WoW within half-step of unrounded delta is accepted."""
     methodology = _methodology()
     prev = _week_payload("2026-08-17", sales=1000.0, txn=100, declined=4, failed=0)
-    curr = _week_payload("2026-08-24", sales=1001.0, txn=100, declined=4, failed=0)
-    # True sales delta = 0.1%; publish 0.04 (0.06 away from rounded 0.1) — must pass with 0.06 tol.
+    # Unrounded sales delta = 0.14%; one-decimal neighbors 0.1 and 0.2 both within 0.05.
+    curr = _week_payload("2026-08-24", sales=1001.4, txn=100, declined=4, failed=0)
     curr["weeks"][0]["week_over_week"] = {
-        "SALES_VOLUME_PCT": 0.04,
+        "SALES_VOLUME_PCT": 0.1,
         "TRANSACTION_COUNT_PCT": 0.0,
         "AUTH_RATE_PP": 0.0,
     }
@@ -614,6 +614,42 @@ def test_week_over_week_allows_one_decimal_rounding_edge(tmp_path: Path):
     path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
     combined = combine_weekly_files([path_a, path_b], methodology)
     assert len(combined["weeks"]) == 2
+
+
+def test_week_over_week_accepts_bankers_and_half_up_tie(tmp_path: Path):
+    """Exact .x5 unrounded delta accepts both banker's (1.2) and half-up (1.3) stated values."""
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17", sales=1000.0, txn=100, declined=4, failed=0)
+    # (1012.5 - 1000) / 1000 * 100 = 1.25 exactly — classic one-decimal tie.
+    curr_base = _week_payload("2026-08-24", sales=1012.5, txn=100, declined=4, failed=0)
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    for stated in (1.2, 1.3):
+        curr = json.loads(json.dumps(curr_base))
+        curr["weeks"][0]["week_over_week"] = {
+            "SALES_VOLUME_PCT": stated,
+            "TRANSACTION_COUNT_PCT": 0.0,
+            "AUTH_RATE_PP": 0.0,
+        }
+        path_b = _write_week(tmp_path / f"olo_pay_data_20260824_{stated}.json", curr)
+        combined = combine_weekly_files([path_a, path_b], methodology)
+        assert len(combined["weeks"]) == 2
+
+
+def test_week_over_week_rejects_materially_wrong_value(tmp_path: Path):
+    """Stated WoW far from unrounded delta is rejected even if one-decimal shaped."""
+    methodology = _methodology()
+    prev = _week_payload("2026-08-17", sales=1000.0, txn=100, declined=4, failed=0)
+    curr = _week_payload("2026-08-24", sales=1012.5, txn=100, declined=4, failed=0)
+    # Unrounded = 1.25%; 5.0 is well beyond half-step.
+    curr["weeks"][0]["week_over_week"] = {
+        "SALES_VOLUME_PCT": 5.0,
+        "TRANSACTION_COUNT_PCT": 0.0,
+        "AUTH_RATE_PP": 0.0,
+    }
+    path_a = _write_week(tmp_path / "olo_pay_data_20260817.json", prev)
+    path_b = _write_week(tmp_path / "olo_pay_data_20260824.json", curr)
+    with pytest.raises(ValueError, match=r"week_over_week|SALES_VOLUME_PCT"):
+        combine_weekly_files([path_a, path_b], methodology)
 
 
 def test_week_over_week_rejects_non_numeric_with_structured_error(tmp_path: Path):

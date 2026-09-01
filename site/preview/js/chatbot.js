@@ -983,6 +983,14 @@ function answerOloRefunds() {
   return `For **${week.label}**, Olo Pay **REFUND_VOLUME** is **${amount}** (company-owned Stripe RefundSale dollars on Olo billing transactions).`;
 }
 
+function answerOloRefundRateUnavailable() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay · Phase 1** publishes **REFUND_VOLUME** (Stripe RefundSale dollars), not a refund rate. " +
+    "I won’t invent an Olo refund rate or cross-walk Worldpay returns %."
+  );
+}
+
 function answerOloVoids() {
   const week = latestOloWeek();
   chatContext.topic = "olo";
@@ -994,21 +1002,14 @@ function answerOloVoids() {
   return `For **${week.label}**, Olo Pay **VOID_VOLUME** is **${amount}** (company-owned Stripe VoidSale dollars on Olo billing transactions).`;
 }
 
-function escapeChatText(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function oloLimitationBullets() {
   const published =
     window.__oloPayState?.methodology?.not_in_this_extract ||
     window.__oloPay?.methodology?.not_in_this_extract ||
     null;
   if (Array.isArray(published) && published.length) {
-    return published.map((item) => `• ${escapeChatText(item)}`);
+    // Leave raw text; appendMessage's renderer escapes HTML for display.
+    return published.map((item) => `• ${String(item ?? "")}`);
   }
   return [
     "• **Franchised shops** and **unmapped shops** (no Gold NEWCOID match) are out of scope — company-owned only.",
@@ -1069,8 +1070,9 @@ function answerOloQuestion(q, raw = "") {
   if (/\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q)) {
     return answerOloAvgTicket();
   }
-  // Refund *rate* is a Worldpay/All-payments KPI — sticky Olo must not steal it.
+  // Refund *rate*: explicit Olo stays on Phase 1 (volume only); sticky generic yields to Worldpay.
   if (/\b(refund|return)\s*rate\b|\breturns as %\b/.test(q)) {
+    if (named) return answerOloRefundRateUnavailable();
     return null;
   }
   if (/\brefunds?\b/.test(q) || /\brefund[_\s]?volume\b/.test(q)) {

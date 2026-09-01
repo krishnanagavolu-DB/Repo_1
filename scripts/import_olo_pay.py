@@ -23,8 +23,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 AMOUNT_TOL = 0.02
 PCT_TOL = 0.05
-WOW_PCT_TOL = 0.06  # one-decimal source rounding slack
-WOW_AUTH_PP_TOL = 0.02
+WOW_PCT_TOL = 0.05  # half-step of one-decimal source rounding
+WOW_AUTH_PP_TOL = 0.01  # one quantum of two-decimal AUTH_RATE_PP vs unrounded rate delta
 AUTH_RATE_TOL = 0.015
 
 WEEK_FILE_RE = re.compile(r"olo_pay_data_(\d{8})")
@@ -439,7 +439,8 @@ def _reject_divergent_metadata(loaded: list[tuple[str, Path, dict]]) -> None:
                 )
 
 
-def _auth_rate_from_week(week: dict) -> float | None:
+def _raw_auth_rate_from_week(week: dict) -> float | None:
+    """Unrounded auth rate % from authorization counts (for WoW half-step checks)."""
     auth = week.get("authorization") or {}
     try:
         approved = int(auth.get("approved"))
@@ -447,11 +448,19 @@ def _auth_rate_from_week(week: dict) -> float | None:
         failed = int(auth.get("failed"))
     except (TypeError, ValueError):
         return None
-    return _auth_rate(approved, declined, failed)
+    attempts = approved + declined + failed
+    if attempts <= 0:
+        return None
+    return approved / attempts * 100.0
 
 
 def _validate_adjacent_week_over_week(weeks: list[dict]) -> None:
-    """Published week_over_week deltas must match adjacent source weeks."""
+    """Published week_over_week deltas must match adjacent source weeks.
+
+    Compare the stated one-decimal (or two-decimal auth) source value against the
+    *unrounded* computed delta with half-step tolerance so banker's and half-up
+    ties both pass while materially wrong values still fail.
+    """
     for prev, curr in zip(weeks, weeks[1:]):
         wow = curr.get("week_over_week") or {}
         try:
@@ -461,18 +470,18 @@ def _validate_adjacent_week_over_week(weeks: list[dict]) -> None:
             curr_txn = int((curr.get("totals") or {}).get("TRANSACTION_COUNT"))
         except (TypeError, ValueError) as err:
             raise ValueError(f"adjacent week totals unreadable for week_over_week: {err}") from err
-        prev_auth = _auth_rate_from_week(prev)
-        curr_auth = _auth_rate_from_week(curr)
+        prev_auth = _raw_auth_rate_from_week(prev)
+        curr_auth = _raw_auth_rate_from_week(curr)
         if prev_auth is None or curr_auth is None:
             raise ValueError("adjacent week authorization unreadable for week_over_week")
 
         expected_sales_pct = (
-            0.0 if prev_sales == 0 else round((curr_sales - prev_sales) / prev_sales * 100.0, 1)
+            0.0 if prev_sales == 0 else (curr_sales - prev_sales) / prev_sales * 100.0
         )
         expected_txn_pct = (
-            0.0 if prev_txn == 0 else round((curr_txn - prev_txn) / prev_txn * 100.0, 1)
+            0.0 if prev_txn == 0 else (curr_txn - prev_txn) / prev_txn * 100.0
         )
-        expected_auth_pp = round(curr_auth - prev_auth, 2)
+        expected_auth_pp = curr_auth - prev_auth
 
         sales_raw = wow.get("SALES_VOLUME_PCT")
         txn_raw = wow.get("TRANSACTION_COUNT_PCT")
@@ -511,7 +520,7 @@ def _validate_adjacent_week_over_week(weeks: list[dict]) -> None:
                 f"week_over_week non-numeric on {week_label}: {err}"
             ) from err
 
-        # <= tol (with float slack) so one-decimal edges like 0.04 vs 0.1 pass at 0.06.
+        # Half-step of published precision (+ float slack) accepts either tie rounding.
         if abs(stated_sales - expected_sales_pct) > WOW_PCT_TOL + 1e-9:
             raise ValueError(
                 f"week_over_week SALES_VOLUME_PCT {stated_sales} != adjacent {expected_sales_pct} "

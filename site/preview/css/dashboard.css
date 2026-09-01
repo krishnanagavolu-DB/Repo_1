@@ -377,6 +377,63 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
+.olo-slide-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.olo-support {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.olo-support-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--line);
+  font-size: 11px;
+}
+
+.olo-support-label {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.olo-support-value {
+  font-weight: 800;
+  color: var(--dark);
+  white-space: nowrap;
+}
+
+.olo-slide-grid .slide-kpis {
+  min-height: 330px;
+}
+
+.olo-slide-grid .compact-legend {
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.olo-detail-table {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.olo-detail-table th,
+.olo-detail-table td {
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.olo-charts .mix-body {
+  display: block;
+  width: 100%;
+}
+
 .pos-slide-stat {
   min-width: 0;
 }
@@ -918,6 +975,10 @@ main {
   .pos-slide-summary {
     grid-template-columns: 1fr;
   }
+
+  .olo-slide-summary {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .charts-2 {
@@ -925,6 +986,11 @@ main {
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
+}
+
+/* Higher specificity than .charts-2 so the single Olo detail panel stays full-width. */
+.charts-2.olo-charts {
+  grid-template-columns: 1fr;
 }
 
 .panel {

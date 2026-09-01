@@ -825,6 +825,277 @@ function latestPosWeek() {
   );
 }
 
+function latestOloWeek() {
+  return (
+    window.__oloPay?.getSelectedWeek?.() ||
+    window.__oloPay?.getLatestWeek?.() ||
+    window.__oloPayState?.latest ||
+    null
+  );
+}
+
+function oloFmt() {
+  return window.__oloPay || {};
+}
+
+function wantsOloKnowledge(q) {
+  return /\b(olo pay|olo)\b/.test(q);
+}
+
+function answerOloUnavailable(kind) {
+  chatContext.topic = "olo";
+  if (kind === "wallet") {
+    return (
+      "**Olo Pay · Phase 1:** wallet mix (Apple Pay, Google Pay, and similar) is **not available**. " +
+      "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is the card brand, not the wallet. " +
+      "I won’t invent wallet shares."
+    );
+  }
+  return (
+    "**Olo Pay · Phase 1:** decline reasons / decline codes are **not available** in the published extract. " +
+    "Authorization rate is published as Approved ÷ (Approved + Declined + Failure) Sale attempts, without a reason breakdown. " +
+    "I won’t invent decline reasons."
+  );
+}
+
+function answerOloSource() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay** comes from **Olo billing transactions** processed by **Stripe** (`PROCESSOR = Stripe`). " +
+    "Scope is **company-owned** shops only. " +
+    "**SALES_VOLUME** is approved Stripe Sale amount, including the billing total Olo stored (tips are not subtracted). " +
+    "Auth rate uses Approved ÷ (Approved + Declined + Failure) Sale attempts. **AVG_TICKET** is sales ÷ order count."
+  );
+}
+
+function answerOloScope() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay** on this dashboard is **company-owned** shops only — the same CO footprint as the other channels. " +
+    "Franchise and unmapped shops are excluded."
+  );
+}
+
+function answerOloSales() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.sales)) {
+    return "Olo Pay has no published week loaded right now.";
+  }
+  const fmt = oloFmt();
+  const sales = fmt.usd ? fmt.usd(week.sales) : money(week.sales, 2);
+  return (
+    `For **${week.label}**, Olo Pay **SALES_VOLUME** is **${sales}** — approved Stripe Sale dollars on company-owned shops, ` +
+    `including the billing total Olo stored (tips are not subtracted).`
+  );
+}
+
+function answerOloAuth() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.authRatePct)) {
+    return "Olo Pay has no published authorization rate for this period.";
+  }
+  const fmt = oloFmt();
+  const auth = fmt.authPct ? fmt.authPct(week.authRatePct) : `${Number(week.authRatePct).toFixed(2)}%`;
+  return (
+    `For **${week.label}**, Olo Pay **authorization rate** is **${auth}** — ` +
+    `Approved ÷ (Approved + Declined + Failure) Sale attempts on company-owned Stripe billing transactions.`
+  );
+}
+
+function answerOloOrders() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.orders)) {
+    return "Olo Pay has no published order count for this period.";
+  }
+  const fmt = oloFmt();
+  const orders = fmt.count ? fmt.count(week.orders) : Number(week.orders).toLocaleString("en-US");
+  return (
+    `For **${week.label}**, Olo Pay **ORDER_COUNT** is **${orders}** approved orders ` +
+    `(company-owned Stripe Sale captures on Olo billing transactions).`
+  );
+}
+
+function answerOloAvgTicket() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.avgTicket)) {
+    return "Olo Pay has no published average ticket for this period.";
+  }
+  const fmt = oloFmt();
+  const ticket = fmt.ticket ? fmt.ticket(week.avgTicket) : `$${Number(week.avgTicket).toFixed(2)}`;
+  return (
+    `For **${week.label}**, Olo Pay **AVG_TICKET** is **${ticket}** — SALES_VOLUME ÷ ORDER_COUNT ` +
+    `(approved Stripe Sale dollars ÷ approved orders). Tips are not subtracted from the billing total.`
+  );
+}
+
+function answerOloBrandMix() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week?.brands?.length) {
+    return "Olo Pay has no published card brand mix for this period.";
+  }
+  const fmt = oloFmt();
+  const lines = week.brands.map((brand) => {
+    const amount = fmt.usd ? fmt.usd(brand.amount) : money(brand.amount, 2);
+    const share = fmt.sharePct
+      ? fmt.sharePct((brand.pctOfSales || 0) / 100)
+      : `${Number(brand.pctOfSales || 0).toFixed(1)}%`;
+    return `• ${brand.label}: **${amount}** (${share})`;
+  });
+  rememberView(
+    `Olo card brand mix — ${week.label}`,
+    week.brands.map((brand) => ({
+      label: brand.label,
+      value: Number(brand.amount),
+      display: fmt.usd ? fmt.usd(brand.amount) : money(brand.amount, 2),
+      secondary: fmt.sharePct
+        ? fmt.sharePct((brand.pctOfSales || 0) / 100)
+        : `${Number(brand.pctOfSales || 0).toFixed(1)}%`,
+    })),
+    "Card brand is ACCOUNT_ISSUER — not wallet."
+  );
+  return (
+    `**Olo Pay card brand mix — ${week.label}** (ACCOUNT_ISSUER, not wallet)\n` +
+    `${lines.join("\n")}\n\nWallet split is not published in Phase 1.`
+  );
+}
+
+
+/** Explicitly names Worldpay/POS (and not Olo) — sticky Olo must yield. */
+function namesOtherChannel(q) {
+  if (/\b(olo pay|olo)\b/.test(q)) return false;
+  return /\b(all payments|xenial|pos|tender mix|card present|worldpay|aov|average order value)\b/.test(q);
+}
+
+
+function answerOloRefunds() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.refunds)) {
+    return "Olo Pay has no published refund volume for this period.";
+  }
+  const fmt = oloFmt();
+  const amount = fmt.usd ? fmt.usd(week.refunds) : money(week.refunds, 2);
+  return `For **${week.label}**, Olo Pay **REFUND_VOLUME** is **${amount}** (company-owned Stripe RefundSale dollars on Olo billing transactions).`;
+}
+
+function answerOloRefundRateUnavailable() {
+  chatContext.topic = "olo";
+  return (
+    "**Olo Pay · Phase 1** publishes **REFUND_VOLUME** (Stripe RefundSale dollars), not a refund rate. " +
+    "I won’t invent an Olo refund rate or cross-walk Worldpay returns %."
+  );
+}
+
+function answerOloVoids() {
+  const week = latestOloWeek();
+  chatContext.topic = "olo";
+  if (!week || !Number.isFinite(week.voids)) {
+    return "Olo Pay has no published void volume for this period.";
+  }
+  const fmt = oloFmt();
+  const amount = fmt.usd ? fmt.usd(week.voids) : money(week.voids, 2);
+  return `For **${week.label}**, Olo Pay **VOID_VOLUME** is **${amount}** (company-owned Stripe VoidSale dollars on Olo billing transactions).`;
+}
+
+function oloLimitationBullets() {
+  const published =
+    window.__oloPayState?.methodology?.not_in_this_extract ||
+    window.__oloPay?.methodology?.not_in_this_extract ||
+    null;
+  if (Array.isArray(published) && published.length) {
+    // Leave raw text; appendMessage's renderer escapes HTML for display.
+    return published.map((item) => `• ${String(item ?? "")}`);
+  }
+  return [
+    "• **Franchised shops** and **unmapped shops** (no Gold NEWCOID match) are out of scope — company-owned only.",
+    "• **Apple Pay / Google Pay wallet identifiers** are not published — Phase 2.",
+    "• **Network decline reason codes** are not published — Phase 2.",
+    "• **Dutch Pass / Paytronix** and **Worldpay** traffic are not in this extract.",
+    "• No line-level dump of every billing transaction.",
+  ];
+}
+
+function answerOloExclusions() {
+  chatContext.topic = "olo";
+  return [
+    "**Olo Pay · Phase 1 methodology limitations**",
+    ...oloLimitationBullets(),
+    "",
+    "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is not a wallet split.",
+  ].join("\n");
+}
+
+function answerOloQuestion(q, raw = "") {
+  const named = wantsOloKnowledge(q);
+  const followUp = chatContext.topic === "olo";
+  if (!named && !followUp) return null;
+  // Sticky Olo must not swallow ambiguous asks or explicitly named other channels.
+  if (!named && followUp && (ambiguousChannelMetric(q, raw) || namesOtherChannel(q))) return null;
+
+  if (
+    /\b(wallet|apple pay|google pay|samsung pay|android pay)\b/.test(q) ||
+    (/\bbrand mix\b/.test(q) && /\b(apple|google|samsung|android|wallet)\b/.test(q))
+  ) {
+    // Generic wallet asks after an Olo turn must yield to Worldpay; only explicit Olo keeps Phase 1.
+    if (!named && followUp) return null;
+    return answerOloUnavailable("wallet");
+  }
+  if (/\b(decline reasons?|decline codes?|why.*declin|declines as|decline breakdown)\b/.test(q)) {
+    if (!named && followUp) return null;
+    return answerOloUnavailable("declines");
+  }
+  if (
+    /\b(where does|where do|source|comes from|come from)\b/.test(q) ||
+    (/\bsource\b/.test(q) && /\b(olo|sales|data)\b/.test(q))
+  ) {
+    return answerOloSource();
+  }
+  if (/\b(scope|company owned|company-owned)\b/.test(q)) {
+    return answerOloScope();
+  }
+  if (/\b(card brand|brand mix|issuer|account_issuer|visa|mastercard|amex|discover)\b/.test(q)) {
+    return answerOloBrandMix();
+  }
+  if (/\b(auth|authorization|approval)\s*rate\b|\bauthorization rate\b/.test(q)) {
+    return answerOloAuth();
+  }
+  if (/\b(order[_\s]?count|how many orders|orders?\b)/.test(q) && !/\b(transaction|payment lines)\b/.test(q)) {
+    return answerOloOrders();
+  }
+  if (/\b(avg[_\s]?ticket|average ticket|avg payment|average payment|average check)\b/.test(q)) {
+    return answerOloAvgTicket();
+  }
+  // Refund *rate*: explicit Olo stays on Phase 1 (volume only); sticky generic yields to Worldpay.
+  if (/\b(refund|return)\s*rate\b|\breturns as %\b/.test(q)) {
+    if (named) return answerOloRefundRateUnavailable();
+    return null;
+  }
+  if (/\brefunds?\b/.test(q) || /\brefund[_\s]?volume\b/.test(q)) {
+    return answerOloRefunds();
+  }
+  if (/\bvoids?\b/.test(q) || /\bvoid[_\s]?volume\b/.test(q)) {
+    return answerOloVoids();
+  }
+  if (/\b(exclud|left out|not in|limitations?|caveats?|methodology)\b/.test(q)) {
+    return answerOloExclusions();
+  }
+  if (
+    /\b(sales?[_\s]?volume|sales volume|sales dollars|revenue|how much.*sales|what.*sales)\b/.test(q) ||
+    /\bsales\b/.test(q)
+  ) {
+    return answerOloSales();
+  }
+  if (/\b(olo pay|olo)\b/.test(q) && /\b(what is|what's|explain|tell me about)\b/.test(q)) {
+    return answerOloSource();
+  }
+  return null;
+}
+
 function answerPosTender(q = "") {
   const week = latestPosWeek();
   chatContext.topic = "pos";
@@ -1012,24 +1283,34 @@ function wantsPosKnowledge(q) {
 const CHANNEL_CHOICES = {
   ticket: {
     ask:
-      "Two lanes, two different answers here — which one do you want?\n\n" +
+      "Three lanes, three different answers here — which one do you want?\n\n" +
       "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ guest checks, with tips and change left out.\n" +
-      "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n\n" +
-      "Say **All payments** or **Card present** and I’ll pull it.",
+      "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n" +
+      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved sales ÷ orders (tips not subtracted).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay** and I’ll pull it.",
   },
   sales: {
     ask:
       "Happy to pull that — which set of sales?\n\n" +
       "• **All payments (Xenial)** — net tender dollars taken at company-owned shops.\n" +
-      "• **Card present (Worldpay)** — card sales the network settled, tips included.\n\n" +
-      "Say **All payments** or **Card present**.",
+      "• **Card present (Worldpay)** — card sales the network settled, tips included.\n" +
+      "• **Olo Pay** — approved Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay**.",
   },
   count: {
     ask:
       "Depends which counter we’re standing at — which one?\n\n" +
       "• **All payments (Xenial)** — payment **lines** after dedupe, so two tenders on one check count twice.\n" +
-      "• **Card present (Worldpay)** — card sales transactions the network saw.\n\n" +
-      "Say **All payments** or **Card present**.",
+      "• **Card present (Worldpay)** — card sales transactions the network saw.\n" +
+      "• **Olo Pay** — approved Olo/Stripe order count (ORDER_COUNT).\n\n" +
+      "Say **All payments**, **Card present**, or **Olo Pay**.",
+  },
+  auth: {
+    ask:
+      "Authorization rate depends on the lane — which one?\n\n" +
+      "• **Card present (Worldpay)** — approved card auth requests ÷ all auth requests at company-owned shops.\n" +
+      "• **Olo Pay** — Approved ÷ (Approved + Declined + Failure) Stripe Sale attempts on Olo billing.\n\n" +
+      "Say **Card present** or **Olo Pay**.",
   },
 };
 
@@ -1059,20 +1340,31 @@ function ambiguousChannelMetric(q, raw) {
   }
   if (
     /\b(sales|revenue)\b/.test(q) &&
-    /\b(total|how much|what were|what was|this week|volume)\b/.test(q)
+    (/\b(total|how much|what were|what was|this week|volume|about)\b/.test(q) ||
+      /^(what about )?sales\??$/.test(q) ||
+      /^sales\??$/.test(q))
   ) {
     return "sales";
+  }
+  if (
+    /\b(auth|authorization|approval)\s+rate\b/.test(q) &&
+    !/\b(trend|over time|best|worst|benchmark|industry|compare|qsr|peer)\b/.test(q)
+  ) {
+    return "auth";
   }
   return null;
 }
 
 /** Only a short, direct reply counts as picking a lane. */
-function detectChannelReply(q) {
+function detectChannelReply(q, kind = null) {
   if (q.split(" ").length > 6) return null;
   if (/^(the )?(all payments|xenial)( one| please)?[.!?]?$/.test(q)) return "pos";
   if (/^(the )?(card present|worldpay)( one| please)?[.!?]?$/.test(q)) return "worldpay";
-  if (/^(first|the first one)[.!?]?$/.test(q)) return "pos";
-  if (/^(second|the second one)[.!?]?$/.test(q)) return "worldpay";
+  if (/^(the )?(olo pay|olo)( one| please)?[.!?]?$/.test(q)) return "olo";
+  // Ordinals follow the order shown in that kind's clarifier.
+  if (/^(first|the first one)[.!?]?$/.test(q)) return kind === "auth" ? "worldpay" : "pos";
+  if (/^(second|the second one)[.!?]?$/.test(q)) return kind === "auth" ? "olo" : "worldpay";
+  if (/^(third|the third one)[.!?]?$/.test(q)) return kind === "auth" ? null : "olo";
   return null;
 }
 
@@ -1081,14 +1373,26 @@ function answerChannelChoice(kind, channel) {
   if (channel === "pos") {
     if (kind === "ticket") return answerPosAvgTicket();
     if (kind === "count") return answerPosPaymentsCount();
+    if (kind === "auth") {
+      // Re-arm so the next Card present / Olo reply still resolves this ask.
+      chatContext.pendingChoice = "auth";
+      return "All payments does not publish an authorization rate — that lives on **Card present (Worldpay)** and **Olo Pay**. Say which of those you want.";
+    }
     const week = latestPosWeek();
     chatContext.topic = "pos";
     if (!week) return "All payments has no published week loaded right now.";
     const sales = week.reportedTotal ?? week.tenderTotal;
     return `For **${week.label}**, All payments took **${money(sales, 2)}** in net tender at company-owned shops — card, cash, and gift card / Dutch Pass together.`;
   }
+  if (channel === "olo") {
+    if (kind === "ticket") return answerOloAvgTicket();
+    if (kind === "count") return answerOloOrders();
+    if (kind === "auth") return answerOloAuth();
+    return answerOloSales();
+  }
   if (kind === "ticket") return answerKpi("aov");
   if (kind === "count") return answerKpi("transaction_volume");
+  if (kind === "auth") return answerKpi("auth_rate");
   return answerKpi("sales_volume");
 }
 
@@ -1103,13 +1407,20 @@ function answerQuestion(raw) {
   // and the offer expires after one turn so it cannot capture a later question.
   if (chatContext.pendingChoice) {
     const pending = chatContext.pendingChoice;
+    const channel = detectChannelReply(q, pending);
+    if (channel) {
+      chatContext.pendingChoice = null;
+      return answerChannelChoice(pending, channel);
+    }
+    // Invalid lane pick (e.g. auth ordinal "third") must not silently clear the pending choice.
+    if (/^(first|second|third|the first one|the second one|the third one)[.!?]?$/.test(q)) {
+      return CHANNEL_CHOICES[pending].ask;
+    }
     chatContext.pendingChoice = null;
-    const channel = detectChannelReply(q);
-    if (channel) return answerChannelChoice(pending, channel);
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); Phase 1 has no wallet mix or decline reasons\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   // Anyone about to share these numbers should be able to ask what was left out.
@@ -1124,12 +1435,14 @@ function answerQuestion(raw) {
     (/\bexclusions?\b|\bexclud/.test(q) ||
       /\b(filtered out|filter out|left out|leave out|not include|doesn't include|does not include|removed from|dropped from)\b/.test(q))
   ) {
+    if (wantsOloKnowledge(q)) return answerOloExclusions();
     return answerPosExclusions();
   }
   if (
     /\b(assumptions?|assumed|caveats?|limitations?|gotchas?|footnotes?|fine print)\b/.test(q) ||
     /\b(what should i know|need to know|before (i )?shar)\b/.test(q)
   ) {
+    if (wantsOloKnowledge(q)) return answerOloExclusions();
     return answerPosAssumptions();
   }
 
@@ -1140,11 +1453,25 @@ function answerQuestion(raw) {
     if (mixTrend) return mixTrend;
   }
 
+  // Olo-named questions must resolve before Worldpay/POS aliases steal sales,
+  // ticket, auth, or order wording — and before the channel clarifier.
+  const oloAnswer = answerOloQuestion(q, raw);
+  if (oloAnswer) return oloAnswer;
+
   const ambiguous = ambiguousChannelMetric(q, raw);
   if (ambiguous) {
     chatContext.topic = "clarify";
     chatContext.pendingChoice = ambiguous;
     return CHANNEL_CHOICES[ambiguous].ask;
+  }
+
+  // Named Card present / Worldpay auth should return the KPI, not only the glossary gloss.
+  if (
+    /\b(auth|authorization|approval)\s*rate\b/.test(q) &&
+    /\b(card present|worldpay)\b/.test(q) &&
+    !/\bolo\b/.test(q)
+  ) {
+    return answerKpi("auth_rate");
   }
 
   if (/\b(scope|company owned|what data|what am i looking)\b/.test(q)) return answerScope();
@@ -1337,13 +1664,21 @@ function suggestedFollowUps() {
       { label: "What gets checked before these numbers go live?", question: "What data sanity checks run before publish?" },
       { label: "How did this week move versus last week?", question: "Compare this week with the prior week" },
     ],
-    clarify: [
-      { label: "All payments (Xenial)", question: "All payments" },
-      { label: "Card present (Worldpay)", question: "Card present" },
-    ],
+    clarify: chatContext.pendingChoice === "auth"
+      ? [
+          { label: "Card present (Worldpay)", question: "Card present" },
+          { label: "Olo Pay", question: "Olo Pay" },
+        ]
+      : [
+          { label: "All payments (Xenial)", question: "All payments" },
+          { label: "Card present (Worldpay)", question: "Card present" },
+          { label: "Olo Pay", question: "Olo Pay" },
+        ],
     kpi: commonFormats,
   };
-  return (byTopic[chatContext.topic] || commonFormats).slice(0, 2);
+  const chips = byTopic[chatContext.topic] || commonFormats;
+  const limit = chatContext.topic === "clarify" ? chips.length : 2;
+  return chips.slice(0, limit);
 }
 
 function appendFollowUps(input) {
@@ -1454,6 +1789,6 @@ function startChatbotWhenUnlocked() {
   window.addEventListener("dashboard:unlocked", () => initChatbot(), { once: true });
 }
 
-window.__paymentsChat = { answerQuestion, normalize, chatContext };
+window.__paymentsChat = { answerQuestion, normalize, chatContext, suggestedFollowUps };
 document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);
 })();

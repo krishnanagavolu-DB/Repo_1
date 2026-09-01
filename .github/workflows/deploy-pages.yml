@@ -43,12 +43,29 @@ jobs:
           node tests/chatbot_exclusions_smoke.js
           node tests/chatbot_mix_trend_smoke.js
           node tests/chatbot_channel_smoke.js
+          node tests/chatbot_olo_smoke.js
           node tests/format_smoke.js
           node tests/slide_layout_smoke.js
           node tests/pos_sales_smoke.js
+          node tests/olo_pay_smoke.js
           node tests/notices_smoke.js
           node tests/ytd_banner_smoke.js
           python3 scripts/stamp_asset_versions.py --check
+          # Olo Pay raw→published byte parity (temp regen; does not alter importer CLI)
+          tmpdir=$(mktemp -d)
+          python3 scripts/import_olo_pay.py data/raw/olo-pay/olo_pay_data_*.json \
+            --methodology data/raw/olo-pay/olo_pay_methodology.json \
+            --out "$tmpdir/olo_pay_data.json" \
+            --report "$tmpdir/olo_pay_validation_report.json" \
+            --preview-copy "$tmpdir/preview_olo_pay_data.json"
+          if ! cmp "$tmpdir/olo_pay_data.json" data/processed/olo_pay_data.json; then
+            echo "Olo Pay processed JSON drifted from raw regen. Re-run scripts/import_olo_pay.py and commit data/processed/olo_pay_data.json." >&2
+            exit 1
+          fi
+          if ! cmp "$tmpdir/preview_olo_pay_data.json" site/preview/data/olo_pay_data.json; then
+            echo "Olo Pay preview JSON drifted from raw regen. Re-run scripts/import_olo_pay.py and commit site/preview/data/olo_pay_data.json." >&2
+            exit 1
+          fi
           python3 scripts/validate_worldpay.py \
             --raw data/raw \
             --dashboard data/processed/dashboard.json \

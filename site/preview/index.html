@@ -6,7 +6,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=7f09e996da" />
+    <link rel="stylesheet" href="css/dashboard.css?v=9b7c6e84d8" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -14,8 +14,9 @@
     <script src="js/chart-labels.js?v=cd7105563a" defer></script>
     <script src="js/dashboard.js?v=12714ffffd" defer></script>
     <script src="js/pos-sales.js?v=9dcca5c9c5" defer></script>
+    <script src="js/olo-pay.js?v=b3e0ceb31c" defer></script>
     <script src="js/tabs.js?v=5d677809bc" defer></script>
-    <script src="js/chatbot.js?v=7a131ab925" defer></script>
+    <script src="js/chatbot.js?v=347f081e17" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -75,17 +76,7 @@
               <button type="button" class="tab" data-tab="worldpay">Card present</button>
             </div>
           </div>
-          <button type="button" class="tab locked" disabled aria-disabled="true">
-            Olo Pay
-            <span class="tab-badge">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path
-                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
-                />
-              </svg>
-              Coming soon
-            </span>
-          </button>
+          <button type="button" class="tab" data-tab="olo">Olo Pay</button>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Gift Cards
             <span class="tab-badge">
@@ -296,6 +287,62 @@
             <div class="coming-card">Coming soon · Chargebacks</div>
           </section>
         </details>
+        </section>
+
+        <section id="panel-olo" class="tab-panel" data-panel="olo" hidden>
+          <div id="olo-empty" class="pos-empty" hidden></div>
+
+          <div id="olo-content" hidden>
+            <section class="slide" aria-label="Olo Pay digital approval and sales">
+              <header class="slide-band">
+                <h2>OLO PAY · DIGITAL APPROVAL &amp; SALES</h2>
+                <p id="olo-period-label">Most recent week</p>
+              </header>
+
+              <div class="slide-grid olo-slide-grid">
+                <article class="slide-panel slide-kpis">
+                  <div class="panel-band">Approval &amp; sales KPIs</div>
+                  <div class="panel-body">
+                    <div class="pos-slide-summary olo-slide-summary" id="olo-summary-grid"></div>
+                    <div class="olo-support" id="olo-support"></div>
+                    <p class="panel-note">Company owned shops only</p>
+                  </div>
+                </article>
+
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Sales over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-sales-trend"></canvas></div>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Card brand mix</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-brand"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-olo-brand" aria-label="Card brand mix legend"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Auth rate over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-auth-trend"></canvas></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <details class="slide-detail">
+              <summary>More detail — brand values, approvals, refunds &amp; voids</summary>
+              <section class="charts-2 olo-charts">
+                <article class="panel">
+                  <h3>Full detail</h3>
+                  <div class="mix-body" id="olo-detail"></div>
+                </article>
+              </section>
+            </details>
+          </div>
         </section>
 
         <!-- Shared across every channel tab: definitions, KPIs, POS mix, benchmarks, competitors -->

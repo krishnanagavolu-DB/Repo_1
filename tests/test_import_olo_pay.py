@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import json
+import sys
 from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
 
-from scripts.import_olo_pay import combine_weekly_files, validate_week
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from import_olo_pay import combine_weekly_files, validate_week  # noqa: E402
 
 BRAND_ORDER = ["Visa", "Mastercard", "Amex", "Discover"]
 
@@ -472,7 +476,7 @@ def test_validate_week_expected_week_mismatch():
 
 
 def test_cli_fail_closed_writes_report_only(tmp_path: Path):
-    from scripts.import_olo_pay import main
+    from import_olo_pay import main
 
     bad = _week_payload(franchised=12.0)
     weekly = _write_week(tmp_path / "olo_pay_data_20260824.json", bad)
@@ -568,7 +572,7 @@ def test_validates_published_week_over_week_against_adjacent_weeks(tmp_path: Pat
 def test_temp_regen_matches_committed_processed_and_preview_bytes():
     """CI parity: regenerating from committed raw weeks must match published JSON bytes."""
     import tempfile
-    from scripts.import_olo_pay import main
+    from import_olo_pay import main
 
     raw_files = sorted(Path("data/raw/olo-pay").glob("olo_pay_data_*.json"))
     assert raw_files, "raw weekly files required"

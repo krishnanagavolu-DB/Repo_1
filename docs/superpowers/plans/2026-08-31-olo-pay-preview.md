@@ -42,7 +42,7 @@ Tests must assert that valid CO-only weekly files combine chronologically, outpu
 
 - [ ] **Step 2: Verify RED**
 
-Run `python3 -m pytest -q tests/test_import_olo_pay.py`. Expected: failure because `scripts.import_olo_pay` does not exist.
+Run `pytest -q tests/test_import_olo_pay.py`. Expected: failure because `import_olo_pay` does not exist. Use the bare `pytest` entrypoint that CI runs, not `python3 -m pytest`, which silently adds the repo root to `sys.path`.
 
 - [ ] **Step 3: Implement the importer**
 

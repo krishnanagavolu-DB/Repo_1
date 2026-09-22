@@ -131,6 +131,11 @@ check(
 );
 
 const css = fs.readFileSync("site/preview/css/dashboard.css", "utf8");
+check(
+  "overview keeps Ask Data below a 900px proof viewport",
+  /\.executive-slide\s*\{[^}]*margin-bottom:\s*48px/.test(css),
+  true
+);
 check("tender canvas has no forced !important width", css.includes("width: 130px !important"), false);
 check("tender canvas has no forced !important height", css.includes("height: 130px !important"), false);
 check(

@@ -1541,6 +1541,7 @@ body.auth-unlocked .auth-gate {
 .executive-slide {
   max-width: 1500px;
   margin-inline: auto;
+  margin-bottom: 48px;
 }
 
 .executive-slide .slide-band span {

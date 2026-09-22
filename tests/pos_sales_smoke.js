@@ -1,6 +1,7 @@
 const fs = require("fs");
 const vm = require("vm");
 
+const windowListeners = {};
 const sandbox = {
   console,
   Intl,
@@ -11,7 +12,12 @@ const sandbox = {
   Array,
   RegExp,
   Date,
-  window: { addEventListener() {}, dispatchEvent() {} },
+  window: {
+    addEventListener(type, handler) {
+      windowListeners[type] = handler;
+    },
+    dispatchEvent() {},
+  },
   document: {
     addEventListener() {},
     getElementById() {
@@ -206,15 +212,36 @@ check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
 check("pos data start", pos.getDataStart(live).startLabel, "Jun 29, 2026");
 check("pos data week count", pos.getDataStart(live).weekCount, 12);
 
-const posSource = fs.readFileSync("site/preview/js/pos-sales.js", "utf8");
-const renderPosSource = posSource.match(
-  /function renderPos\(weeks\)\s*\{([\s\S]*?)\n\}\n\nasync function loadPosSales/
-)?.[1] || "";
+const renderElements = {
+  "pos-period-label": { textContent: "" },
+  "pos-summary-grid": { innerHTML: "" },
+  "pos-kpi-grid": { innerHTML: "" },
+  "pos-empty": { hidden: true },
+  "pos-content": { hidden: true },
+};
+sandbox.document.getElementById = (id) => renderElements[id] || null;
+sandbox.window.__posSalesState = { weeks: [], latest: null };
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: "history" },
+});
+pos.renderPos(live);
 check(
-  "renderPos handles history explicitly",
-  /else if \(isHistoryPeriod\(selectedPeriodId\)\)/.test(renderPosSource),
+  "pre-load history selection renders the aggregate through renderPos",
+  renderElements["pos-period-label"].textContent,
+  liveYtd.label
+);
+check(
+  "pre-load history selection renders aggregate sales rather than latest sales",
+  renderElements["pos-summary-grid"].innerHTML.includes(pos.compactUsd(liveYtd.reportedTotal)),
   true
 );
+
+sandbox.window.__posSalesState = { weeks: [], latest: null };
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: "ytd" },
+});
+pos.renderPos(live);
+check("legacy ytd selection still renders available history", renderElements["pos-period-label"].textContent, liveYtd.label);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

@@ -106,12 +106,23 @@ coordinator.registerPeriods("worldpay", [
 ]);
 coordinator.activate("pos");
 check("POS offers its weeks plus history", select.options.length, 3);
-check("latest POS week is selected", select.value, "2026-09-07");
+check("history selected before periods load survives registration", select.value, "history");
 select.value = "2026-08-31";
 coordinator.activate("worldpay");
 check("invalid date falls back to latest Worldpay", select.value, "2026-09-07");
 check("history option copy", select.options.at(-1).textContent, "Available history");
 check("registered periods are readable", coordinator.getPeriods("worldpay").length, 1);
+
+select.value = "history";
+coordinator.activate("pos");
+check("history survives activation when the destination has periods", select.value, "history");
+coordinator.registerPeriods("pos", [
+  { id: "2026-09-07", label: "Sep 7 – Sep 13, 2026" },
+  { id: "2026-09-14", label: "Sep 14 – Sep 20, 2026" },
+]);
+check("history survives active-tab period registration", select.value, "history");
+coordinator.activate("worldpay");
+check("history survives switching back to another registered tab", select.value, "history");
 
 listeners["window:dashboard:periods"]?.({
   detail: {

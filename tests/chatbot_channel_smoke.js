@@ -85,6 +85,17 @@ expect("In-Shop Sales definition names scope", inShopDefinition, /company-owned/
 expect("In-Shop Sales definition names weekly grain", inShopDefinition, /completed Monday.?Sunday/i);
 expect("In-Shop Sales definition names all tenders", inShopDefinition, /Card.*Cash.*Gift Card.*Dutch Pass/i);
 expect("In-Shop Sales definition names exclusions", inShopDefinition, /exclude.*tips.*change/i);
+expect(
+  "In-Shop Sales definition preserves curated company-owned ownership",
+  inShopDefinition,
+  /VW_DIM_STORE_CURATED\.OWNERSHIP\s*=\s*Company Owned/i
+);
+expect("In-Shop Sales definition states published tender mix is 100%", inShopDefinition, /mix.*100%/i);
+expect(
+  "In-Shop Sales definition cross-references separate Worldpay card authorizations",
+  inShopDefinition,
+  /Worldpay.*card authorizations/i
+);
 
 const legacyPosDefinition = sameOnBothTabs("What is All payments?");
 if (legacyPosDefinition !== inShopDefinition) {
@@ -95,7 +106,17 @@ if (legacyPosDefinition !== inShopDefinition) {
   });
 }
 checkAnswer("What is Card Health?", /Worldpay.*authoriz.*decline.*interchange/i);
-checkAnswer("Can I add POS and Worldpay sales?", /overlap.*do not add/i);
+const nonAdditivity = sameOnBothTabs("Can I add POS and Worldpay sales?");
+expect("POS and Worldpay non-additivity names overlap", nonAdditivity, /overlap/i);
+const doNotAddCount = (nonAdditivity.match(/do not add/gi) || []).length;
+if (doNotAddCount !== 1) {
+  failures.push({
+    name: "POS and Worldpay non-additivity says do not add exactly once",
+    expected: 1,
+    actual: doNotAddCount,
+    answer: nonAdditivity,
+  });
+}
 checkAnswer("What does YTD mean?", /Available history.*loaded weeks/i);
 
 const overviewPrompts = onPos.tabPrompts?.overview || [];

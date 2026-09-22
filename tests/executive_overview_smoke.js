@@ -58,36 +58,145 @@ const worldpayWeeks = overview.worldpayWeeks(worldpayPayload);
 
 const periodIds = overview.intersectPeriodIds(posWeeks, worldpayWeeks, oloWeeks);
 check("period intersection starts when all sources overlap", periodIds[0], "2026-07-20");
-check("period intersection ends latest", periodIds.at(-1), "2026-09-14");
+const latestPeriodId = periodIds.at(-1);
+const latestPosWeek = posWeeks.find((week) => week.sortKey === latestPeriodId);
+const latestWorldpayWeek = worldpayWeeks.find((week) => week.id === latestPeriodId);
+const latestOloWeek = oloWeeks.find((week) => week.sortKey === latestPeriodId);
+check(
+  "latest common period is present in every normalized source",
+  Boolean(latestPosWeek && latestWorldpayWeek && latestOloWeek),
+  true
+);
 check("period intersection has no duplicates", new Set(periodIds).size, periodIds.length);
+check(
+  "one usable source contributes all of its periods",
+  JSON.stringify(
+    typeof overview.periodIdsForAvailableSources === "function"
+      ? overview.periodIdsForAvailableSources({ pos: posWeeks, worldpay: [], olo: [] })
+      : null
+  ),
+  JSON.stringify(posWeeks.map((week) => week.sortKey))
+);
 
-const model = overview.overviewForPeriod("2026-09-14", {
+const model = overview.overviewForPeriod(latestPeriodId, {
   pos: posWeeks,
   worldpay: worldpayWeeks,
   olo: oloWeeks,
 });
-check("POS sales stays POS only", model.kpis.inShopSales.value, 44151389.8);
-check("Olo sales stays separate", model.kpis.orderAheadSales.value, 5581687.75);
+check(
+  "POS sales stays equal to the normalized POS source only",
+  model.kpis.inShopSales.value,
+  latestPosWeek.reportedTotal ?? latestPosWeek.tenderTotal
+);
+check(
+  "Olo sales stays equal to the normalized Olo source only",
+  model.kpis.orderAheadSales.value,
+  latestOloWeek.sales
+);
+check(
+  "POS and Olo remain concretely separate source values",
+  model.kpis.inShopSales.value !== model.kpis.orderAheadSales.value,
+  true
+);
 check("overview has six KPI cards", Object.keys(model.kpis).length, 6);
 check("sales trend excludes Worldpay dollars", model.salesTrend.datasets.length, 2);
 check("watchlist maximum", model.watchlist.length <= 3, true);
 check(
-  "watchlist claims no cause",
-  /because|caused by|driven by/i.test(model.watchlist.map((x) => x.text).join(" ")),
+  "watchlist claims no cause or target",
+  /because|caused by|driven by|target|goal|threshold/i.test(
+    model.watchlist.map((x) => x.text).join(" ")
+  ),
   false
 );
 
-const partial = overview.overviewForPeriod("2026-09-14", {
+const partial = overview.overviewForPeriod(latestPeriodId, {
   pos: posWeeks,
   worldpay: [],
   olo: oloWeeks,
 });
 check("missing Worldpay is unavailable", partial.kpis.cardAuthRate.value, null);
+check("missing Worldpay renders explicit unavailable copy", partial.kpis.cardAuthRate.display, "Not available");
 check(
   "missing Worldpay creates coverage notice",
   partial.watchlist.some((x) => /Worldpay.*not available/i.test(x.text)),
   true
 );
+
+const watchlistModel = {
+  coverage: { pos: true, worldpay: true, olo: true },
+  kpis: {
+    inShopSales: {
+      label: "In-shop sales",
+      delta: { value: -4.7, unit: "percent", text: "-4.7% vs prior week" },
+    },
+    inShopOrders: {
+      label: "In-shop orders",
+      delta: { value: 2.2, unit: "percent", text: "+2.2% vs prior week" },
+    },
+    cardAuthRate: {
+      label: "Card auth rate",
+      delta: { value: -0.35, unit: "points", text: "-0.35 pts vs prior week" },
+    },
+    orderAheadSales: {
+      label: "Order-ahead sales",
+      delta: { value: 1.4, unit: "percent", text: "+1.4% vs prior week" },
+    },
+    orderAheadAuthRate: {
+      label: "Order-ahead auth rate",
+      delta: { value: -12, unit: "points", text: "-12.00 pts vs prior week" },
+    },
+  },
+};
+const designedWatchlist = overview.buildWatchlist(watchlistModel);
+check("watchlist slot 1 is largest comparable movement", designedWatchlist[0]?.text, "In-shop sales -4.7% vs prior week.");
+check("watchlist slot 2 always carries Card auth health", designedWatchlist[1]?.text, "Card auth rate -0.35 pts vs prior week.");
+check("watchlist slot 3 is the next distinct comparable movement", designedWatchlist[2]?.text, "In-shop orders +2.2% vs prior week.");
+
+const coverageWatchlist = overview.buildWatchlist({
+  ...watchlistModel,
+  coverage: { pos: true, worldpay: false, olo: true },
+});
+check("coverage watchlist stays capped at three", coverageWatchlist.length, 3);
+check(
+  "source coverage takes slot 3 without displacing Card auth slot",
+  /Worldpay.*not available/i.test(coverageWatchlist[2]?.text || ""),
+  true
+);
+
+const gappedWeeks = [
+  {
+    sortKey: "2099-01-01",
+    label: "Jan 1 – Jan 7, 2099",
+    reportedTotal: 100,
+    orderCount: 10,
+    avgTicket: 10,
+    tenders: [{ label: "Card", amount: 100, pct: 1 }],
+  },
+  {
+    sortKey: "2099-01-15",
+    label: "Jan 15 – Jan 21, 2099",
+    reportedTotal: 120,
+    orderCount: 12,
+    avgTicket: 10,
+    tenders: [{ label: "Card", amount: 120, pct: 1 }],
+  },
+];
+const gappedModel = overview.overviewForPeriod("2099-01-15", {
+  pos: gappedWeeks,
+  worldpay: [],
+  olo: [],
+});
+check("a fourteen-day source gap has no prior-week comparison", gappedModel.kpis.inShopSales.delta, null);
+
+const adjacentModel = overview.overviewForPeriod("2099-01-08", {
+  pos: [
+    gappedWeeks[0],
+    { ...gappedWeeks[1], sortKey: "2099-01-08", label: "Jan 8 – Jan 14, 2099" },
+  ],
+  worldpay: [],
+  olo: [],
+});
+check("a seven-day adjacent source week has a prior-week comparison", Boolean(adjacentModel.kpis.inShopSales.delta), true);
 
 const html = fs.readFileSync("site/preview/index.html", "utf8");
 check(
@@ -100,7 +209,24 @@ check("six-card grid exists", html.includes('id="overview-kpis"'), true);
 check("sales chart exists", html.includes('id="chart-overview-sales"'), true);
 check("tender chart exists", html.includes('id="chart-overview-tender"'), true);
 check("watchlist exists", html.includes('id="overview-watchlist"'), true);
+check("overview has a structured empty-state container", html.includes('id="overview-empty"'), true);
 check("reconciliation note names overlap", /Worldpay[^<]*overlap/i.test(html), true);
+check(
+  "overview sales canvas has a grounded image label",
+  /<canvas id="chart-overview-sales" role="img" aria-label="[^"]*In-Shop Sales[^"]*Order Ahead[^"]*"><\/canvas>/.test(html),
+  true
+);
+check(
+  "overview tender canvas has a grounded image label",
+  /<canvas id="chart-overview-tender" role="img" aria-label="[^"]*Card[^"]*Cash[^"]*Gift Card[^"]*"><\/canvas>/.test(html),
+  true
+);
+check(
+  "KPI and watchlist updates are announced politely",
+  /id="overview-kpis"[^>]*aria-live="polite"/.test(html) &&
+    /id="overview-watchlist"[^>]*aria-live="polite"/.test(html),
+  true
+);
 
 const overviewRef = html.indexOf('src="js/executive-overview.js');
 const posRef = html.indexOf('src="js/pos-sales.js');
@@ -131,9 +257,31 @@ check(
 );
 
 const css = fs.readFileSync("site/preview/css/dashboard.css", "utf8");
+const askDataRef = html.indexOf('<section class="ask-data"');
+const lastTabPanelRef = html.lastIndexOf('class="tab-panel"');
 check(
-  "overview keeps Ask Data below a 900px proof viewport",
-  /\.executive-slide\s*\{[^}]*margin-bottom:\s*48px/.test(css),
+  "shared Ask Data is structurally placed after every tab panel",
+  askDataRef > lastTabPanelRef && lastTabPanelRef >= 0,
+  true
+);
+check(
+  "KPI source labels use at least 10px muted text",
+  /\.executive-kpi-source\s*\{[^}]*font-size:\s*10px[^}]*color:\s*var\(--muted\)/s.test(css),
+  true
+);
+check(
+  "KPI source labels reserve two-line alignment space",
+  /\.executive-kpi-source\s*\{[^}]*min-height:\s*2\.[0-9]+em/s.test(css),
+  true
+);
+check(
+  "negative watch movement uses Dutch yellow",
+  /\.executive-watchlist li\[data-tone="watch"\]\s*\{[^}]*border-left-color:\s*var\(--yellow\)/s.test(css),
+  true
+);
+check(
+  "context notices use Dutch blue",
+  /\.executive-watchlist li\[data-tone="context"\]\s*\{[^}]*border-left-color:\s*var\(--blue\)/s.test(css),
   true
 );
 check("tender canvas has no forced !important width", css.includes("width: 130px !important"), false);
@@ -158,6 +306,11 @@ check(
   "mix panel body is an explicit flex row so height is the cross axis",
   /\.executive-mix-panel\s+\.panel-body\s*\{[^}]*flex-direction:\s*row/.test(css),
   true
+);
+check(
+  "bare Gift Card legend ink falls back to navy",
+  typeof overview.tenderInk === "function" ? overview.tenderInk("Gift Card") : null,
+  "#154167"
 );
 
 // --- Review fix: Executive Overview must support a cross-channel
@@ -279,33 +432,25 @@ check(
   true
 );
 
-if (failures.length) {
-  console.error(JSON.stringify(failures, null, 2));
-  process.exit(1);
-} else {
-  console.log("Executive overview smoke checks passed");
-
-  // --- Review fix: loading the overview must construct each chart exactly
-  // once (registerPeriods' own event echo plus loadOverview's explicit
-  // render previously double-built both charts on every page load). This
-  // exercises the real tabs.js period coordinator, not a mock, so the
-  // regression is caught the same way it would break in the browser. ---
-  runRenderingRegressionChecks()
-    .then((renderingFailures) => {
-      if (renderingFailures.length) {
-        console.error(JSON.stringify(renderingFailures, null, 2));
-        process.exit(1);
-      }
-      console.log("Executive overview rendering smoke checks passed");
-    })
-    .catch((err) => {
-      console.error(err);
+// Loading regressions run even when a pure-model assertion above fails so
+// RED output proves HTTP failures and activation sequences are exercised.
+runRenderingRegressionChecks()
+  .then((renderingFailures) => {
+    const allFailures = [...failures, ...renderingFailures];
+    if (allFailures.length) {
+      console.error(JSON.stringify(allFailures, null, 2));
       process.exit(1);
-    });
-}
+    }
+    console.log("Executive overview smoke checks passed");
+    console.log("Executive overview rendering smoke checks passed");
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 
 function makeElementStub() {
-  const stub = { textContent: "" };
+  const stub = { textContent: "", hidden: false };
   let html = "";
   Object.defineProperty(stub, "innerHTML", {
     get() {
@@ -318,19 +463,37 @@ function makeElementStub() {
   return stub;
 }
 
-async function runRenderingRegressionChecks() {
-  const renderingFailures = [];
-  function renderCheck(name, actual, expected) {
-    if (actual !== expected) renderingFailures.push({ name, expected, actual });
-  }
+function makeClassList(active = false) {
+  const values = new Set(active ? ["active"] : []);
+  return {
+    contains(value) {
+      return values.has(value);
+    },
+    toggle(value, enabled) {
+      if (enabled) values.add(value);
+      else values.delete(value);
+    },
+  };
+}
 
-  let salesChartCount = 0;
-  let tenderChartCount = 0;
+function payloadForUrl(url) {
+  if (url.includes("in_shop_sales_data")) return posPayload;
+  if (url.includes("dashboard.json")) return worldpayPayload;
+  return oloPayload;
+}
+
+function successfulFetch(url) {
+  return Promise.resolve({ ok: true, status: 200, json: async () => payloadForUrl(url) });
+}
+
+function buildRenderingHarness(fetchImpl = successfulFetch) {
+  const stats = { salesCharts: 0, tenderCharts: 0 };
+  const noticeCalls = [];
 
   class FakeChart {
     constructor(_canvas, config) {
-      if (config?.type === "line") salesChartCount += 1;
-      if (config?.type === "doughnut") tenderChartCount += 1;
+      if (config?.type === "line") stats.salesCharts += 1;
+      if (config?.type === "doughnut") stats.tenderCharts += 1;
     }
     destroy() {}
   }
@@ -342,6 +505,8 @@ async function runRenderingRegressionChecks() {
     "overview-period-label": makeElementStub(),
     "chart-overview-sales": {},
     "chart-overview-tender": {},
+    "overview-empty": { ...makeElementStub(), hidden: true },
+    "overview-content": { ...makeElementStub(), hidden: false },
   };
 
   const periodSelect = {
@@ -353,6 +518,24 @@ async function runRenderingRegressionChecks() {
     },
   };
 
+  const tabs = [
+    {
+      dataset: { tab: "overview" },
+      classList: makeClassList(true),
+      setAttribute() {},
+      removeAttribute() {},
+    },
+    {
+      dataset: { tab: "pos" },
+      classList: makeClassList(false),
+      setAttribute() {},
+      removeAttribute() {},
+    },
+  ];
+  const panels = [
+    { dataset: { panel: "overview" }, hidden: false },
+    { dataset: { panel: "pos" }, hidden: true },
+  ];
   const eventListeners = {};
 
   const renderSandbox = {
@@ -373,20 +556,19 @@ async function runRenderingRegressionChecks() {
         this.detail = init?.detail;
       }
     },
-    fetch(url) {
-      const payload = url.includes("in_shop_sales_data")
-        ? posPayload
-        : url.includes("dashboard.json")
-        ? worldpayPayload
-        : oloPayload;
-      return Promise.resolve({ ok: true, json: async () => payload });
-    },
     window: {
       addEventListener(type, handler) {
         (eventListeners[type] = eventListeners[type] || []).push(handler);
       },
       dispatchEvent(event) {
         for (const handler of eventListeners[event.type] || []) handler(event);
+      },
+      __notices: {
+        renderNotice(target, options) {
+          noticeCalls.push(options);
+          target.innerHTML = `<h3>${options.title}</h3><p>${options.message || ""}</p>`;
+          target.hidden = false;
+        },
       },
     },
     document: {
@@ -399,13 +581,14 @@ async function runRenderingRegressionChecks() {
         if (id === "period-select") return periodSelect;
         return elements[id] || null;
       },
-      querySelectorAll() {
-        return [];
+      querySelectorAll(selector) {
+        return selector.includes("tab-panel") ? panels : tabs;
       },
-      querySelector() {
-        return null;
+      querySelector(selector) {
+        return selector.includes(".active") ? tabs[0] : null;
       },
     },
+    fetch: fetchImpl,
   };
 
   vm.createContext(renderSandbox);
@@ -418,54 +601,75 @@ async function runRenderingRegressionChecks() {
     vm.runInContext(fs.readFileSync(script, "utf8"), renderSandbox);
   }
 
-  await renderSandbox.window.__executiveOverview.loadOverview();
+  return {
+    sandbox: renderSandbox,
+    elements,
+    periodSelect,
+    stats,
+    noticeCalls,
+    resetCharts() {
+      stats.salesCharts = 0;
+      stats.tenderCharts = 0;
+    },
+  };
+}
 
-  renderCheck("sales chart is constructed exactly once on load", salesChartCount, 1);
-  renderCheck("tender chart is constructed exactly once on load", tenderChartCount, 1);
+async function runRenderingRegressionChecks() {
+  const renderingFailures = [];
+  function renderCheck(name, actual, expected) {
+    if (actual !== expected) renderingFailures.push({ name, expected, actual });
+  }
+
+  const full = buildRenderingHarness();
+  await full.sandbox.window.__executiveOverview.loadOverview();
+
+  renderCheck("sales chart is constructed exactly once on load", full.stats.salesCharts, 1);
+  renderCheck("tender chart is constructed exactly once on load", full.stats.tenderCharts, 1);
   renderCheck(
     "initial render shows the latest common week, not history",
-    elements["overview-period-label"].textContent !== "Available history",
+    full.elements["overview-period-label"].textContent !== "Available history",
     true
   );
   renderCheck(
     "initial KPI grid shows the latest-week sales figure",
-    elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
     true
   );
   renderCheck(
     "legend dot ink uses the WCAG-safe navy for Gift Card / Dutch Pass, not raw brand yellow",
-    elements["legend-overview-tender"].innerHTML.includes("color:#154167") &&
-      !/color:#F6E300[^>]*>●<\/span>\s*Gift Card/i.test(elements["legend-overview-tender"].innerHTML),
+    full.elements["legend-overview-tender"].innerHTML.includes("color:#154167") &&
+      !/color:#F6E300[^>]*>●<\/span>\s*Gift Card/i.test(
+        full.elements["legend-overview-tender"].innerHTML
+      ),
     true
   );
 
   // Switch to Available history and prove it renders the aggregate, not a
   // silent no-op that keeps showing the latest week.
-  salesChartCount = 0;
-  tenderChartCount = 0;
-  renderSandbox.window.dispatchEvent(
-    new renderSandbox.CustomEvent("dashboard:period", {
+  full.resetCharts();
+  full.sandbox.window.dispatchEvent(
+    new full.sandbox.CustomEvent("dashboard:period", {
       detail: { periodId: "history", tabId: "overview" },
     })
   );
 
   renderCheck(
     "selecting Available history updates the period label",
-    elements["overview-period-label"].textContent,
+    full.elements["overview-period-label"].textContent,
     "Available history"
   );
   renderCheck(
     "Available history renders the aggregated POS sales figure",
-    elements["overview-kpis"].innerHTML.includes(historyModel.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(historyModel.kpis.inShopSales.display),
     true
   );
   renderCheck(
     "Available history no longer shows the latest single-week POS figure",
-    elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
     false
   );
-  renderCheck("history selection re-renders the sales chart once", salesChartCount, 1);
-  renderCheck("history selection re-renders the tender chart once", tenderChartCount, 1);
+  renderCheck("history selection re-renders the sales chart once", full.stats.salesCharts, 1);
+  renderCheck("history selection re-renders the tender chart once", full.stats.tenderCharts, 1);
 
   // --- Review fix: switching to the overview tab (dashboard:tab) after data
   // has already loaded must rerender/rebuild the charts, even though the
@@ -474,33 +678,104 @@ async function runRenderingRegressionChecks() {
   // finished, then switched back) stays sized to a hidden 0x0 canvas — the
   // period-echo double-render guard would otherwise skip this rebuild since
   // the resolved period id is unchanged. ---
-  salesChartCount = 0;
-  tenderChartCount = 0;
-  renderSandbox.window.dispatchEvent(
-    new renderSandbox.CustomEvent("dashboard:tab", { detail: { tabId: "overview" } })
+  full.resetCharts();
+  full.sandbox.window.dispatchEvent(
+    new full.sandbox.CustomEvent("dashboard:tab", { detail: { tabId: "overview" } })
   );
   renderCheck(
     "activating the overview tab rebuilds the sales chart even though the period is unchanged",
-    salesChartCount,
+    full.stats.salesCharts,
     1
   );
   renderCheck(
     "activating the overview tab rebuilds the tender chart even though the period is unchanged",
-    tenderChartCount,
+    full.stats.tenderCharts,
     1
   );
   renderCheck(
     "activating another tab does not rebuild the overview charts",
     (() => {
-      salesChartCount = 0;
-      tenderChartCount = 0;
-      renderSandbox.window.dispatchEvent(
-        new renderSandbox.CustomEvent("dashboard:tab", { detail: { tabId: "pos" } })
+      full.resetCharts();
+      full.sandbox.window.dispatchEvent(
+        new full.sandbox.CustomEvent("dashboard:tab", { detail: { tabId: "pos" } })
       );
-      return salesChartCount + tenderChartCount;
+      return full.stats.salesCharts + full.stats.tenderCharts;
     })(),
     0
   );
+
+  // activate() emits both dashboard:period and dashboard:tab. A changed
+  // period must still build one chart pair, not one pair for each event.
+  full.periodSelect.value = latestPeriodId;
+  full.resetCharts();
+  full.sandbox.window.__dashboardTabs.activate("overview");
+  renderCheck("overview activate/register builds one sales chart", full.stats.salesCharts, 1);
+  renderCheck("overview activate/register builds one tender chart", full.stats.tenderCharts, 1);
+
+  full.periodSelect.value = "history";
+  full.resetCharts();
+  full.sandbox.window.__dashboardTabs.activate("overview");
+  renderCheck(
+    "overview activation preserves an explicit history selection",
+    full.elements["overview-period-label"].textContent,
+    "Available history"
+  );
+  renderCheck("history activation builds one sales chart", full.stats.salesCharts, 1);
+  renderCheck("history activation builds one tender chart", full.stats.tenderCharts, 1);
+
+  const expectedWithoutWorldpay = posWeeks
+    .map((week) => week.sortKey)
+    .filter((id) => oloWeeks.some((week) => week.sortKey === id));
+  const partialHttp = buildRenderingHarness((url) => {
+    if (url.includes("dashboard.json")) {
+      return Promise.resolve({ ok: false, status: 503, json: async () => ({}) });
+    }
+    return successfulFetch(url);
+  });
+  await partialHttp.sandbox.window.__executiveOverview.loadOverview();
+  renderCheck(
+    "one failed HTTP source still registers common successful-feed periods",
+    JSON.stringify(partialHttp.sandbox.window.__executiveOverviewState?.periodIds),
+    JSON.stringify(expectedWithoutWorldpay)
+  );
+  renderCheck(
+    "one failed HTTP source renders affected KPI as Not available",
+    partialHttp.elements["overview-kpis"].innerHTML.includes("Not available"),
+    true
+  );
+  renderCheck(
+    "one failed HTTP source renders the grounded coverage watchlist item",
+    /Worldpay.*not available/i.test(partialHttp.elements["overview-watchlist"].innerHTML),
+    true
+  );
+  renderCheck("partial-source rendering keeps overview content visible", partialHttp.elements["overview-content"].hidden, false);
+  renderCheck("partial-source rendering builds the sales chart", partialHttp.stats.salesCharts, 1);
+  renderCheck("partial-source rendering builds the tender chart", partialHttp.stats.tenderCharts, 1);
+
+  const allFailed = buildRenderingHarness((url) =>
+    Promise.resolve({ ok: false, status: 503, json: async () => ({ url }) })
+  );
+  await allFailed.sandbox.window.__executiveOverview.loadOverview();
+  renderCheck("all failed HTTP sources do not build charts", allFailed.stats.salesCharts + allFailed.stats.tenderCharts, 0);
+  renderCheck("all failed HTTP sources use the structured notice renderer", allFailed.noticeCalls.length, 1);
+  renderCheck("all failed HTTP sources reveal the overview empty state", allFailed.elements["overview-empty"].hidden, false);
+  renderCheck("all failed HTTP sources hide the overview content", allFailed.elements["overview-content"].hidden, true);
+
+  const preselectedHistory = buildRenderingHarness();
+  preselectedHistory.periodSelect.value = "history";
+  preselectedHistory.sandbox.window.dispatchEvent(
+    new preselectedHistory.sandbox.CustomEvent("dashboard:period", {
+      detail: { periodId: "history", tabId: "overview" },
+    })
+  );
+  await preselectedHistory.sandbox.window.__executiveOverview.loadOverview();
+  renderCheck(
+    "history selected before data load remains selected after register",
+    preselectedHistory.elements["overview-period-label"].textContent,
+    "Available history"
+  );
+  renderCheck("pre-load history selection builds one sales chart", preselectedHistory.stats.salesCharts, 1);
+  renderCheck("pre-load history selection builds one tender chart", preselectedHistory.stats.tenderCharts, 1);
 
   return renderingFailures;
 }

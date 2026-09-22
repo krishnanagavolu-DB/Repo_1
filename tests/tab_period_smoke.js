@@ -4,6 +4,7 @@ const vm = require("vm");
 const failures = [];
 const listeners = {};
 const events = [];
+let domPresent = true;
 
 function check(name, actual, expected) {
   if (actual !== expected) failures.push({ name, expected, actual });
@@ -82,6 +83,7 @@ const sandbox = {
       return id === "period-select" ? select : null;
     },
     querySelectorAll(selector) {
+      if (!domPresent) return [];
       return selector.includes("tab-panel") ? panels : tabs;
     },
     querySelector() {
@@ -124,6 +126,11 @@ listeners["select:change"]?.();
 const periodEvent = events.filter((event) => event.type === "dashboard:period").at(-1);
 check("period event includes selected period", periodEvent?.detail?.periodId, "history");
 check("period event includes active tab", periodEvent?.detail?.tabId, "worldpay");
+
+const eventCount = events.length;
+domPresent = false;
+coordinator.activate("pos");
+check("activation is inert without tab DOM", events.length, eventCount);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

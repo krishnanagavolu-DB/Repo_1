@@ -182,7 +182,7 @@ function getState() {
 function currentPeriod() {
   const state = getState();
   if (!state?.data) return null;
-  if (state.periodId === "ytd") return state.data.periods.ytd;
+  if (state.periodId === "history" || state.periodId === "ytd") return state.data.periods.ytd;
   return state.data.periods.weeks.find((w) => w.id === state.periodId) || state.data.periods.weeks.at(-1);
 }
 

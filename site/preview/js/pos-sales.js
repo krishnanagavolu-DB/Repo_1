@@ -807,8 +807,13 @@ function renderPos(weeks) {
   );
   window.__ytdBanner?.register("pos", getDataStart(weeks));
   const requested = findWeekForPeriod(weeks, selectedPeriodId);
-  if (selectedPeriodId && !requested) selectPeriod(selectedPeriodId);
-  else renderWeek(requested || latest);
+  if (selectedPeriodId && !isHistoryPeriod(selectedPeriodId) && !requested) {
+    selectPeriod(selectedPeriodId);
+  } else if (isHistoryPeriod(selectedPeriodId)) {
+    selectPeriod(selectedPeriodId);
+  } else {
+    renderWeek(requested || latest);
+  }
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }

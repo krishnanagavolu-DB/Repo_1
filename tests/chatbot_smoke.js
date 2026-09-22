@@ -48,6 +48,13 @@ const formattedIcFeePerTransaction = `$${icFeePerTransaction.toFixed(2)}`;
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// The tab coordinator emits "history"; chatbot answers must use the aggregate.
+sandbox.window.__dashboardState.periodId = "history";
+const historyAnswer = ask("Card present auth rate");
+sandbox.window.__dashboardState.periodId = "ytd";
+const legacyYtdAnswer = ask("Card present auth rate");
+sandbox.window.__dashboardState.periodId = latest.id;
+
 const checks = [
   [
     "Explain the auth rate trend",
@@ -75,6 +82,20 @@ const checks = [
 ];
 
 const failures = [];
+if (!historyAnswer.includes(dashboard.periods.ytd.label)) {
+  failures.push({
+    question: "Show auth rate with history selected",
+    expected: dashboard.periods.ytd.label,
+    answer: historyAnswer,
+  });
+}
+if (!legacyYtdAnswer.includes(dashboard.periods.ytd.label)) {
+  failures.push({
+    question: "Show auth rate with legacy ytd selected",
+    expected: dashboard.periods.ytd.label,
+    answer: legacyYtdAnswer,
+  });
+}
 for (const [question, expected] of checks) {
   const answer = ask(question);
   if (!expected.test(answer)) {

@@ -206,6 +206,16 @@ check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
 check("pos data start", pos.getDataStart(live).startLabel, "Jun 29, 2026");
 check("pos data week count", pos.getDataStart(live).weekCount, 12);
 
+const posSource = fs.readFileSync("site/preview/js/pos-sales.js", "utf8");
+const renderPosSource = posSource.match(
+  /function renderPos\(weeks\)\s*\{([\s\S]*?)\n\}\n\nasync function loadPosSales/
+)?.[1] || "";
+check(
+  "renderPos handles history explicitly",
+  /else if \(isHistoryPeriod\(selectedPeriodId\)\)/.test(renderPosSource),
+  true
+);
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

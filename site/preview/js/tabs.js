@@ -43,9 +43,10 @@ function getPeriods(tabId) {
 }
 
 function activate(tabId) {
-  activeTabId = tabId;
   const tabs = document.querySelectorAll(".tab[data-tab]");
   const panels = document.querySelectorAll(".tab-panel[data-panel]");
+  if (!tabs.length || !panels.length) return;
+  activeTabId = tabId;
 
   for (const tab of tabs) {
     const isActive = tab.dataset.tab === tabId;

@@ -35,7 +35,7 @@ check("legend-olo-brand id", html.includes('id="legend-olo-brand"'), true);
 check("olo-detail id", html.includes('id="olo-detail"'), true);
 check("olo detail uses olo-charts class", html.includes("olo-charts"), true);
 check("olo slide aria-label", html.includes('aria-label="Olo Pay digital approval and sales"'), true);
-check("olo slide title", html.includes("OLO PAY · DIGITAL APPROVAL &amp; SALES") || html.includes("OLO PAY · DIGITAL APPROVAL & SALES"), true);
+check("olo slide title", html.includes("Order Ahead · Olo Pay &amp; Stripe"), true);
 check("company owned shops only copy", html.includes("Company owned shops only"), true);
 check("olo-pay.js is loaded", /src="js\/olo-pay\.js/.test(html), true);
 

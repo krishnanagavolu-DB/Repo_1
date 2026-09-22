@@ -13,11 +13,11 @@
     <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
     <script src="js/chart-labels.js?v=cd7105563a" defer></script>
     <script src="js/dashboard.js?v=50f532ebc1" defer></script>
-    <script src="js/pos-sales.js?v=d9a2f0d77e" defer></script>
-    <script src="js/olo-pay.js?v=254a6480f6" defer></script>
+    <script src="js/pos-sales.js?v=e96e9e27f4" defer></script>
+    <script src="js/olo-pay.js?v=2b62e40ed8" defer></script>
     <script src="js/executive-overview.js?v=cde36eda16" defer></script>
     <script src="js/tabs.js?v=7d1fe93723" defer></script>
-    <script src="js/chatbot.js?v=5510dd7f96" defer></script>
+    <script src="js/chatbot.js?v=701fd59b7c" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -150,7 +150,7 @@
           <div id="pos-content" hidden>
             <section class="slide" aria-label="All payments sales and tender mix">
               <header class="slide-band">
-                <h2>All payments · Sales &amp; tender mix</h2>
+                <h2>In-Shop Sales · Tender mix</h2>
                 <p id="pos-period-label">Most recent week</p>
               </header>
 
@@ -220,7 +220,7 @@
         <!-- Slide-shaped board: one screen, headline numbers first, detail folded below. -->
         <section class="slide" aria-label="Card present approval and cost">
           <header class="slide-band">
-            <h2>Card present · Approval &amp; cost</h2>
+            <h2>Card Health · Approval &amp; cost</h2>
             <p id="slide-period">Most recent week</p>
           </header>
 
@@ -333,7 +333,7 @@
           <div id="olo-content" hidden>
             <section class="slide" aria-label="Olo Pay digital approval and sales">
               <header class="slide-band">
-                <h2>OLO PAY · DIGITAL APPROVAL &amp; SALES</h2>
+                <h2>Order Ahead · Olo Pay &amp; Stripe</h2>
                 <p id="olo-period-label">Most recent week</p>
               </header>
 
@@ -387,13 +387,13 @@
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p id="ask-data-blurb">Explore trends, definitions, POS tender mix, industry benchmarks, and competitor research</p>
+            <p id="ask-data-blurb">Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention</p>
             <div class="ask-data-prompts" aria-label="Suggested questions">
-              <button type="button" data-question="Which metrics need attention?">What’s brewing in this week’s metrics?</button>
-              <button type="button" data-question="Show the POS tender mix">How did guests pay at the POS?</button>
-              <button type="button" data-question="How does our auth rate compare with industry benchmarks?">How does our auth rate stack up?</button>
-              <button type="button" data-question="What competitor research is available for Starbucks, Dunkin, and 7 Brew?">What can our competitors teach us?</button>
-              <button type="button" data-question="Is this data certified?">Has this data passed its quality checks?</button>
+              <button type="button" data-question="What is In-Shop Sales?">What does In-Shop Sales include?</button>
+              <button type="button" data-question="What is Card Health?">What does Card Health measure?</button>
+              <button type="button" data-question="What is Order Ahead?">What does Order Ahead include?</button>
+              <button type="button" data-question="Can I add POS and Worldpay sales?">How do the channels overlap?</button>
+              <button type="button" data-question="Which metrics need attention?">What needs executive attention?</button>
             </div>
           </div>
           <div id="chat-log" class="ask-data-log" aria-live="polite"></div>

@@ -75,6 +75,30 @@ function expect(name, answer, pattern) {
   }
 }
 
+function checkAnswer(question, pattern) {
+  expect(question, sameOnBothTabs(question), pattern);
+}
+
+checkAnswer("What is In-Shop Sales?", /POS.*Card.*Cash.*Gift Card/i);
+checkAnswer("What is Card Health?", /Worldpay.*authoriz.*decline.*interchange/i);
+checkAnswer("Can I add POS and Worldpay sales?", /overlap.*do not add/i);
+checkAnswer("What does YTD mean?", /Available history.*loaded weeks/i);
+
+const overviewPrompts = onPos.tabPrompts?.overview || [];
+if (overviewPrompts.length === 0) {
+  failures.push({ name: "Executive Overview has its own Ask Data prompts" });
+}
+expect(
+  "Executive Overview Ask Data prompts are executive-specific",
+  overviewPrompts.map((prompt) => `${prompt.label} ${prompt.question}`).join(" "),
+  /channel|overlap|executive|attention/i
+);
+expect(
+  "Executive Overview has its own Ask Data blurb",
+  onPos.tabBlurb?.("overview") || "",
+  /Executive Overview.*In-Shop Sales.*Card Health.*Order Ahead/i
+);
+
 // The reported question: asked from the All payments tab, it was refused.
 const androidTrend = sameOnBothTabs("what is the trend of Android pay payments over the last 4 weeks?");
 expect("android pay trend has weekly shares", androidTrend, /Android Pay[\s\S]*%[\s\S]*%/);

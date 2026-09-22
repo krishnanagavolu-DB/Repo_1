@@ -715,7 +715,7 @@ function selectPeriod(periodId) {
   if (!match) {
     const available = weeks.map((week) => week.label).join(", ");
     showNotice({
-      title: "Olo Pay isn't published for this week yet",
+      title: "Order Ahead (Olo Pay) isn't published for this week yet",
       message: `Pick another week — digital approval metrics are available for ${available}.`,
       technical: `No Olo week matches period id "${periodId}" in ${OLO_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -729,7 +729,7 @@ function renderOlo(weeks) {
   if (!weeks.length) {
     window.__oloPayState = { weeks: [], latest: null, methodology: null };
     showNotice({
-      title: "Olo Pay for this preview isn't published yet",
+      title: "Order Ahead (Olo Pay) for this preview isn't published yet",
       message: "Once the certified weekly Olo files are loaded, digital approval metrics will appear here.",
       technical: `No usable weeks found in ${OLO_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -763,7 +763,7 @@ async function loadOloPay() {
     const res = await fetch(OLO_DATA_URL, { cache: "no-store" });
     if (!res.ok) {
       showNotice({
-        title: "Olo Pay couldn't be loaded right now",
+        title: "Order Ahead (Olo Pay) couldn't be loaded right now",
         message: "Try refreshing in a moment. If it keeps happening, share the technical details with the data team.",
         technical: `Request for ${OLO_DATA_URL} returned HTTP ${res.status}.`,
         fix: IMPORT_STEPS,
@@ -773,7 +773,7 @@ async function loadOloPay() {
     renderOlo(normalizeOloData(await res.json()));
   } catch (err) {
     showNotice({
-      title: "Olo Pay couldn't be displayed right now",
+      title: "Order Ahead (Olo Pay) couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),

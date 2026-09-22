@@ -76,6 +76,14 @@ function check(question, expected) {
   return answer;
 }
 
+const orderAheadDefinition = check("What is Order Ahead?", /Olo Pay.*Stripe/i);
+if (!/Published sales and average ticket exclude tip/i.test(orderAheadDefinition)) {
+  failures.push({
+    name: "Order Ahead definition states the published ex-tip basis",
+    answer: orderAheadDefinition,
+  });
+}
+
 const latest = oloWeeks.at(-1);
 const earlier = oloWeeks.at(-2);
 const salesFmt = olo.usd(latest.sales);
@@ -87,12 +95,14 @@ const escapeRegExp = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\
 
 // Olo-named metrics must use the selected week's published figures.
 check("What is Olo Pay sales volume?", new RegExp(escapeRegExp(salesFmt)));
+check("What is Olo Pay sales volume?", /exclud(?:e|es|ing).*tip/i);
 check("What is SALES_VOLUME on Olo?", new RegExp(escapeRegExp(salesFmt)));
 check("What is the Olo authorization rate?", new RegExp(escapeRegExp(authFmt)));
 check("What is the Olo auth rate?", new RegExp(escapeRegExp(authFmt)));
 check("How many Olo orders were there?", new RegExp(escapeRegExp(ordersFmt)));
 check("What is ORDER_COUNT on Olo Pay?", new RegExp(escapeRegExp(ordersFmt)));
 check("What is the average ticket on Olo?", new RegExp(escapeRegExp(ticketFmt)));
+check("What is the average ticket on Olo?", /exclud(?:e|es|ing).*tip/i);
 check("What is AVG_TICKET on Olo Pay?", new RegExp(escapeRegExp(ticketFmt)));
 check("Show Olo card brand mix", /Visa/i);
 check("Show Olo card brand mix", new RegExp(escapeRegExp(brand0Amt)));

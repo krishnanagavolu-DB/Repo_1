@@ -739,7 +739,7 @@ function showReady() {
 
 function notPublishedNotice(technical) {
   showNotice({
-    title: "All payments for this week aren't published yet",
+    title: "In-Shop Sales for this week aren't published yet",
     message: "Once the weekly POS export is loaded, tender mix will appear here.",
     technical,
     fix: IMPORT_STEPS,
@@ -781,7 +781,7 @@ function selectPeriod(periodId) {
   if (!match) {
     const available = weeks.map((week) => week.label).join(", ");
     showNotice({
-      title: "All payments isn't published for this week yet",
+      title: "In-Shop Sales isn't published for this week yet",
       message: `Pick another week — tender mix is available for ${available}.`,
       technical: `No POS week matches period id "${periodId}" in ${POS_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -828,7 +828,7 @@ async function loadPosSales() {
     renderPos(normalizePosData(await res.json()));
   } catch (err) {
     showNotice({
-      title: "All payments couldn't be displayed right now",
+      title: "In-Shop Sales couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),

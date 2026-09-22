@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T21:06:28-07:00",
+  "generated_at": "2026-09-21T23:00:56-07:00",
   "week_cadence": "Monday-Sunday",
   "definitions": {
     "SALES_VOLUME": "Company Owned payment dollars from Gold Semantic Sales. Quarantine false, subtype payment, refunds as signed ORDER_PAYMENT_AMOUNT.",
@@ -69,6 +69,736 @@
   ],
   "weeks": [
     {
+      "week_start_date": "2026-06-29",
+      "week_end_date": "2026-07-05",
+      "totals": {
+        "SALES_VOLUME": 47563011.32,
+        "TRANSACTION_COUNT": 4291073,
+        "AVG_TICKET": 11.29,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4213882
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 32846474.05,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2869854
+        },
+        "Cash": {
+          "amount": 7463926.11,
+          "pct_of_total_sales": 15.7,
+          "TRANSACTION_COUNT": 755401
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 7252611.16,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 665818,
+          "components": {
+            "GIFT": {
+              "amount": 4933700.09,
+              "TRANSACTION_COUNT": 442254
+            },
+            "CUSTOM": {
+              "amount": 2318911.07,
+              "TRANSACTION_COUNT": 223564
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 32846474.05,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2869854
+        },
+        {
+          "name": "Cash",
+          "amount": 7463926.11,
+          "pct_of_total_sales": 15.7,
+          "TRANSACTION_COUNT": 755401
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 7252611.16,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 665818,
+          "components": {
+            "GIFT": {
+              "amount": 4933700.09,
+              "TRANSACTION_COUNT": 442254
+            },
+            "CUSTOM": {
+              "amount": 2318911.07,
+              "TRANSACTION_COUNT": 223564
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": null,
+        "TRANSACTION_COUNT_PCT": null
+      }
+    },
+    {
+      "week_start_date": "2026-07-06",
+      "week_end_date": "2026-07-12",
+      "totals": {
+        "SALES_VOLUME": 45754100.65,
+        "TRANSACTION_COUNT": 4256833,
+        "AVG_TICKET": 10.94,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4183035
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31548294.58,
+          "pct_of_total_sales": 69.0,
+          "TRANSACTION_COUNT": 2833695
+        },
+        "Cash": {
+          "amount": 7382838.27,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 783176
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6822967.8,
+          "pct_of_total_sales": 14.9,
+          "TRANSACTION_COUNT": 639962,
+          "components": {
+            "GIFT": {
+              "amount": 4567234.19,
+              "TRANSACTION_COUNT": 418596
+            },
+            "CUSTOM": {
+              "amount": 2255733.61,
+              "TRANSACTION_COUNT": 221366
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31548294.58,
+          "pct_of_total_sales": 69.0,
+          "TRANSACTION_COUNT": 2833695
+        },
+        {
+          "name": "Cash",
+          "amount": 7382838.27,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 783176
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6822967.8,
+          "pct_of_total_sales": 14.9,
+          "TRANSACTION_COUNT": 639962,
+          "components": {
+            "GIFT": {
+              "amount": 4567234.19,
+              "TRANSACTION_COUNT": 418596
+            },
+            "CUSTOM": {
+              "amount": 2255733.61,
+              "TRANSACTION_COUNT": 221366
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -3.8,
+        "TRANSACTION_COUNT_PCT": -0.8
+      }
+    },
+    {
+      "week_start_date": "2026-07-13",
+      "week_end_date": "2026-07-19",
+      "totals": {
+        "SALES_VOLUME": 47505893.72,
+        "TRANSACTION_COUNT": 4382905,
+        "AVG_TICKET": 11.03,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4306821
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 32810106.84,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2928110
+        },
+        "Cash": {
+          "amount": 7465938.49,
+          "pct_of_total_sales": 15.7,
+          "TRANSACTION_COUNT": 785913
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 7229848.39,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 668882,
+          "components": {
+            "GIFT": {
+              "amount": 4923653.6,
+              "TRANSACTION_COUNT": 443253
+            },
+            "CUSTOM": {
+              "amount": 2306194.79,
+              "TRANSACTION_COUNT": 225629
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 32810106.84,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2928110
+        },
+        {
+          "name": "Cash",
+          "amount": 7465938.49,
+          "pct_of_total_sales": 15.7,
+          "TRANSACTION_COUNT": 785913
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 7229848.39,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 668882,
+          "components": {
+            "GIFT": {
+              "amount": 4923653.6,
+              "TRANSACTION_COUNT": 443253
+            },
+            "CUSTOM": {
+              "amount": 2306194.79,
+              "TRANSACTION_COUNT": 225629
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 3.8,
+        "TRANSACTION_COUNT_PCT": 3.0
+      }
+    },
+    {
+      "week_start_date": "2026-07-20",
+      "week_end_date": "2026-07-26",
+      "totals": {
+        "SALES_VOLUME": 45933353.48,
+        "TRANSACTION_COUNT": 4270893,
+        "AVG_TICKET": 10.94,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4198793
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31582705.7,
+          "pct_of_total_sales": 68.8,
+          "TRANSACTION_COUNT": 2852106
+        },
+        "Cash": {
+          "amount": 7544279.53,
+          "pct_of_total_sales": 16.4,
+          "TRANSACTION_COUNT": 767045
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6806368.25,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 651742,
+          "components": {
+            "GIFT": {
+              "amount": 4535796.68,
+              "TRANSACTION_COUNT": 424336
+            },
+            "CUSTOM": {
+              "amount": 2270571.57,
+              "TRANSACTION_COUNT": 227406
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31582705.7,
+          "pct_of_total_sales": 68.8,
+          "TRANSACTION_COUNT": 2852106
+        },
+        {
+          "name": "Cash",
+          "amount": 7544279.53,
+          "pct_of_total_sales": 16.4,
+          "TRANSACTION_COUNT": 767045
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6806368.25,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 651742,
+          "components": {
+            "GIFT": {
+              "amount": 4535796.68,
+              "TRANSACTION_COUNT": 424336
+            },
+            "CUSTOM": {
+              "amount": 2270571.57,
+              "TRANSACTION_COUNT": 227406
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -3.3,
+        "TRANSACTION_COUNT_PCT": -2.6
+      }
+    },
+    {
+      "week_start_date": "2026-07-27",
+      "week_end_date": "2026-08-02",
+      "totals": {
+        "SALES_VOLUME": 45719700.66,
+        "TRANSACTION_COUNT": 4263299,
+        "AVG_TICKET": 10.91,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4191889
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31599154.96,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2848316
+        },
+        "Cash": {
+          "amount": 7378550.12,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 775624
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6741995.58,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 639359,
+          "components": {
+            "GIFT": {
+              "amount": 4499467.07,
+              "TRANSACTION_COUNT": 416840
+            },
+            "CUSTOM": {
+              "amount": 2242528.51,
+              "TRANSACTION_COUNT": 222519
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31599154.96,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2848316
+        },
+        {
+          "name": "Cash",
+          "amount": 7378550.12,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 775624
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6741995.58,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 639359,
+          "components": {
+            "GIFT": {
+              "amount": 4499467.07,
+              "TRANSACTION_COUNT": 416840
+            },
+            "CUSTOM": {
+              "amount": 2242528.51,
+              "TRANSACTION_COUNT": 222519
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -0.5,
+        "TRANSACTION_COUNT_PCT": -0.2
+      }
+    },
+    {
+      "week_start_date": "2026-08-03",
+      "week_end_date": "2026-08-09",
+      "totals": {
+        "SALES_VOLUME": 46513298.79,
+        "TRANSACTION_COUNT": 4381822,
+        "AVG_TICKET": 10.8,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4308570
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31982108.22,
+          "pct_of_total_sales": 68.7,
+          "TRANSACTION_COUNT": 2916023
+        },
+        "Cash": {
+          "amount": 7477558.62,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 790252
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 7053631.95,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 675547,
+          "components": {
+            "GIFT": {
+              "amount": 4674611.29,
+              "TRANSACTION_COUNT": 435549
+            },
+            "CUSTOM": {
+              "amount": 2379020.66,
+              "TRANSACTION_COUNT": 239998
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31982108.22,
+          "pct_of_total_sales": 68.7,
+          "TRANSACTION_COUNT": 2916023
+        },
+        {
+          "name": "Cash",
+          "amount": 7477558.62,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 790252
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 7053631.95,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 675547,
+          "components": {
+            "GIFT": {
+              "amount": 4674611.29,
+              "TRANSACTION_COUNT": 435549
+            },
+            "CUSTOM": {
+              "amount": 2379020.66,
+              "TRANSACTION_COUNT": 239998
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 1.7,
+        "TRANSACTION_COUNT_PCT": 2.8
+      }
+    },
+    {
+      "week_start_date": "2026-08-10",
+      "week_end_date": "2026-08-16",
+      "totals": {
+        "SALES_VOLUME": 45559137.57,
+        "TRANSACTION_COUNT": 4306492,
+        "AVG_TICKET": 10.76,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4233788
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31475805.44,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2874864
+        },
+        "Cash": {
+          "amount": 7324723.81,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 783876
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6758608.32,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 647752,
+          "components": {
+            "GIFT": {
+              "amount": 4548587.54,
+              "TRANSACTION_COUNT": 422962
+            },
+            "CUSTOM": {
+              "amount": 2210020.78,
+              "TRANSACTION_COUNT": 224790
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31475805.44,
+          "pct_of_total_sales": 69.1,
+          "TRANSACTION_COUNT": 2874864
+        },
+        {
+          "name": "Cash",
+          "amount": 7324723.81,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 783876
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6758608.32,
+          "pct_of_total_sales": 14.8,
+          "TRANSACTION_COUNT": 647752,
+          "components": {
+            "GIFT": {
+              "amount": 4548587.54,
+              "TRANSACTION_COUNT": 422962
+            },
+            "CUSTOM": {
+              "amount": 2210020.78,
+              "TRANSACTION_COUNT": 224790
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -2.1,
+        "TRANSACTION_COUNT_PCT": -1.7
+      }
+    },
+    {
+      "week_start_date": "2026-08-17",
+      "week_end_date": "2026-08-23",
+      "totals": {
+        "SALES_VOLUME": 46785779.53,
+        "TRANSACTION_COUNT": 4442078,
+        "AVG_TICKET": 10.71,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4368401
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 32408164.99,
+          "pct_of_total_sales": 69.3,
+          "TRANSACTION_COUNT": 2973757
+        },
+        "Cash": {
+          "amount": 7299419.41,
+          "pct_of_total_sales": 15.6,
+          "TRANSACTION_COUNT": 790966
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 7078195.13,
+          "pct_of_total_sales": 15.1,
+          "TRANSACTION_COUNT": 677355,
+          "components": {
+            "GIFT": {
+              "amount": 4594068.99,
+              "TRANSACTION_COUNT": 428400
+            },
+            "CUSTOM": {
+              "amount": 2484126.14,
+              "TRANSACTION_COUNT": 248955
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 32408164.99,
+          "pct_of_total_sales": 69.3,
+          "TRANSACTION_COUNT": 2973757
+        },
+        {
+          "name": "Cash",
+          "amount": 7299419.41,
+          "pct_of_total_sales": 15.6,
+          "TRANSACTION_COUNT": 790966
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 7078195.13,
+          "pct_of_total_sales": 15.1,
+          "TRANSACTION_COUNT": 677355,
+          "components": {
+            "GIFT": {
+              "amount": 4594068.99,
+              "TRANSACTION_COUNT": 428400
+            },
+            "CUSTOM": {
+              "amount": 2484126.14,
+              "TRANSACTION_COUNT": 248955
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 2.7,
+        "TRANSACTION_COUNT_PCT": 3.1
+      }
+    },
+    {
+      "week_start_date": "2026-08-24",
+      "week_end_date": "2026-08-30",
+      "totals": {
+        "SALES_VOLUME": 45596583.4,
+        "TRANSACTION_COUNT": 4353448,
+        "AVG_TICKET": 10.65,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4281408
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31627263.77,
+          "pct_of_total_sales": 69.4,
+          "TRANSACTION_COUNT": 2921265
+        },
+        "Cash": {
+          "amount": 7109917.58,
+          "pct_of_total_sales": 15.6,
+          "TRANSACTION_COUNT": 777639
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6859402.05,
+          "pct_of_total_sales": 15.0,
+          "TRANSACTION_COUNT": 654544,
+          "components": {
+            "GIFT": {
+              "amount": 4491071.29,
+              "TRANSACTION_COUNT": 417918
+            },
+            "CUSTOM": {
+              "amount": 2368330.76,
+              "TRANSACTION_COUNT": 236626
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31627263.77,
+          "pct_of_total_sales": 69.4,
+          "TRANSACTION_COUNT": 2921265
+        },
+        {
+          "name": "Cash",
+          "amount": 7109917.58,
+          "pct_of_total_sales": 15.6,
+          "TRANSACTION_COUNT": 777639
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6859402.05,
+          "pct_of_total_sales": 15.0,
+          "TRANSACTION_COUNT": 654544,
+          "components": {
+            "GIFT": {
+              "amount": 4491071.29,
+              "TRANSACTION_COUNT": 417918
+            },
+            "CUSTOM": {
+              "amount": 2368330.76,
+              "TRANSACTION_COUNT": 236626
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -2.5,
+        "TRANSACTION_COUNT_PCT": -2.0
+      }
+    },
+    {
+      "week_start_date": "2026-08-31",
+      "week_end_date": "2026-09-06",
+      "totals": {
+        "SALES_VOLUME": 44989016.32,
+        "TRANSACTION_COUNT": 4266707,
+        "AVG_TICKET": 10.72,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4197582
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 30997699.63,
+          "pct_of_total_sales": 68.9,
+          "TRANSACTION_COUNT": 2858527
+        },
+        "Cash": {
+          "amount": 7226405.43,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 762824
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6764911.26,
+          "pct_of_total_sales": 15.0,
+          "TRANSACTION_COUNT": 645356,
+          "components": {
+            "GIFT": {
+              "amount": 4396435.53,
+              "TRANSACTION_COUNT": 409309
+            },
+            "CUSTOM": {
+              "amount": 2368475.73,
+              "TRANSACTION_COUNT": 236047
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 30997699.63,
+          "pct_of_total_sales": 68.9,
+          "TRANSACTION_COUNT": 2858527
+        },
+        {
+          "name": "Cash",
+          "amount": 7226405.43,
+          "pct_of_total_sales": 16.1,
+          "TRANSACTION_COUNT": 762824
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6764911.26,
+          "pct_of_total_sales": 15.0,
+          "TRANSACTION_COUNT": 645356,
+          "components": {
+            "GIFT": {
+              "amount": 4396435.53,
+              "TRANSACTION_COUNT": 409309
+            },
+            "CUSTOM": {
+              "amount": 2368475.73,
+              "TRANSACTION_COUNT": 236047
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -1.3,
+        "TRANSACTION_COUNT_PCT": -2.0
+      }
+    },
+    {
       "week_start_date": "2026-09-07",
       "week_end_date": "2026-09-13",
       "totals": {
@@ -137,8 +867,8 @@
       ],
       "mix_checksum": 100.0,
       "week_over_week": {
-        "SALES_VOLUME_PCT": null,
-        "TRANSACTION_COUNT_PCT": null
+        "SALES_VOLUME_PCT": 2.9,
+        "TRANSACTION_COUNT_PCT": 2.1
       }
     },
     {
@@ -257,8 +987,8 @@
     {
       "code": "unmapped_payment_type",
       "payment_type": "UNKNOWN",
-      "amount": -29.95,
-      "rows": 15,
+      "amount": -208.42,
+      "rows": 104,
       "action": "excluded_from_kpi_mix"
     }
   ],

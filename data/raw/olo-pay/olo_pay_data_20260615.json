@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-09-21T23:01:21-07:00",
+  "week_cadence": "Monday-Sunday",
+  "dashboard_tab": "Olo Pay",
+  "environment": "prod",
+  "definitions": {
+    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION. Drink/order total, not the card billed total.",
+    "TIP_VOLUME": "Sum of TIP_PORTION on those approved Sales.",
+    "BILLED_VOLUME": "SALES_VOLUME + TIP_VOLUME (what Stripe captured).",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip).",
+    "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
+    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales, using ex-tip dollars. Wallet service is Phase 2."
+  },
+  "methodology_file": "olo_pay_methodology.json",
+  "filter": {
+    "layer": "OLO_DATA_SHARE.RPT_EXT.BILLING_TRANSACTION_FCT_V",
+    "processor": "Stripe",
+    "txn_types": [
+      "Sale",
+      "RefundSale",
+      "VoidSale"
+    ],
+    "sales_status": "Approved",
+    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded.",
+    "sales_excludes_tip": true,
+    "tip_field": "TIP_PORTION"
+  },
+  "brand_order": [
+    "Visa",
+    "Mastercard",
+    "Amex",
+    "Discover"
+  ],
+  "weeks": [
+    {
+      "week_start_date": "2026-06-15",
+      "week_end_date": "2026-06-21",
+      "totals": {
+        "SALES_VOLUME": 5345004.06,
+        "TIP_VOLUME": 399112.93,
+        "BILLED_VOLUME": 5744116.99,
+        "TRANSACTION_COUNT": 492845,
+        "ORDER_COUNT": 492845,
+        "TIPPED_ORDER_COUNT": 196695,
+        "AVG_TICKET": 10.85,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 2.03,
+        "REFUND_VOLUME": 1312.05,
+        "VOID_VOLUME": 413.07
+      },
+      "authorization": {
+        "approved": 492845,
+        "declined": 16091,
+        "failed": 0,
+        "auth_rate_pct": 96.84,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 3890021.72,
+          "pct_of_digital_sales": 72.8,
+          "TRANSACTION_COUNT": 357441
+        },
+        "Mastercard": {
+          "amount": 1151847.16,
+          "pct_of_digital_sales": 21.5,
+          "TRANSACTION_COUNT": 107003
+        },
+        "Amex": {
+          "amount": 96843.16,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 8795
+        },
+        "Discover": {
+          "amount": 206292.02,
+          "pct_of_digital_sales": 3.9,
+          "TRANSACTION_COUNT": 19606
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 5345004.06,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": null,
+        "TRANSACTION_COUNT_PCT": null,
+        "AUTH_RATE_PP": null
+      }
+    }
+  ],
+  "shop_coverage": {
+    "gold_store_ownership_counts": {
+      "Company Owned": 1016,
+      "Franchised": 312
+    }
+  },
+  "artifacts": {
+    "json": "olo_pay_data_20260615.json",
+    "methodology": "olo_pay_methodology.json"
+  },
+  "error_log": [
+    {
+      "code": "source_olo_billing_transactions",
+      "note": "OLO_DATA_SHARE.RPT_EXT.BILLING_TRANSACTION_FCT_V. PROCESSOR = Stripe (Olo Pay). Paytronix Dutch Pass excluded."
+    },
+    {
+      "code": "company_owned_only",
+      "note": "GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Franchised and unmapped excluded from all KPIs."
+    },
+    {
+      "code": "amount_uses_coalesce_final_then_initial",
+      "note": "FINAL_AMOUNT is currently null on this feed; INITIAL_AMOUNT is used."
+    },
+    {
+      "code": "tips_subtracted_from_sales",
+      "note": "SALES_VOLUME = billed minus TIP_PORTION. TIP_VOLUME is separate. Same as Genius: tips not in drink sales."
+    },
+    {
+      "code": "phase_2_excluded",
+      "note": "Apple Pay / Google Pay not split (BILLING_SCHEME_NM). Decline reason codes not extracted."
+    },
+    {
+      "code": "dedupe_billing_transaction_id",
+      "source_rows_after_dedupe": 5671507,
+      "distinct_id": 5671507,
+      "null_amount": 0,
+      "tip_gt_billed": 0
+    }
+  ]
+}

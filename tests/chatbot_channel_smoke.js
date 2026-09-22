@@ -79,7 +79,21 @@ function checkAnswer(question, pattern) {
   expect(question, sameOnBothTabs(question), pattern);
 }
 
-checkAnswer("What is In-Shop Sales?", /POS.*Card.*Cash.*Gift Card/i);
+const inShopDefinition = sameOnBothTabs("What is In-Shop Sales?");
+expect("In-Shop Sales definition names source", inShopDefinition, /POS.*Gold Semantic Sales/i);
+expect("In-Shop Sales definition names scope", inShopDefinition, /company-owned/i);
+expect("In-Shop Sales definition names weekly grain", inShopDefinition, /completed Monday.?Sunday/i);
+expect("In-Shop Sales definition names all tenders", inShopDefinition, /Card.*Cash.*Gift Card.*Dutch Pass/i);
+expect("In-Shop Sales definition names exclusions", inShopDefinition, /exclude.*tips.*change/i);
+
+const legacyPosDefinition = sameOnBothTabs("What is All payments?");
+if (legacyPosDefinition !== inShopDefinition) {
+  failures.push({
+    name: "legacy All payments query uses canonical In-Shop Sales definition",
+    expected: inShopDefinition,
+    answer: legacyPosDefinition,
+  });
+}
 checkAnswer("What is Card Health?", /Worldpay.*authoriz.*decline.*interchange/i);
 checkAnswer("Can I add POS and Worldpay sales?", /overlap.*do not add/i);
 checkAnswer("What does YTD mean?", /Available history.*loaded weeks/i);

@@ -4,9 +4,18 @@
 (function () {
 const PAYMENT_DEFINITIONS = [
   {
-    terms: ["in-shop sales", "in shop sales"],
+    terms: [
+      "in-shop sales",
+      "in shop sales",
+      "all payments",
+      "pos sales",
+      "in shop pos",
+      "tender mix",
+      "tender",
+      "xenial",
+    ],
     title: "In-Shop Sales",
-    body: "Company-owned POS sales from Gold Semantic Sales: Card, Cash, and Gift Card / Dutch Pass. Sales and average ticket exclude tips and change.",
+    body: "Company-owned POS sales from Gold Semantic Sales (Xenial-sourced). Completed Monday–Sunday weeks include every tender: Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM). Sales and average ticket exclude tips and change.",
   },
   {
     terms: ["card health"],
@@ -108,11 +117,6 @@ const PAYMENT_DEFINITIONS = [
     terms: ["ytd", "year to date"],
     title: "Available history",
     body: "All loaded weeks certified and available for the selected channel.",
-  },
-  {
-    terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender", "xenial"],
-    title: "In Shop · All payments",
-    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Gold Semantic Sales (Xenial-sourced). Shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
   },
   {
     terms: ["gift card", "dutch pass", "custom"],

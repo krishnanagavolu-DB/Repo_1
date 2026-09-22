@@ -8,7 +8,9 @@ function check(name, actual, expected) {
 }
 
 const html = fs.readFileSync("site/preview/index.html", "utf8");
-check("All payments uses slide", html.includes('aria-label="All payments sales and tender mix"'), true);
+check("In-Shop Sales slide aria label", html.includes('aria-label="In-Shop Sales tender mix"'), true);
+check("Card Health slide aria label", html.includes('aria-label="Card Health approval and cost"'), true);
+check("Order Ahead slide aria label", html.includes('aria-label="Order Ahead Olo Pay and Stripe"'), true);
 check("All payments sales trend canvas", html.includes('id="chart-pos-sales-trend"'), true);
 check("All payments payments trend canvas", html.includes('id="chart-pos-payments-trend"'), true);
 check("actionable decline heading", html.includes("Actionable decline reasons"), true);

@@ -108,7 +108,7 @@ check("compact thousands", pos.compactUsd(7358837.24), "$7.4M");
 check("missing WoW stays blank", pos.wowLabel(null), null);
 
 const live = pos.normalizePosData(
-  JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"))
+  JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"))
 );
 const liveLatest = live[live.length - 1];
 check("live wow sales", liveLatest.wow.salesPct, -4.7);

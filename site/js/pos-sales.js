@@ -784,13 +784,13 @@ function renderPos(weeks) {
 
 async function loadPosSales() {
   try {
-    const res = await fetch(POS_DATA_URL, { cache: "no-store" });
-    if (!res.ok) {
-      notPublishedNotice(`Request for ${POS_DATA_URL} returned HTTP ${res.status}.`);
+    const payload = await window.__dashboardAuth.loadJson(POS_DATA_URL);
+    renderPos(normalizePosData(payload));
+  } catch (err) {
+    if (err?.status) {
+      notPublishedNotice(`Request for ${POS_DATA_URL} returned HTTP ${err.status}.`);
       return;
     }
-    renderPos(normalizePosData(await res.json()));
-  } catch (err) {
     showNotice({
       title: "All payments couldn't be displayed right now",
       message:

@@ -55,21 +55,19 @@ access back on **Only project members**.
 
 ### What "public" actually exposes
 
-The password gate is client-side. It hides the UI, not the files.
-`/(preview/)data/*.json` — weekly sales, auth rates, interchange, Olo order
-counts — is fetchable directly by anyone who has the URL, with no password.
-Treat the Pages URL itself as the secret while this is public.
+The password gate is still client-side, but published `site/**/data/*.json`
+files are AES-GCM envelopes. Fetching them without the key yields ciphertext,
+not weekly sales. The same password opens the gate and the numbers (see
+`docs/ops/password-gate.md`).
 
-Two guards are in place so public does not also mean findable
-(`tests/test_public_exposure.py` fails if either is dropped):
+Two extra guards keep the public URL from being findable
+(`tests/test_public_exposure.py` and `tests/test_payload_crypto.py`):
 
 - `site/robots.txt` disallows every crawler for the whole domain, `/preview/`
   included
 - both pages carry `noindex, nofollow, noarchive` and `referrer: no-referrer`
-
-Neither stops someone who is handed the URL. If the aggregates need to survive
-link-sharing, the fix is to encrypt the JSON payloads against the gate password
-at publish time so the files are useless without it.
+- CI fails if a published JSON file is still plaintext or its hash drifts from
+  `data/processed/`
 
 ## Optional: a cleaner URL later
 
@@ -104,4 +102,4 @@ we can retarget `origin` to GitLab.
 - Do not publish `data/raw/`.
 - Do not overwrite leadership `site/index.html` from preview unless you say **promote**.
 - Do not send people `https://krishna.nagavolu.gitlab.io/…` — browsers will reject the certificate.
-- Do not treat the password gate as access control for the JSON under `site/`.
+- Do not treat an unencrypted `site/**/data/*.json` as safe to publish. Run `python3 scripts/encrypt_site_data.py --check`.

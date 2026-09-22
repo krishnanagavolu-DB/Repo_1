@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update the dashboard gate password hash (no plaintext stored in the site)."""
+"""Set the dashboard gate password and re-encrypt published JSON with it."""
 from __future__ import annotations
 
 import argparse
@@ -9,6 +9,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from payload_crypto import encrypt_site_payloads  # noqa: E402
+
 DEFAULT_CONFIGS = [
     ROOT / "site" / "auth-config.json",
     ROOT / "site" / "preview" / "auth-config.json",
@@ -29,7 +33,7 @@ def write_hash(config_path: Path, password: str) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Set the dashboard access password (stores SHA-256 hash only)."
+        description="Set the dashboard access password and encrypt published metrics."
     )
     parser.add_argument("password", help="New password (exact string to type in the gate)")
     parser.add_argument(
@@ -38,6 +42,11 @@ def main() -> int:
         action="append",
         default=None,
         help="Path to auth-config.json (repeatable; default: leadership + preview)",
+    )
+    parser.add_argument(
+        "--skip-encrypt",
+        action="store_true",
+        help="Update hashes only (not for publish; published JSON would stay on the old key)",
     )
     args = parser.parse_args()
 
@@ -49,7 +58,11 @@ def main() -> int:
     for path in configs:
         write_hash(path.resolve(), args.password)
 
-    print("Commit and push the updated auth-config.json file(s) to change the live gate password.")
+    if not args.skip_encrypt:
+        for line in encrypt_site_payloads(args.password):
+            print(line)
+
+    print("Commit auth-config.json and site/**/data/*.json, then push to publish.")
     return 0
 
 

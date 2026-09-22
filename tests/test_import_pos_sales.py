@@ -192,12 +192,9 @@ def test_published_file_keeps_every_certified_week():
     combined, _warnings = combine_extracts(extracts)
     expected = [w["week_start_date"] for w in combined["weeks"]]
 
-    for published in (
-        ROOT / "site" / "data" / "in_shop_sales_data.json",
-        ROOT / "site" / "preview" / "data" / "in_shop_sales_data.json",
-    ):
-        payload = json.loads(published.read_text(encoding="utf-8"))
-        assert [w["week_start_date"] for w in payload["weeks"]] == expected, (
-            f"{published.relative_to(ROOT)} is missing weeks held in data/raw/pos-sales. "
-            "Re-run scripts/import_pos_sales.py with every extract."
-        )
+    processed = ROOT / "data" / "processed" / "in_shop_sales_data.json"
+    payload = json.loads(processed.read_text(encoding="utf-8"))
+    assert [w["week_start_date"] for w in payload["weeks"]] == expected, (
+        f"{processed.relative_to(ROOT)} is missing weeks held in data/raw/pos-sales. "
+        "Re-run scripts/import_pos_sales.py with every extract."
+    )

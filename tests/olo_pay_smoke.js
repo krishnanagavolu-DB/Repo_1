@@ -18,7 +18,7 @@ function approx(name, actual, expected, digits = 2) {
 
 const htmlPath = "site/preview/index.html";
 const scriptPath = "site/preview/js/olo-pay.js";
-const dataPath = "site/preview/data/olo_pay_data.json";
+const dataPath = "data/processed/olo_pay_data.json";
 
 const html = fs.readFileSync(htmlPath, "utf8");
 check('preview exposes data-tab="olo"', html.includes('data-tab="olo"'), true);

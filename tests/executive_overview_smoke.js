@@ -42,13 +42,13 @@ function check(name, actual, expected) {
 }
 
 const posPayload = JSON.parse(
-  fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8")
+  fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8")
 );
 const worldpayPayload = JSON.parse(
-  fs.readFileSync("site/preview/data/dashboard.json", "utf8")
+  fs.readFileSync("data/processed/dashboard.json", "utf8")
 );
 const oloPayload = JSON.parse(
-  fs.readFileSync("site/preview/data/olo_pay_data.json", "utf8")
+  fs.readFileSync("data/processed/olo_pay_data.json", "utf8")
 );
 
 const posWeeks = sandbox.window.__posSales.normalizePosData(posPayload);
@@ -679,6 +679,18 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
       }
     },
     window: {
+      __dashboardAuth: {
+        password: "test-key",
+        async loadJson(url) {
+          const res = await fetchImpl(url);
+          if (!res.ok) {
+            const error = new Error(`Failed to load ${url} (${res.status})`);
+            error.status = res.status;
+            throw error;
+          }
+          return res.json();
+        },
+      },
       addEventListener(type, handler) {
         (eventListeners[type] = eventListeners[type] || []).push(handler);
       },

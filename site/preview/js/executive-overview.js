@@ -741,14 +741,8 @@ function renderOverview(periodId, { force = false } = {}) {
 async function loadOverview() {
   async function loadFeed(url, label, normalize) {
     try {
-      const response = await fetch(url, { cache: "no-store" });
-      if (!response.ok) {
-        return {
-          weeks: [],
-          error: `${label}: request for ${url} returned HTTP ${response.status}.`,
-        };
-      }
-      const weeks = normalize(await response.json());
+      const payload = await window.__dashboardAuth.loadJson(url);
+      const weeks = normalize(payload);
       if (!Array.isArray(weeks) || !weeks.length) {
         return { weeks: [], error: `${label}: ${url} contained no usable completed weeks.` };
       }

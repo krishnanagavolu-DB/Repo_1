@@ -5,10 +5,10 @@
 const fs = require("fs");
 const vm = require("vm");
 
-const dashboard = JSON.parse(fs.readFileSync("site/preview/data/dashboard.json", "utf8"));
-const benchmarks = JSON.parse(fs.readFileSync("site/preview/data/benchmarks.json", "utf8"));
-const posRaw = JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"));
-const oloRaw = JSON.parse(fs.readFileSync("site/preview/data/olo_pay_data.json", "utf8"));
+const dashboard = JSON.parse(fs.readFileSync("data/processed/dashboard.json", "utf8"));
+const benchmarks = JSON.parse(fs.readFileSync("data/processed/benchmarks.json", "utf8"));
+const posRaw = JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"));
+const oloRaw = JSON.parse(fs.readFileSync("data/processed/olo_pay_data.json", "utf8"));
 
 const sandbox = {
   console,

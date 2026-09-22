@@ -1,0 +1,163 @@
+{
+  "updated_at": "2026-08-11",
+  "methodology": "Curated public research. Benchmarks are directional context, not contractual targets. Competitors do not publicly disclose comparable payment authorization, decline, interchange, downgrade, wallet, or entry-method metrics.",
+  "comparison_policy": {
+    "allow_peer_payment_kpi_comparison": false,
+    "default_chatbot_stance": "Use cited industry or vendor-cohort ranges with channel and definition caveats; never infer competitor payment KPIs from footprint, sales, or AUV."
+  },
+  "payment_benchmarks": [
+    {
+      "metric": "QSR authorization decline rate",
+      "value": 0.0406,
+      "metric_direction": "lower_is_better",
+      "segment": "Equifax/Kount QSR merchant cohort",
+      "confidence": "directional",
+      "source": {
+        "publisher": "Equifax / Kount",
+        "title": "Fraud Prevention Excellence in Quick Service Restaurants",
+        "url": "https://assets.equifax.com/marketing/US/assets/fraud-prevention-in-quick-service-restaurants.pdf",
+        "published": "2024"
+      },
+      "caveat": "Vendor client cohort, likely digital/mobile-heavy; its decline definition and retry/session treatment do not align directly with Dutch Bros in-shop approve-code math."
+    },
+    {
+      "metric": "Card-present approval rate",
+      "value": 0.96,
+      "metric_direction": "higher_is_better",
+      "segment": "U.S. VisaNet card-present",
+      "confidence": "directional",
+      "source": {
+        "publisher": "Visa Acceptance Solutions",
+        "title": "AI is Increasing Revenue and Authorization Rates",
+        "url": "https://www.visaacceptance.com/en-us/blog/article/2024/ai-increasing-revenue.html",
+        "published": "2024"
+      },
+      "caveat": "VisaNet only; 2021–2022 underlying period; not restaurant-MCC or all-card-network specific."
+    },
+    {
+      "metric": "Best-in-class authorization rate",
+      "range_low": 0.97,
+      "range_high": null,
+      "segment": "Worldpay clients in select verticals",
+      "confidence": "directional",
+      "source": {
+        "publisher": "Worldpay",
+        "title": "The C-suite’s guide to payment authorization rates",
+        "url": "https://www.worldpay.com/en-CA/insights/articles/c-suite-guide-to-auth-rates",
+        "accessed": "2026-08-11"
+      },
+      "caveat": "Not QSR-specific and not a direct peer benchmark."
+    }
+  ],
+  "qsr_coffee_context": [
+    {
+      "fact": "QSR tips averaged 15.8% in Q4 2025 on Toast's selected restaurant cohort.",
+      "comparable_to_dashboard": false,
+      "reason": "The Worldpay files do not contain tip data.",
+      "source": {
+        "publisher": "Toast / Business Wire",
+        "title": "How Americans are Changing Their Coffee Drinking Habits",
+        "url": "https://www.businesswire.com/news/home/20260311438637/en/How-Americans-are-Changing-Their-Coffee-Drinking-Habits",
+        "published": "2026-03-11"
+      }
+    },
+    {
+      "fact": "Toast reported growth in barista-crafted lattes and espresso transactions while regular drip coffee and cold brew declined in its 2025 cohort.",
+      "comparable_to_dashboard": false,
+      "reason": "The Worldpay files contain payment totals, not item-level product mix.",
+      "source": {
+        "publisher": "Toast",
+        "title": "Restaurant Trends Report: Coffee Prices and Drink Preferences",
+        "url": "https://pos.toasttab.com/blog/data/toast-restaurant-trends-report-coffee-prices-2026",
+        "published": "2026-03-11"
+      }
+    }
+  ],
+  "competitors": [
+    {
+      "name": "Dunkin",
+      "public_context": [
+        "Dunkin celebrated its 10,000th U.S. location in October 2025.",
+        "Inspire describes Dunkin as having more than 14,000 restaurants globally."
+      ],
+      "comparable_payment_kpis_available": false,
+      "unavailable_metrics": [
+        "authorization rate",
+        "decline dollars",
+        "interchange fee/rate",
+        "downgrade rate",
+        "returns rate",
+        "AOV",
+        "wallet mix",
+        "entry-method mix"
+      ],
+      "sources": [
+        {
+          "publisher": "Inspire Brands",
+          "title": "Inspire Celebrates 10K Dunkin’ U.S. Location",
+          "url": "https://stories.inspirebrands.com/inspire-celebrates-10k-dunkin-u-s-location/",
+          "published": "2025"
+        },
+        {
+          "publisher": "Inspire Brands",
+          "title": "Dunkin’ Through the Decades",
+          "url": "https://stories.inspirebrands.com/dunkin-through-the-decades-celebrating-75-years-of-keeping-america-running/",
+          "published": "2025"
+        }
+      ]
+    },
+    {
+      "name": "Starbucks",
+      "public_context": [
+        "Starbucks Card represented 42% of U.S. company-operated transactions in its Q4 FY25 Digital IR Dashboard.",
+        "Starbucks Rewards accounted for 58% of tender dollars, and Mobile Order & Pay was 31% of transactions."
+      ],
+      "payment_proxy": [
+        {
+          "label": "Starbucks Card share of transactions",
+          "value": "42%",
+          "note": "Closest public tender-mix proxy; it is a stored-value/loyalty card, not the tap/chip/wallet entry mix on our Worldpay feed."
+        },
+        {
+          "label": "Mobile Order & Pay share of transactions",
+          "value": "31%",
+          "note": "App ordering channel, not a card entry method; directional context only."
+        }
+      ],
+      "sources": [
+        {
+          "publisher": "Starbucks",
+          "title": "Q4 FY25 Digital IR Dashboard",
+          "url": "https://s203.q4cdn.com/326826266/files/doc_financials/2025/q4/Q4-FY25-Digital-IR-Dashboard.pdf",
+          "published": "2025-10"
+        }
+      ]
+    },
+    {
+      "name": "7 Brew",
+      "public_context": [
+        "7 Brew's official About page reports 800+ stands in 38 states.",
+        "The company says it serves over 1 million drinks per day."
+      ],
+      "comparable_payment_kpis_available": false,
+      "unavailable_metrics": [
+        "authorization rate",
+        "decline dollars",
+        "interchange fee/rate",
+        "downgrade rate",
+        "returns rate",
+        "AOV",
+        "wallet mix",
+        "entry-method mix"
+      ],
+      "sources": [
+        {
+          "publisher": "7 Brew",
+          "title": "About 7 Brew",
+          "url": "https://7brew.com/about",
+          "accessed": "2026-08-11"
+        }
+      ]
+    }
+  ]
+}

@@ -763,18 +763,18 @@ function renderOlo(weeks) {
 
 async function loadOloPay() {
   try {
-    const res = await fetch(OLO_DATA_URL, { cache: "no-store" });
-    if (!res.ok) {
+    const payload = await window.__dashboardAuth.loadJson(OLO_DATA_URL);
+    renderOlo(normalizeOloData(payload));
+  } catch (err) {
+    if (err?.status) {
       showNotice({
         title: "Order Ahead (Olo Pay) couldn't be loaded right now",
         message: "Try refreshing in a moment. If it keeps happening, share the technical details with the data team.",
-        technical: `Request for ${OLO_DATA_URL} returned HTTP ${res.status}.`,
+        technical: `Request for ${OLO_DATA_URL} returned HTTP ${err.status}.`,
         fix: IMPORT_STEPS,
       });
       return;
     }
-    renderOlo(normalizeOloData(await res.json()));
-  } catch (err) {
     showNotice({
       title: "Order Ahead (Olo Pay) couldn't be displayed right now",
       message:

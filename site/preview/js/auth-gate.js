@@ -1,4 +1,5 @@
-/* Access gate: password hash lives in auth-config.json (change via scripts/set_dashboard_password.py). */
+/* Access gate: password hash lives in auth-config.json (change via scripts/set_dashboard_password.py).
+   Published metrics under data/*.json are AES-GCM envelopes opened with the same password. */
 
 const KEY_PHRASES = [
   // Hitchhiker's Guide
@@ -30,15 +31,87 @@ const KEY_PHRASES = [
   "No free samples of the KPIs. Show us the key.",
 ];
 
+const ENC_VERSION = "db-dash-v1";
+const ENC_ITERATIONS = 210000;
+const MATERIAL_SUFFIX = "_material";
+
 function pickPhrase() {
   const i = Math.floor(Math.random() * KEY_PHRASES.length);
   return KEY_PHRASES[i];
+}
+
+function b64ToBytes(text) {
+  const binary = atob(text);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
 }
 
 async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function isEnvelope(payload) {
+  return Boolean(payload && payload.enc === ENC_VERSION && payload.ciphertext && payload.salt);
+}
+
+async function deriveAesKey(password, saltB64, iterations) {
+  const material = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: b64ToBytes(saltB64),
+      iterations,
+      hash: "SHA-256",
+    },
+    material,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["decrypt"]
+  );
+}
+
+async function decryptEnvelope(envelope, password) {
+  const iterations = Number(envelope.iterations) || ENC_ITERATIONS;
+  const key = await deriveAesKey(password, envelope.salt, iterations);
+  const decrypted = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv: b64ToBytes(envelope.iv),
+      additionalData: new TextEncoder().encode(ENC_VERSION),
+    },
+    key,
+    b64ToBytes(envelope.ciphertext)
+  );
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+async function loadPublishedJson(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    const error = new Error(`Failed to load ${url} (${res.status})`);
+    error.status = res.status;
+    throw error;
+  }
+  const payload = await res.json();
+  if (!isEnvelope(payload)) return payload;
+  const password = window.__dashboardAuth?.password;
+  if (!password) {
+    throw new Error("Dashboard key required to read published metrics");
+  }
+  try {
+    return await decryptEnvelope(payload, password);
+  } catch (err) {
+    throw new Error("Dashboard key could not open the published metrics. Re-enter the key.");
+  }
 }
 
 async function loadConfig() {
@@ -57,6 +130,12 @@ function unlockUi() {
   const skeleton = document.getElementById("auth-skeleton");
   if (skeleton) skeleton.hidden = true;
   window.dispatchEvent(new CustomEvent("dashboard:unlocked"));
+}
+
+function rememberKey(sessionKey, expectedHash, password) {
+  window.__dashboardAuth.password = password;
+  sessionStorage.setItem(sessionKey, expectedHash);
+  sessionStorage.setItem(sessionKey + MATERIAL_SUFFIX, password);
 }
 
 function showError(msg) {
@@ -78,10 +157,17 @@ async function initAuthGate() {
 
   const sessionKey = config.sessionKey || "db_wp_dashboard_auth_v1";
   const expected = String(config.passwordHash || "").toLowerCase();
+  const storedHash = sessionStorage.getItem(sessionKey);
+  const storedPassword = sessionStorage.getItem(sessionKey + MATERIAL_SUFFIX);
 
-  if (sessionStorage.getItem(sessionKey) === expected && expected) {
-    unlockUi();
-    return;
+  if (storedHash === expected && expected && storedPassword) {
+    const hash = await sha256Hex(storedPassword);
+    if (hash === expected) {
+      rememberKey(sessionKey, expected, storedPassword);
+      unlockUi();
+      return;
+    }
+    sessionStorage.removeItem(sessionKey + MATERIAL_SUFFIX);
   }
 
   document.body.classList.add("auth-locked");
@@ -102,7 +188,7 @@ async function initAuthGate() {
     }
     const hash = await sha256Hex(entered);
     if (hash === expected) {
-      sessionStorage.setItem(sessionKey, expected);
+      rememberKey(sessionKey, expected, entered);
       input.value = "";
       unlockUi();
       return;
@@ -113,5 +199,11 @@ async function initAuthGate() {
 
   input.focus();
 }
+
+window.__dashboardAuth = {
+  password: null,
+  loadJson: loadPublishedJson,
+  isEnvelope,
+};
 
 document.addEventListener("DOMContentLoaded", initAuthGate);

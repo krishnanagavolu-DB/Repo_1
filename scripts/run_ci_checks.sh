@@ -40,7 +40,7 @@ node tests/ytd_banner_smoke.js
 node tests/tab_period_smoke.js
 python3 scripts/stamp_asset_versions.py --check
 
-# Olo Pay raw→published byte parity (temp regen; does not alter importer CLI)
+# Olo Pay raw→processed byte parity (temp regen; does not alter importer CLI)
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 python3 scripts/import_olo_pay.py data/raw/olo-pay/olo_pay_data_*.json \
@@ -52,16 +52,15 @@ if ! cmp "$tmpdir/olo_pay_data.json" data/processed/olo_pay_data.json; then
   echo "Olo Pay processed JSON drifted from raw regen. Re-run scripts/import_olo_pay.py and commit data/processed/olo_pay_data.json." >&2
   exit 1
 fi
-if ! cmp "$tmpdir/preview_olo_pay_data.json" site/preview/data/olo_pay_data.json; then
-  echo "Olo Pay preview JSON drifted from raw regen. Re-run scripts/import_olo_pay.py and commit site/preview/data/olo_pay_data.json." >&2
+if ! cmp "$tmpdir/preview_olo_pay_data.json" data/processed/olo_pay_data.json; then
+  echo "Olo Pay regen preview copy drifted from processed JSON." >&2
   exit 1
 fi
+python3 scripts/encrypt_site_data.py --check
 
 python3 scripts/validate_worldpay.py \
   --raw data/raw \
-  --dashboard data/processed/dashboard.json \
-  --dashboard site/data/dashboard.json \
-  --dashboard site/preview/data/dashboard.json
+  --dashboard data/processed/dashboard.json
 
 echo
 echo "All CI checks passed locally."

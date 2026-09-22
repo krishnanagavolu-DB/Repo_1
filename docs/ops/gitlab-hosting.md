@@ -32,17 +32,35 @@ GitHub backup (still live):
 - https://krishnanagavolu-db.github.io/Repo_1/
 - https://krishnanagavolu-db.github.io/Repo_1/preview/
 
-## Two clicks so leadership can open the link
+## Sharing the link with someone else
 
-The GitLab project is private, so Pages may ask for a GitLab login until you
-change this:
+The GitLab project is private and Pages access control is on, so anyone who is
+not a project member is bounced to GitLab and sees a **404** (GitLab shows 404,
+not 403, for resources you cannot see). The Pages URL answers `302` to
+`projects.gitlab.io/auth` for signed-out visitors — that redirect is the tell.
+
+Pick one of these.
+
+### Option A — add the person to the project (keeps the site non-public)
+
+1. **Manage → Members → Invite members**
+2. Role **Guest** is enough for Pages access control
+3. They open the Pages URL while signed in to that GitLab account
+
+### Option B — make Pages public
 
 1. **Settings → General → Visibility, project features, permissions**
 2. **Pages** access: **Everyone**
 3. Save
 
-The published site is still only the aggregates in `site/`. Raw Excels are not
-copied to Pages.
+The repository stays private; only the published `site/` output becomes
+reachable. Raw Excels are never copied to Pages.
+
+**Before choosing Option B:** the password gate is client-side only. It hides
+the UI, not the files. `/(preview/)data/*.json` — weekly sales, auth rates,
+interchange, Olo order counts — is fetchable directly by anyone who has the URL,
+with no password. Option B means treating those aggregates as public-if-linked.
+Option A does not have that exposure.
 
 ## Optional: a cleaner URL later
 
@@ -77,3 +95,4 @@ we can retarget `origin` to GitLab.
 - Do not publish `data/raw/`.
 - Do not overwrite leadership `site/index.html` from preview unless you say **promote**.
 - Do not send people `https://krishna.nagavolu.gitlab.io/…` — browsers will reject the certificate.
+- Do not treat the password gate as access control for the JSON under `site/`.

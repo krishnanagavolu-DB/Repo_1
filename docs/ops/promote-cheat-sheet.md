@@ -8,8 +8,8 @@ A one-page note for you. You can copy this file into Notes, SharePoint, or a loc
 
 | Who it’s for | Link | What it is |
 |---|---|---|
-| **You / experiments** | https://krishnanagavolu-db.github.io/Repo_1/preview/ | Safe sandbox. Labeled **Preview**. Try look, chat, and layout here first. |
-| **Leadership** | https://krishnanagavolu-db.github.io/Repo_1/ | Official scorecard. Same URL every week. Do not send people the preview link. |
+| **You / experiments** | GitLab unique Pages URL + `/preview/` (copy from Deploy → Pages). GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/preview/ | Safe sandbox. Labeled **Preview**. Try look, chat, and layout here first. |
+| **Leadership** | GitLab unique Pages URL (site root). GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/ | Official scorecard. Same URL every week. Do not send people the preview link. |
 
 Hard-refresh (Cmd+Shift+R or Ctrl+Shift+R) if a page looks stale after a publish.
 
@@ -30,7 +30,7 @@ It runs one command:
 python3 scripts/promote_preview.py
 ```
 
-Then it checks tests and publishes so GitHub Pages can refresh the leadership URL.
+Then it checks tests and publishes so GitLab Pages (primary) and GitHub Pages (backup) can refresh the leadership URL.
 
 ### What “promote” copies
 Look, charts, colors, type, chatbot behavior — the **preview UI**.

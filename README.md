@@ -6,10 +6,21 @@ Built from Worldpay **Auth Summary** + **Interchange** reports. Static site in `
 
 ## Share with leadership
 
-1. Merge to `main` and enable **GitHub Pages** (Settings → Pages → Source: **GitHub Actions**).
-2. Private repos need **GitHub Pro** for Pages.
-3. Share the Pages URL (same link every week after Monday refresh).
+Primary host is **GitLab Pages**. GitHub Pages stays up as a backup until GitLab is proven.
+
+| Audience | GitLab (primary) | GitHub (backup) |
+| --- | --- | --- |
+| Leadership | Unique `*.gitlab.io` URL from **Deploy → Pages** (site root) | https://krishnanagavolu-db.github.io/Repo_1/ |
+| Preview | same unique URL + `/preview/` | https://krishnanagavolu-db.github.io/Repo_1/preview/ |
+
+The GitLab username contains a **dot**, so `https://krishna.nagavolu.gitlab.io/…` is **not** a working HTTPS link. Copy the unique Pages URL from the `pages` job (or Deploy → Pages). See [`docs/ops/gitlab-hosting.md`](docs/ops/gitlab-hosting.md).
+
+1. Push or merge to `main` on [GitLab](https://gitlab.com/Krishna.Nagavolu/db-payments-space). The `pages` job copies certified `site/` into GitLab Pages (`public/`).
+2. Share that **same unique GitLab URL** every week after the Monday refresh.
+3. If the GitLab project is private: **Settings → General → Visibility → Pages: Everyone** so leadership can open the link without a GitLab login.
 4. Only aggregates are published (`site/`). Raw Excels stay in the private repo under `data/raw/`.
+
+One-time GitLab steps: [`docs/ops/gitlab-hosting.md`](docs/ops/gitlab-hosting.md).
 
 ## Local preview (Chrome)
 
@@ -40,6 +51,12 @@ git add data site/data/dashboard.json && git commit -m "data: refresh Worldpay d
 pytest -v
 ```
 
+Local copy of the publish checks (same entrypoints CI uses):
+
+```bash
+scripts/run_ci_checks.sh
+```
+
 ## NSO First Tamper Check reminders
 
 Daily decision engine for upcoming shop openings (Outlook drafts for approval — nothing auto-sends in v1).
@@ -60,6 +77,7 @@ Config: [`config/nso-source.json`](config/nso-source.json) · email templates: [
 - Design: `docs/superpowers/specs/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard-design.md`
 - Plan: `docs/superpowers/plans/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard.md`
 - Monday ops: `docs/ops/monday-automation.md`
+- GitLab hosting: `docs/ops/gitlab-hosting.md`
 - NSO design: `docs/superpowers/specs/2026-08-17-nso-tamper-check-reminders-design.md`
 - NSO plan: `docs/superpowers/plans/2026-08-17-nso-tamper-check-reminders.md`
 - NSO daily ops: `docs/ops/nso-daily-automation.md`

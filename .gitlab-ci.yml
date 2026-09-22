@@ -1,0 +1,42 @@
+# GitLab Pages host for the executive dashboard.
+# Job name `pages` is required. Only `site/` is copied to `public/` (no data/raw).
+#
+# Share $CI_PAGES_URL from the pages job (unique domain). The username contains
+# a dot, so https://krishna.nagavolu.gitlab.io/… is not valid HTTPS.
+
+stages:
+  - certify
+  - deploy
+
+.certify:
+  image: python:3.12-bookworm
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq nodejs
+    - pip install -r requirements.txt
+
+certify:
+  extends: .certify
+  stage: certify
+  script:
+    - bash scripts/run_ci_checks.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+pages:
+  extends: .certify
+  stage: deploy
+  environment:
+    name: pages
+    url: $CI_PAGES_URL
+  script:
+    - bash scripts/run_ci_checks.sh
+    - mkdir -p public
+    - cp -a site/. public/
+    - echo "GitLab Pages URL: ${CI_PAGES_URL}"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

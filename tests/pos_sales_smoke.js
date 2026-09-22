@@ -249,6 +249,50 @@ windowListeners["dashboard:period"]?.({
 pos.renderPos(live);
 check("legacy ytd selection still renders available history", renderElements["pos-period-label"].textContent, liveYtd.label);
 
+const olderOverviewWeek = live.at(-2);
+sandbox.window.__posSalesState = { weeks: live, latest: liveLatest };
+renderElements["pos-period-label"].textContent = "hidden POS panel sentinel";
+renderElements["pos-summary-grid"].innerHTML = "hidden POS summary sentinel";
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: olderOverviewWeek.sortKey },
+});
+check(
+  "Overview week selection updates the POS chatbot getter",
+  pos.getSelectedWeek()?.sortKey,
+  olderOverviewWeek.sortKey
+);
+check(
+  "Overview week selection does not render the hidden POS period",
+  renderElements["pos-period-label"].textContent,
+  "hidden POS panel sentinel"
+);
+check(
+  "Overview week selection does not rebuild the hidden POS summary",
+  renderElements["pos-summary-grid"].innerHTML,
+  "hidden POS summary sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: "history" },
+});
+check("Overview history selection updates the POS getter to its aggregate", pos.getSelectedWeek()?.sortKey, "history");
+check(
+  "Overview history selection still does not render the hidden POS panel",
+  renderElements["pos-period-label"].textContent,
+  "hidden POS panel sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "worldpay", periodId: liveLatest.sortKey },
+});
+check("unrelated tab period remains ignored by POS", pos.getSelectedWeek()?.sortKey, "history");
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: olderOverviewWeek.sortKey },
+});
+check("POS tab period still updates its getter", pos.getSelectedWeek()?.sortKey, olderOverviewWeek.sortKey);
+check("POS tab period still renders normally", renderElements["pos-period-label"].textContent, olderOverviewWeek.label);
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

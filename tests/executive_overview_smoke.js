@@ -150,7 +150,11 @@ const watchlistModel = {
 const designedWatchlist = overview.buildWatchlist(watchlistModel);
 check("watchlist slot 1 is largest comparable movement", designedWatchlist[0]?.text, "In-shop sales -4.7% vs prior week.");
 check("watchlist slot 2 always carries Card auth health", designedWatchlist[1]?.text, "Card auth rate -0.35 pts vs prior week.");
-check("watchlist slot 3 is the next distinct comparable movement", designedWatchlist[2]?.text, "In-shop orders +2.2% vs prior week.");
+check(
+  "watchlist slot 3 reserves Order-ahead auth health without comparing magnitudes",
+  designedWatchlist[2]?.text,
+  "Order-ahead auth rate -12.00 pts vs prior week."
+);
 
 const coverageWatchlist = overview.buildWatchlist({
   ...watchlistModel,
@@ -174,6 +178,27 @@ check(
   /Worldpay.*not available/i.test(coverageWatchlist[2]?.text || ""),
   true
 );
+
+const coverageOverrideWatchlist = overview.buildWatchlist({
+  ...watchlistModel,
+  coverage: { pos: false, worldpay: true, olo: true },
+  kpis: {
+    ...watchlistModel.kpis,
+    inShopSales: { ...watchlistModel.kpis.inShopSales, delta: null },
+    inShopOrders: { ...watchlistModel.kpis.inShopOrders, delta: null },
+  },
+});
+check(
+  "coverage override keeps Card auth in slot 2",
+  coverageOverrideWatchlist[1]?.text,
+  "Card auth rate -0.35 pts vs prior week."
+);
+check(
+  "coverage override replaces Order-ahead auth in slot 3",
+  /POS.*not available/i.test(coverageOverrideWatchlist[2]?.text || ""),
+  true
+);
+check("coverage override remains capped at three", coverageOverrideWatchlist.length, 3);
 
 const gappedWeeks = [
   {

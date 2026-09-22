@@ -2,6 +2,7 @@ const fs = require("fs");
 const vm = require("vm");
 
 const failures = [];
+const windowListeners = {};
 
 function check(name, actual, expected) {
   if (actual !== expected) failures.push({ name, expected, actual });
@@ -76,7 +77,12 @@ const sandbox = {
   Array,
   RegExp,
   Date,
-  window: { addEventListener() {}, dispatchEvent() {} },
+  window: {
+    addEventListener(type, handler) {
+      windowListeners[type] = handler;
+    },
+    dispatchEvent() {},
+  },
   document: {
     addEventListener() {},
     getElementById() {
@@ -206,6 +212,58 @@ check(
   true
 );
 
+const renderElements = {
+  "olo-period-label": { textContent: "" },
+  "olo-summary-grid": { innerHTML: "" },
+  "olo-support": { innerHTML: "" },
+  "olo-detail": { innerHTML: "" },
+  "olo-empty": { hidden: true },
+  "olo-content": { hidden: true },
+};
+sandbox.document.getElementById = (id) => renderElements[id] || null;
+sandbox.window.__oloPayState = { weeks, latest, methodology: null };
+const olderOverviewWeek = weeks.at(-2);
+renderElements["olo-period-label"].textContent = "hidden Olo panel sentinel";
+renderElements["olo-summary-grid"].innerHTML = "hidden Olo summary sentinel";
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: olderOverviewWeek.sortKey },
+});
+check(
+  "Overview week selection updates the Olo chatbot getter",
+  olo.getSelectedWeek()?.sortKey,
+  olderOverviewWeek.sortKey
+);
+check(
+  "Overview week selection does not render the hidden Olo period",
+  renderElements["olo-period-label"].textContent,
+  "hidden Olo panel sentinel"
+);
+check(
+  "Overview week selection does not rebuild the hidden Olo summary",
+  renderElements["olo-summary-grid"].innerHTML,
+  "hidden Olo summary sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: "history" },
+});
+check("Overview history selection updates the Olo getter to its aggregate", olo.getSelectedWeek()?.sortKey, "history");
+check(
+  "Overview history selection still does not render the hidden Olo panel",
+  renderElements["olo-period-label"].textContent,
+  "hidden Olo panel sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: latest.sortKey },
+});
+check("unrelated tab period remains ignored by Olo", olo.getSelectedWeek()?.sortKey, "history");
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "olo", periodId: olderOverviewWeek.sortKey },
+});
+check("Olo tab period still updates its getter", olo.getSelectedWeek()?.sortKey, olderOverviewWeek.sortKey);
+check("Olo tab period still renders normally", renderElements["olo-period-label"].textContent, olderOverviewWeek.label);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

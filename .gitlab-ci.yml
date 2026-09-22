@@ -27,9 +27,6 @@ certify:
 pages:
   extends: .certify
   stage: deploy
-  environment:
-    name: pages
-    url: $CI_PAGES_URL
   script:
     - bash scripts/run_ci_checks.sh
     - mkdir -p public

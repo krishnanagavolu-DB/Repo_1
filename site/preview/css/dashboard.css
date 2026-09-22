@@ -1578,11 +1578,13 @@ body.auth-unlocked .auth-gate {
 }
 
 .executive-kpi-source {
-  font-size: 9px;
+  min-height: 2.3em;
+  font-size: 10px;
   font-weight: 700;
+  line-height: 1.15;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted-2);
+  color: var(--muted);
 }
 
 .executive-kpi strong {
@@ -1675,15 +1677,18 @@ body.auth-unlocked .auth-gate {
 }
 
 .executive-watchlist li[data-tone="watch"] {
-  border-left-color: var(--red);
+  border-left-color: var(--yellow);
+  color: var(--navy);
 }
 
 .executive-watchlist li[data-tone="positive"] {
   border-left-color: var(--good);
+  color: var(--good);
 }
 
 .executive-watchlist li[data-tone="context"] {
-  border-left-color: var(--yellow);
+  border-left-color: var(--blue);
+  color: var(--blue);
 }
 
 .executive-reconciliation {

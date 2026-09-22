@@ -806,14 +806,8 @@ function renderPos(weeks) {
     weeks.map((week) => ({ id: week.sortKey, label: week.label }))
   );
   window.__ytdBanner?.register("pos", getDataStart(weeks));
-  const requested = findWeekForPeriod(weeks, selectedPeriodId);
-  if (selectedPeriodId && !isHistoryPeriod(selectedPeriodId) && !requested) {
-    selectPeriod(selectedPeriodId);
-  } else if (isHistoryPeriod(selectedPeriodId)) {
-    selectPeriod(selectedPeriodId);
-  } else {
-    renderWeek(requested || latest);
-  }
+  if (selectedPeriodId) selectPeriod(selectedPeriodId);
+  else renderWeek(latest);
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }

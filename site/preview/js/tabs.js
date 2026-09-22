@@ -12,13 +12,13 @@ function optionForPeriod(period) {
   return option;
 }
 
-function announcePeriod(periodId, tabId = activeTabId) {
+function announcePeriod(periodId, tabId = activeTabId, reason = "selection") {
   window.dispatchEvent(
-    new CustomEvent("dashboard:period", { detail: { periodId, tabId } })
+    new CustomEvent("dashboard:period", { detail: { periodId, tabId, reason } })
   );
 }
 
-function populateSelect(tabId) {
+function populateSelect(tabId, reason = "periods-registered") {
   const select = document.getElementById("period-select");
   if (!select) return;
   const periods = periodsByTab[tabId] || [];
@@ -27,10 +27,10 @@ function populateSelect(tabId) {
     ...periods.map(optionForPeriod),
     optionForPeriod({ id: "history", label: "Available history" })
   );
-  select.value = periods.some((item) => item.id === wanted)
+  select.value = wanted === "history" || periods.some((item) => item.id === wanted)
     ? wanted
     : periods.at(-1)?.id || "history";
-  announcePeriod(select.value, tabId);
+  announcePeriod(select.value, tabId, reason);
 }
 
 function registerPeriods(tabId, periods) {
@@ -60,8 +60,9 @@ function activate(tabId) {
 
   // The period control drives every channel, so it stays visible on all tabs.
 
-  populateSelect(tabId);
-  window.dispatchEvent(new CustomEvent("dashboard:tab", { detail: { tabId } }));
+  populateSelect(tabId, "tab-activation");
+  const periodId = document.getElementById("period-select")?.value;
+  window.dispatchEvent(new CustomEvent("dashboard:tab", { detail: { tabId, periodId } }));
 }
 
 function initTabs() {

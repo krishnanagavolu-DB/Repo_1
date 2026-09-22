@@ -210,6 +210,7 @@ check("sales chart exists", html.includes('id="chart-overview-sales"'), true);
 check("tender chart exists", html.includes('id="chart-overview-tender"'), true);
 check("watchlist exists", html.includes('id="overview-watchlist"'), true);
 check("overview has a structured empty-state container", html.includes('id="overview-empty"'), true);
+check("overview has a hideable content container", html.includes('id="overview-content"'), true);
 check("reconciliation note names overlap", /Worldpay[^<]*overlap/i.test(html), true);
 check(
   "overview sales canvas has a grounded image label",
@@ -252,7 +253,7 @@ check(
 // distorts the circle). ---
 check(
   "tender chart canvas is wrapped in a fixed-size chart-wrap container",
-  html.includes('<div class="chart-wrap"><canvas id="chart-overview-tender"></canvas></div>'),
+  /<div class="chart-wrap"><canvas id="chart-overview-tender"[^>]*><\/canvas><\/div>/.test(html),
   true
 );
 

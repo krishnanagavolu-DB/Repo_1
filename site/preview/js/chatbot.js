@@ -15,7 +15,7 @@ const PAYMENT_DEFINITIONS = [
       "xenial",
     ],
     title: "In-Shop Sales",
-    body: "Company-owned POS sales from Gold Semantic Sales (Xenial-sourced). Completed Monday–Sunday weeks include every tender: Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM). Sales and average ticket exclude tips and change.",
+    body: "Company-owned POS sales from Gold Semantic Sales (Xenial-sourced) include every tender: Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM). The curated shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday, and the published Card + Cash + Gift Card / Dutch Pass mix totals 100%. Sales and average ticket exclude tips and change. Card present (Worldpay) is the separate view of card authorizations.",
   },
   {
     terms: ["card health"],
@@ -1447,9 +1447,9 @@ function answerQuestion(raw) {
     /\b(worldpay|card health)\b/.test(q);
   if (namesPosAndWorldpay && /\b(add|sum|combine|total|overlap|reconcile)\b/.test(q)) {
     return (
-      "Do not add POS and Worldpay sales. Worldpay is the processor view of the card " +
-      "portion of POS sales and includes tip. Olo Pay is a separate order-ahead " +
-      "channel. Because the POS and Worldpay views overlap, do not add them."
+      "POS and Worldpay sales overlap, so do not add them. Worldpay is the processor " +
+      "view of the card portion of POS sales and includes tip. Olo Pay is a separate " +
+      "order-ahead channel."
     );
   }
 

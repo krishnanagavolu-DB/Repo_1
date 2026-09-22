@@ -75,14 +75,35 @@ function intersectPeriodIds(posWeeks, worldpay, oloWeeks) {
   return [...pos].filter((id) => wp.has(id) && olo.has(id)).sort();
 }
 
+function periodIdsForAvailableSources(sources) {
+  const periodLists = [
+    (sources?.pos || []).map((week) => week.sortKey),
+    (sources?.worldpay || []).map((week) => week.id),
+    (sources?.olo || []).map((week) => week.sortKey),
+  ].filter((ids) => ids.length);
+  if (!periodLists.length) return [];
+
+  const otherSources = periodLists.slice(1).map((ids) => new Set(ids));
+  return [...new Set(periodLists[0])]
+    .filter((id) => otherSources.every((ids) => ids.has(id)))
+    .sort();
+}
+
+function isPriorWeek(currentId, priorId) {
+  const current = Date.parse(`${currentId}T00:00:00Z`);
+  const prior = Date.parse(`${priorId}T00:00:00Z`);
+  return Number.isFinite(current) && Number.isFinite(prior) && current - prior === 7 * 24 * 60 * 60 * 1000;
+}
+
 function selectedAndPrior(weeks, periodId, idKey) {
   const sorted = [...(weeks || [])].sort((a, b) =>
     String(a?.[idKey] || "").localeCompare(String(b?.[idKey] || ""))
   );
   const index = sorted.findIndex((week) => week?.[idKey] === periodId);
+  const candidate = index > 0 ? sorted[index - 1] : null;
   return {
     selected: index >= 0 ? sorted[index] : null,
-    prior: index > 0 ? sorted[index - 1] : null,
+    prior: candidate && isPriorWeek(periodId, candidate?.[idKey]) ? candidate : null,
   };
 }
 
@@ -161,24 +182,47 @@ function buildWatchlist(model) {
   const missing = Object.entries(model.coverage || {})
     .filter(([, available]) => !available)
     .map(([source]) => ({ pos: "POS", worldpay: "Worldpay", olo: "Olo Pay" })[source]);
-  const notices = missing.length
-    ? [{
+  const coverageNotice = missing.length
+    ? {
         tone: "context",
         text: `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} not available for this period.`,
         movement: null,
-      }]
-    : [];
+      }
+    : null;
 
-  const observations = Object.values(model.kpis || {})
-    .filter((item) => finiteNumber(item?.delta?.value) !== null)
-    .map((item) => ({
+  /* Percent movements are comparable with one another. Point changes are
+     not ranked against percentages; Card auth health receives its own
+     fixed slot below instead. */
+  const comparableMovements = Object.entries(model.kpis || {})
+    .filter(([key, item]) =>
+      key !== "cardAuthRate" &&
+      item?.delta?.unit === "percent" &&
+      finiteNumber(item?.delta?.value) !== null
+    )
+    .map(([, item]) => ({
       tone: item.delta.value > 0 ? "positive" : item.delta.value < 0 ? "watch" : "context",
       text: `${item.label} ${item.delta.text}.`,
       movement: Math.abs(item.delta.value),
     }))
     .sort((a, b) => b.movement - a.movement);
 
-  return [...notices, ...observations.slice(0, 3 - notices.length)];
+  const cardAuth = model.kpis?.cardAuthRate;
+  const cardAuthMovement =
+    finiteNumber(cardAuth?.delta?.value) === null
+      ? null
+      : {
+          tone: cardAuth.delta.value > 0 ? "positive" : cardAuth.delta.value < 0 ? "watch" : "context",
+          text: `${cardAuth.label} ${cardAuth.delta.text}.`,
+          movement: Math.abs(cardAuth.delta.value),
+        };
+
+  const items = [];
+  if (comparableMovements[0]) items.push(comparableMovements[0]);
+  if (cardAuthMovement) items.push(cardAuthMovement);
+  if (coverageNotice) items.push(coverageNotice);
+  else if (comparableMovements[1]) items.push(comparableMovements[1]);
+
+  return items.slice(0, 3);
 }
 
 function overviewForPeriod(periodId, sources) {
@@ -206,42 +250,42 @@ function overviewForPeriod(periodId, sources) {
       inShopSales: kpi(
         "In-shop sales",
         posSales,
-        compactUsd(posSales),
+        posSales === null ? "Not available" : compactUsd(posSales),
         delta(percentChange(posSales, pos.prior?.reportedTotal ?? pos.prior?.tenderTotal), "percent"),
         "POS · ex-tip"
       ),
       inShopOrders: kpi(
         "In-shop orders",
         posOrders,
-        compactCount(posOrders),
+        posOrders === null ? "Not available" : compactCount(posOrders),
         delta(percentChange(posOrders, pos.prior?.orderCount), "percent"),
         "POS · guest checks"
       ),
       inShopAvgTicket: kpi(
         "In-shop avg ticket",
         posAvgTicket,
-        posAvgTicket === null ? "—" : `$${posAvgTicket.toFixed(2)}`,
+        posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
         delta(percentChange(posAvgTicket, pos.prior?.avgTicket), "percent"),
         "POS · ex-tip"
       ),
       cardAuthRate: kpi(
         "Card auth rate",
         cardAuthRate,
-        cardAuthRate === null ? "—" : `${cardAuthRate.toFixed(2)}%`,
+        cardAuthRate === null ? "Not available" : `${cardAuthRate.toFixed(2)}%`,
         delta(pointChange(cardAuthRate, worldpay.prior?.authRate), "points"),
         "Worldpay · card present"
       ),
       orderAheadSales: kpi(
         "Order-ahead sales",
         oloSales,
-        compactUsd(oloSales),
+        oloSales === null ? "Not available" : compactUsd(oloSales),
         delta(percentChange(oloSales, olo.prior?.sales), "percent"),
         "Olo Pay · ex-tip"
       ),
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",
         oloAuthRate,
-        oloAuthRate === null ? "—" : `${oloAuthRate.toFixed(2)}%`,
+        oloAuthRate === null ? "Not available" : `${oloAuthRate.toFixed(2)}%`,
         delta(pointChange(oloAuthRate, olo.prior?.authRatePct), "points"),
         "Stripe · order ahead"
       ),
@@ -311,33 +355,45 @@ function overviewForHistory(periodIds, sources) {
       olo: Boolean(oloSubset.length),
     },
     kpis: {
-      inShopSales: kpi("In-shop sales", posSales, compactUsd(posSales), null, "POS · ex-tip"),
+      inShopSales: kpi(
+        "In-shop sales",
+        posSales,
+        posSales === null ? "Not available" : compactUsd(posSales),
+        null,
+        "POS · ex-tip"
+      ),
       inShopOrders: kpi(
         "In-shop orders",
         posOrders,
-        compactCount(posOrders),
+        posOrders === null ? "Not available" : compactCount(posOrders),
         null,
         "POS · guest checks"
       ),
       inShopAvgTicket: kpi(
         "In-shop avg ticket",
         posAvgTicket,
-        posAvgTicket === null ? "—" : `$${posAvgTicket.toFixed(2)}`,
+        posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
         null,
         "POS · ex-tip"
       ),
       cardAuthRate: kpi(
         "Card auth rate",
         worldpayAuthRate,
-        worldpayAuthRate === null ? "—" : `${worldpayAuthRate.toFixed(2)}%`,
+        worldpayAuthRate === null ? "Not available" : `${worldpayAuthRate.toFixed(2)}%`,
         null,
         "Worldpay · card present"
       ),
-      orderAheadSales: kpi("Order-ahead sales", oloSales, compactUsd(oloSales), null, "Olo Pay · ex-tip"),
+      orderAheadSales: kpi(
+        "Order-ahead sales",
+        oloSales,
+        oloSales === null ? "Not available" : compactUsd(oloSales),
+        null,
+        "Olo Pay · ex-tip"
+      ),
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",
         oloAuthRate,
-        oloAuthRate === null ? "—" : `${oloAuthRate.toFixed(2)}%`,
+        oloAuthRate === null ? "Not available" : `${oloAuthRate.toFixed(2)}%`,
         null,
         "Stripe · order ahead"
       ),
@@ -380,7 +436,10 @@ const TENDER_COLORS = {
   "Gift Card / Dutch Pass": "#F6E300",
 };
 /* Brand yellow fails WCAG as small text, so ink uses official navy. */
-const TENDER_INK = { "Gift Card / Dutch Pass": "#154167" };
+const TENDER_INK = {
+  "Gift Card / Dutch Pass": "#154167",
+  "Gift Card": "#154167",
+};
 
 let selectedPeriodId = null;
 let overviewSalesChart = null;
@@ -558,6 +617,32 @@ function renderWatchlist(model) {
     .join("");
 }
 
+function showOverviewReady() {
+  const empty = document.getElementById("overview-empty");
+  const content = document.getElementById("overview-content");
+  if (empty) empty.hidden = true;
+  if (content) content.hidden = false;
+}
+
+function showOverviewNotice(technical) {
+  const empty = document.getElementById("overview-empty");
+  const content = document.getElementById("overview-content");
+  if (content) content.hidden = true;
+  if (!empty) return;
+  empty.hidden = false;
+  const options = {
+    title: "Payments Executive Overview isn't available right now",
+    message: "No usable reporting periods are available from the published payment sources.",
+    technical,
+    fix: [
+      "Confirm each published payment JSON feed is reachable and contains usable completed weeks.",
+      "Refresh after the source feeds have been republished.",
+    ],
+  };
+  if (window.__notices) window.__notices.renderNotice(empty, options);
+  else empty.innerHTML = `<h3>${options.title}</h3><p>${options.message}</p>`;
+}
+
 /** Earliest common week, used to register a meaningful available-history
     banner for the overview tab (the intersection, not any one source's
     own longer history). */
@@ -567,7 +652,7 @@ function overviewDataStart(periodIds, sources) {
   const label = shortLabel(periodLabelFor(firstId, sources));
   const year = String(firstId).slice(0, 4);
   return {
-    startLabel: year ? `${label}, ${year}` : label,
+    startLabel: `${label}, ${year}`,
     weekCount: periodIds.length,
   };
 }
@@ -605,48 +690,75 @@ function renderOverview(periodId, { force = false } = {}) {
 }
 
 async function loadOverview() {
-  try {
-    const [posRes, worldpayRes, oloRes] = await Promise.all([
-      fetch(POS_DATA_URL, { cache: "no-store" }),
-      fetch(WORLDPAY_DATA_URL, { cache: "no-store" }),
-      fetch(OLO_DATA_URL, { cache: "no-store" }),
-    ]);
-    if (!posRes.ok || !worldpayRes.ok || !oloRes.ok) return;
-    const [posPayload, worldpayPayload, oloPayload] = await Promise.all([
-      posRes.json(),
-      worldpayRes.json(),
-      oloRes.json(),
-    ]);
-    const pos = window.__posSales?.normalizePosData(posPayload) || [];
-    const olo = window.__oloPay?.normalizeOloData(oloPayload) || [];
-    const worldpay = worldpayWeeks(worldpayPayload);
-    const periodIds = intersectPeriodIds(pos, worldpay, olo);
-    window.__executiveOverviewState = { pos, worldpay, olo, periodIds };
-    if (!periodIds.length) return;
-    const sources = { pos, worldpay, olo };
-    window.__ytdBanner?.register("overview", overviewDataStart(periodIds, sources));
-    window.__dashboardTabs?.registerPeriods(
-      "overview",
-      periodIds.map((id) => ({ id, label: periodLabelFor(id, sources) }))
-    );
-    /* If registerPeriods() above already rendered via its event echo (the
-       common case, since Executive Overview is the default active tab),
-       renderOverview()'s own guard makes this a no-op; it only does real
-       work when the echo did not fire (e.g. overview is not the active
-       tab, or the tab coordinator is unavailable). */
-    renderOverview(selectedPeriodId || periodIds.at(-1));
-  } catch (err) {
-    console.error(err);
+  async function loadFeed(url, label, normalize) {
+    try {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) {
+        return {
+          weeks: [],
+          error: `${label}: request for ${url} returned HTTP ${response.status}.`,
+        };
+      }
+      const weeks = normalize(await response.json());
+      if (!Array.isArray(weeks) || !weeks.length) {
+        return { weeks: [], error: `${label}: ${url} contained no usable completed weeks.` };
+      }
+      return { weeks, error: null };
+    } catch (err) {
+      return { weeks: [], error: `${label}: ${String(err?.message || err)}` };
+    }
   }
+
+  const [posResult, worldpayResult, oloResult] = await Promise.all([
+    loadFeed(POS_DATA_URL, "POS", (payload) =>
+      window.__posSales?.normalizePosData(payload) || []
+    ),
+    loadFeed(WORLDPAY_DATA_URL, "Worldpay", worldpayWeeks),
+    loadFeed(OLO_DATA_URL, "Olo Pay", (payload) =>
+      window.__oloPay?.normalizeOloData(payload) || []
+    ),
+  ]);
+
+  const sources = {
+    pos: posResult.weeks,
+    worldpay: worldpayResult.weeks,
+    olo: oloResult.weeks,
+  };
+  const periodIds = periodIdsForAvailableSources(sources);
+  const errors = [posResult.error, worldpayResult.error, oloResult.error].filter(Boolean);
+  window.__executiveOverviewState = { ...sources, periodIds, sourceErrors: errors };
+
+  if (!periodIds.length) {
+    const technical = errors.length
+      ? errors.join("\n")
+      : "The available feeds do not share any usable reporting period.";
+    showOverviewNotice(technical);
+    return;
+  }
+
+  showOverviewReady();
+  window.__ytdBanner?.register("overview", overviewDataStart(periodIds, sources));
+  window.__dashboardTabs?.registerPeriods(
+    "overview",
+    periodIds.map((id) => ({ id, label: periodLabelFor(id, sources) }))
+  );
+  /* If registerPeriods() above already rendered via its event echo (the
+     common case, since Executive Overview is the default active tab),
+     renderOverview()'s own guard makes this a no-op; it only does real
+     work when the echo did not fire (e.g. overview is not the active
+     tab, or the tab coordinator is unavailable). */
+  renderOverview(selectedPeriodId || periodIds.at(-1));
 }
 
 window.__executiveOverview = {
   worldpayWeeks,
   intersectPeriodIds,
+  periodIdsForAvailableSources,
   overviewForPeriod,
   isHistoryPeriod,
   overviewForHistory,
   buildWatchlist,
+  tenderInk,
   formatSignedPct,
   loadOverview,
   renderOverview,
@@ -668,6 +780,10 @@ window.addEventListener("dashboard:period", (event) => {
   if (tabId !== "overview") return;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
+  if (event.detail?.reason === "tab-activation") {
+    selectedPeriodId = periodId;
+    return;
+  }
   if (!window.__executiveOverviewState?.periodIds?.length) {
     selectedPeriodId = periodId;
     return;
@@ -691,7 +807,9 @@ window.addEventListener("dashboard:tab", (event) => {
   if (event.detail?.tabId !== "overview") return;
   const state = window.__executiveOverviewState;
   if (!state?.periodIds?.length) return;
-  renderOverview(selectedPeriodId || state.periodIds.at(-1), { force: true });
+  renderOverview(event.detail?.periodId || selectedPeriodId || state.periodIds.at(-1), {
+    force: true,
+  });
 });
 
 document.addEventListener("DOMContentLoaded", startOverviewWhenUnlocked);

@@ -109,7 +109,8 @@
         <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
 
         <section id="panel-overview" class="tab-panel" data-panel="overview">
-          <section class="slide executive-slide" aria-label="Payments Executive Overview">
+          <div id="overview-empty" class="pos-empty" hidden></div>
+          <section id="overview-content" class="slide executive-slide" aria-label="Payments Executive Overview">
             <header class="slide-band">
               <div>
                 <h2>Payments Executive Overview</h2>
@@ -118,23 +119,23 @@
               <p id="overview-period-label">Most recent common week</p>
             </header>
             <div class="executive-board">
-              <div class="executive-kpis" id="overview-kpis"></div>
+              <div class="executive-kpis" id="overview-kpis" aria-live="polite"></div>
               <article class="slide-panel executive-sales-panel">
                 <div class="panel-band">Sales trend by channel</div>
                 <div class="panel-body">
-                  <div class="chart-wrap"><canvas id="chart-overview-sales"></canvas></div>
+                  <div class="chart-wrap"><canvas id="chart-overview-sales" role="img" aria-label="Weekly In-Shop Sales and Order Ahead sales trend"></canvas></div>
                 </div>
               </article>
               <article class="slide-panel executive-mix-panel">
                 <div class="panel-band">How guests paid in shop</div>
                 <div class="panel-body">
-                  <div class="chart-wrap"><canvas id="chart-overview-tender"></canvas></div>
+                  <div class="chart-wrap"><canvas id="chart-overview-tender" role="img" aria-label="In-Shop Sales tender mix by Card, Cash, and Gift Card / Dutch Pass"></canvas></div>
                   <table id="legend-overview-tender" class="mix-legend compact-legend"></table>
                 </div>
               </article>
               <article class="slide-panel executive-watch-panel">
                 <div class="panel-band">Leadership watchlist</div>
-                <ol id="overview-watchlist" class="executive-watchlist"></ol>
+                <ol id="overview-watchlist" class="executive-watchlist" aria-live="polite"></ol>
               </article>
             </div>
             <p id="overview-reconciliation" class="executive-reconciliation">

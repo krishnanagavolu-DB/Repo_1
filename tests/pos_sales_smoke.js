@@ -12,6 +12,12 @@ const sandbox = {
   Array,
   RegExp,
   Date,
+  CustomEvent: class CustomEvent {
+    constructor(type, init) {
+      this.type = type;
+      this.detail = init?.detail;
+    }
+  },
   window: {
     addEventListener(type, handler) {
       windowListeners[type] = handler;

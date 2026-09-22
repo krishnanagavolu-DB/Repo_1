@@ -217,10 +217,18 @@ function buildWatchlist(model) {
         };
 
   const items = [];
-  if (comparableMovements[0]) items.push(comparableMovements[0]);
+  let nextComparable = 0;
+  if (comparableMovements[nextComparable]) {
+    items.push(comparableMovements[nextComparable]);
+    nextComparable += 1;
+  }
   if (cardAuthMovement) items.push(cardAuthMovement);
+  else if (comparableMovements[nextComparable]) {
+    items.push(comparableMovements[nextComparable]);
+    nextComparable += 1;
+  }
   if (coverageNotice) items.push(coverageNotice);
-  else if (comparableMovements[1]) items.push(comparableMovements[1]);
+  else if (comparableMovements[nextComparable]) items.push(comparableMovements[nextComparable]);
 
   return items.slice(0, 3);
 }

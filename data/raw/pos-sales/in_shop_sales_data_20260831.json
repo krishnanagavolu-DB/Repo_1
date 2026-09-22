@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T21:06:28-07:00",
+  "generated_at": "2026-08-31T11:18:07-07:00",
   "week_cadence": "Monday-Sunday",
   "definitions": {
     "SALES_VOLUME": "Company Owned payment dollars from Gold Semantic Sales. Quarantine false, subtype payment, refunds as signed ORDER_PAYMENT_AMOUNT.",
@@ -59,7 +59,7 @@
     },
     "gold_store_ownership_counts": {
       "Company Owned": 1016,
-      "Franchised": 312
+      "Franchised": 310
     }
   },
   "tender_order": [
@@ -432,166 +432,20 @@
         "SALES_VOLUME_PCT": -2.5,
         "TRANSACTION_COUNT_PCT": -2.0
       }
-    },
-    {
-      "week_start_date": "2026-09-07",
-      "week_end_date": "2026-09-13",
-      "totals": {
-        "SALES_VOLUME": 46314847.63,
-        "TRANSACTION_COUNT": 4354707,
-        "AVG_TICKET": 10.81,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "ORDER_COUNT": 4284497
-      },
-      "tender_mix": {
-        "Card": {
-          "amount": 31736318.18,
-          "pct_of_total_sales": 68.5,
-          "TRANSACTION_COUNT": 2925290
-        },
-        "Cash": {
-          "amount": 7708887.94,
-          "pct_of_total_sales": 16.7,
-          "TRANSACTION_COUNT": 767343
-        },
-        "Gift Card / Dutch Pass": {
-          "amount": 6869641.51,
-          "pct_of_total_sales": 14.8,
-          "TRANSACTION_COUNT": 662074,
-          "components": {
-            "GIFT": {
-              "amount": 4460044.69,
-              "TRANSACTION_COUNT": 418768
-            },
-            "CUSTOM": {
-              "amount": 2409596.82,
-              "TRANSACTION_COUNT": 243306
-            }
-          }
-        }
-      },
-      "tenders": [
-        {
-          "name": "Card",
-          "amount": 31736318.18,
-          "pct_of_total_sales": 68.5,
-          "TRANSACTION_COUNT": 2925290
-        },
-        {
-          "name": "Cash",
-          "amount": 7708887.94,
-          "pct_of_total_sales": 16.7,
-          "TRANSACTION_COUNT": 767343
-        },
-        {
-          "name": "Gift Card / Dutch Pass",
-          "amount": 6869641.51,
-          "pct_of_total_sales": 14.8,
-          "TRANSACTION_COUNT": 662074,
-          "components": {
-            "GIFT": {
-              "amount": 4460044.69,
-              "TRANSACTION_COUNT": 418768
-            },
-            "CUSTOM": {
-              "amount": 2409596.82,
-              "TRANSACTION_COUNT": 243306
-            }
-          }
-        }
-      ],
-      "mix_checksum": 100.0,
-      "week_over_week": {
-        "SALES_VOLUME_PCT": null,
-        "TRANSACTION_COUNT_PCT": null
-      }
-    },
-    {
-      "week_start_date": "2026-09-14",
-      "week_end_date": "2026-09-20",
-      "totals": {
-        "SALES_VOLUME": 44151389.8,
-        "TRANSACTION_COUNT": 4266914,
-        "AVG_TICKET": 10.52,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "ORDER_COUNT": 4197913
-      },
-      "tender_mix": {
-        "Card": {
-          "amount": 30521477.45,
-          "pct_of_total_sales": 69.1,
-          "TRANSACTION_COUNT": 2856448
-        },
-        "Cash": {
-          "amount": 6944257.29,
-          "pct_of_total_sales": 15.7,
-          "TRANSACTION_COUNT": 762866
-        },
-        "Gift Card / Dutch Pass": {
-          "amount": 6685655.06,
-          "pct_of_total_sales": 15.2,
-          "TRANSACTION_COUNT": 647600,
-          "components": {
-            "GIFT": {
-              "amount": 4323312.67,
-              "TRANSACTION_COUNT": 408359
-            },
-            "CUSTOM": {
-              "amount": 2362342.39,
-              "TRANSACTION_COUNT": 239241
-            }
-          }
-        }
-      },
-      "tenders": [
-        {
-          "name": "Card",
-          "amount": 30521477.45,
-          "pct_of_total_sales": 69.1,
-          "TRANSACTION_COUNT": 2856448
-        },
-        {
-          "name": "Cash",
-          "amount": 6944257.29,
-          "pct_of_total_sales": 15.7,
-          "TRANSACTION_COUNT": 762866
-        },
-        {
-          "name": "Gift Card / Dutch Pass",
-          "amount": 6685655.06,
-          "pct_of_total_sales": 15.2,
-          "TRANSACTION_COUNT": 647600,
-          "components": {
-            "GIFT": {
-              "amount": 4323312.67,
-              "TRANSACTION_COUNT": 408359
-            },
-            "CUSTOM": {
-              "amount": 2362342.39,
-              "TRANSACTION_COUNT": 239241
-            }
-          }
-        }
-      ],
-      "mix_checksum": 100.0,
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -4.7,
-        "TRANSACTION_COUNT_PCT": -2.0
-      }
     }
   ],
   "shop_coverage": {
     "co_shops_in_gold_dim": 1016,
-    "franchised_shops_in_gold_dim": 312,
-    "excluded_store_codes_csv_only": 312
+    "franchised_shops_in_gold_dim": 310,
+    "excluded_store_codes_csv_only": 310
   },
   "artifacts": {
-    "json": "in_shop_sales_data_20260921.json",
+    "json": "in_shop_sales_data_20260831.json",
+    "rolling_json": "in_shop_sales_data.json",
     "granular": {
       "status": "skipped",
       "note": "Row-level Parquet is off by default."
-    },
-    "methodology": "in_shop_sales_methodology_20260921.json"
+    }
   },
   "error_log": [
     {
@@ -622,8 +476,8 @@
     {
       "code": "unmapped_payment_type",
       "payment_type": "UNKNOWN",
-      "amount": -29.95,
-      "rows": 15,
+      "amount": -91.29,
+      "rows": 41,
       "action": "excluded_from_kpi_mix"
     }
   ],

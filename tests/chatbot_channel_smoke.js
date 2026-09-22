@@ -10,6 +10,7 @@ const benchmarks = JSON.parse(fs.readFileSync("site/preview/data/benchmarks.json
 const posRaw = JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"));
 
 function buildBot(activeTab) {
+  const eventListeners = {};
   const sandbox = {
     console,
     Intl,
@@ -21,7 +22,21 @@ function buildBot(activeTab) {
     RegExp,
     Date,
     setTimeout: (callback) => callback(),
-    window: { __benchmarkData: benchmarks, addEventListener() {}, dispatchEvent() {} },
+    CustomEvent: class CustomEvent {
+      constructor(type, init) {
+        this.type = type;
+        this.detail = init?.detail;
+      }
+    },
+    window: {
+      __benchmarkData: benchmarks,
+      addEventListener(type, handler) {
+        (eventListeners[type] = eventListeners[type] || []).push(handler);
+      },
+      dispatchEvent(event) {
+        for (const handler of eventListeners[event.type] || []) handler(event);
+      },
+    },
     document: {
       addEventListener() {},
       querySelectorAll: () => [],
@@ -43,6 +58,10 @@ function buildBot(activeTab) {
   vm.runInContext(fs.readFileSync("site/preview/js/chatbot.js", "utf8"), sandbox);
   const chat = sandbox.window.__paymentsChat;
   chat.chatContext.activeTab = activeTab;
+  chat.emitPeriod = (detail) => {
+    sandbox.window.dispatchEvent(new sandbox.CustomEvent("dashboard:period", { detail }));
+  };
+  chat.selectedPeriodId = () => sandbox.window.__dashboardState?.periodId;
   return chat;
 }
 
@@ -178,6 +197,43 @@ const explicitPos = sameOnBothTabs("What is the average ticket on All payments?"
 expect("explicit All payments answers directly", explicitPos, /\$10\.03|payment lines|guest checks/);
 const explicitWp = sameOnBothTabs("What was AOV last week?");
 expect("explicit AOV answers directly", explicitWp, /AOV/);
+
+const overviewWeek = dashboard.periods.weeks.at(-2);
+onPos.emitPeriod({ tabId: "overview", periodId: overviewWeek.id, reason: "selection" });
+if (onPos.selectedPeriodId() !== overviewWeek.id) {
+  failures.push({
+    name: "Overview period events update shared dashboard state",
+    expected: overviewWeek.id,
+    actual: onPos.selectedPeriodId(),
+  });
+}
+reset(onPos);
+const overviewWeekAuth = onPos.answerQuestion("What was the Card present auth rate?");
+expect("Overview Ask Data auth answer uses the selected week label", overviewWeekAuth, new RegExp(overviewWeek.label));
+expect(
+  "Overview Ask Data auth answer uses the selected week's value",
+  overviewWeekAuth,
+  new RegExp(`${(overviewWeek.kpis.auth_rate.value * 100).toFixed(2)}%`)
+);
+
+onPos.emitPeriod({ tabId: "overview", periodId: "history", reason: "selection" });
+reset(onPos);
+const overviewHistoryAuth = onPos.answerQuestion("What was the Card present auth rate?");
+expect(
+  "Overview Ask Data auth answer uses Available history when selected",
+  overviewHistoryAuth,
+  new RegExp(dashboard.periods.ytd.label)
+);
+
+const posWeek = dashboard.periods.weeks.at(-3);
+onPos.emitPeriod({ tabId: "pos", periodId: posWeek.id, reason: "selection" });
+if (onPos.selectedPeriodId() !== posWeek.id) {
+  failures.push({
+    name: "non-Worldpay tab periods also update shared dashboard state",
+    expected: posWeek.id,
+    actual: onPos.selectedPeriodId(),
+  });
+}
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

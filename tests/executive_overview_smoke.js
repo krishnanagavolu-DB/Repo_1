@@ -210,6 +210,44 @@ const adjacentModel = overview.overviewForPeriod("2099-01-08", {
 });
 check("a seven-day adjacent source week has a prior-week comparison", Boolean(adjacentModel.kpis.inShopSales.delta), true);
 
+const oneWeekId = "2099-02-01";
+const oneWeekModel = overview.overviewForPeriod(oneWeekId, {
+  pos: [
+    {
+      sortKey: oneWeekId,
+      label: "Feb 1 – Feb 7, 2099",
+      reportedTotal: 100,
+      orderCount: 10,
+      avgTicket: 10,
+      tenders: [{ label: "Card", amount: 100, pct: 1 }],
+    },
+  ],
+  worldpay: [
+    {
+      id: oneWeekId,
+      label: "Feb 1 – Feb 7, 2099",
+      authRate: 98,
+      authApprovedCnt: 98,
+      authAttemptsCnt: 100,
+    },
+  ],
+  olo: [
+    {
+      sortKey: oneWeekId,
+      label: "Feb 1 – Feb 7, 2099",
+      sales: 25,
+      authRatePct: 97,
+    },
+  ],
+});
+check("a one-week model never leaves the watchlist blank", oneWeekModel.watchlist.length, 1);
+check("one-week comparison notice is neutral", oneWeekModel.watchlist[0]?.tone, "context");
+check(
+  "one-week comparison notice says comparison is unavailable",
+  /comparison is unavailable/i.test(oneWeekModel.watchlist[0]?.text || ""),
+  true
+);
+
 const html = fs.readFileSync("site/preview/index.html", "utf8");
 check(
   "overview tab is first and active",
@@ -270,6 +308,18 @@ check(
 );
 
 const css = fs.readFileSync("site/preview/css/dashboard.css", "utf8");
+function contrastAgainstWhite(hex) {
+  const channels = String(hex || "")
+    .replace("#", "")
+    .match(/.{2}/g)
+    ?.map((channel) => {
+      const value = parseInt(channel, 16) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+  if (!channels || channels.length !== 3) return 0;
+  const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  return 1.05 / (luminance + 0.05);
+}
 const askDataRef = html.indexOf('<section class="ask-data"');
 const lastTabPanelRef = html.lastIndexOf('class="tab-panel"');
 check(
@@ -295,6 +345,17 @@ check(
 check(
   "context notices use Dutch blue",
   /\.executive-watchlist li\[data-tone="context"\]\s*\{[^}]*border-left-color:\s*var\(--blue\)/s.test(css),
+  true
+);
+check(
+  "flat comparison text uses the passing muted token",
+  /\.executive-kpi small\.flat\s*\{[^}]*color:\s*var\(--muted\)/s.test(css),
+  true
+);
+const goodHex = css.match(/--good:\s*(#[0-9a-f]{6})/i)?.[1];
+check(
+  "small positive text color reaches WCAG AA contrast on white",
+  contrastAgainstWhite(goodHex) >= 4.5,
   true
 );
 check("tender canvas has no forced !important width", css.includes("width: 130px !important"), false);
@@ -535,12 +596,14 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
     {
       dataset: { tab: "overview" },
       classList: makeClassList(true),
+      addEventListener() {},
       setAttribute() {},
       removeAttribute() {},
     },
     {
       dataset: { tab: "pos" },
       classList: makeClassList(false),
+      addEventListener() {},
       setAttribute() {},
       removeAttribute() {},
     },
@@ -550,6 +613,8 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
     { dataset: { panel: "pos" }, hidden: true },
   ];
   const eventListeners = {};
+  const documentEventListeners = {};
+  const dispatchedEvents = [];
 
   const renderSandbox = {
     console,
@@ -574,6 +639,7 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
         (eventListeners[type] = eventListeners[type] || []).push(handler);
       },
       dispatchEvent(event) {
+        dispatchedEvents.push(event);
         for (const handler of eventListeners[event.type] || []) handler(event);
       },
       __notices: {
@@ -586,7 +652,9 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
     },
     document: {
       body: { classList: { contains: () => false } },
-      addEventListener() {},
+      addEventListener(type, handler) {
+        (documentEventListeners[type] = documentEventListeners[type] || []).push(handler);
+      },
       createElement() {
         return { value: "", textContent: "" };
       },
@@ -620,6 +688,10 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
     periodSelect,
     stats,
     noticeCalls,
+    dispatchedEvents,
+    runDomContentLoaded() {
+      for (const handler of documentEventListeners.DOMContentLoaded || []) handler();
+    },
     resetCharts() {
       stats.salesCharts = 0;
       stats.tenderCharts = 0;
@@ -774,21 +846,31 @@ async function runRenderingRegressionChecks() {
   renderCheck("all failed HTTP sources reveal the overview empty state", allFailed.elements["overview-empty"].hidden, false);
   renderCheck("all failed HTTP sources hide the overview content", allFailed.elements["overview-content"].hidden, true);
 
-  const preselectedHistory = buildRenderingHarness();
-  preselectedHistory.periodSelect.value = "history";
-  preselectedHistory.sandbox.window.dispatchEvent(
-    new preselectedHistory.sandbox.CustomEvent("dashboard:period", {
-      detail: { periodId: "history", tabId: "overview" },
-    })
-  );
-  await preselectedHistory.sandbox.window.__executiveOverview.loadOverview();
+  const coldLoad = buildRenderingHarness();
+  coldLoad.runDomContentLoaded();
   renderCheck(
-    "history selected before data load remains selected after register",
-    preselectedHistory.elements["overview-period-label"].textContent,
-    "Available history"
+    "realistic DOMContentLoaded before data leaves the period selector empty",
+    coldLoad.periodSelect.value,
+    ""
   );
-  renderCheck("pre-load history selection builds one sales chart", preselectedHistory.stats.salesCharts, 1);
-  renderCheck("pre-load history selection builds one tender chart", preselectedHistory.stats.tenderCharts, 1);
+  renderCheck(
+    "realistic DOMContentLoaded before data announces no fallback period",
+    coldLoad.dispatchedEvents.filter((event) => event.type === "dashboard:period").length,
+    0
+  );
+  await coldLoad.sandbox.window.__executiveOverview.loadOverview();
+  renderCheck(
+    "true cold load selects the latest common period after registration",
+    coldLoad.periodSelect.value,
+    latestPeriodId
+  );
+  renderCheck(
+    "true cold load renders the latest common week, not history",
+    coldLoad.elements["overview-period-label"].textContent,
+    model.label
+  );
+  renderCheck("cold-load latest period builds one sales chart", coldLoad.stats.salesCharts, 1);
+  renderCheck("cold-load latest period builds one tender chart", coldLoad.stats.tenderCharts, 1);
 
   return renderingFailures;
 }

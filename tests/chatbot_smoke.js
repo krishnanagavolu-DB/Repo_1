@@ -39,16 +39,29 @@ const topDeclineCount = latest.decline_reasons.at(0).count;
 const formattedApplePayCount = new Intl.NumberFormat("en-US").format(applePayCount);
 const formattedTopDeclineCount = new Intl.NumberFormat("en-US").format(topDeclineCount);
 
+// Chat trends read the last six history points, so a weekly refresh moves these.
+const authTrendWindow = latest.kpis.auth_rate.history.slice(-6);
+const bestAuthRate = Math.max(...authTrendWindow.map(({ value }) => value));
+const formattedBestAuthRate = `${(bestAuthRate * 100).toFixed(2)}%`;
+const icFeePerTransaction = latest.kpis.ic_fee.value / latest.kpis.transaction_volume.value;
+const formattedIcFeePerTransaction = `$${icFeePerTransaction.toFixed(2)}`;
+
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const checks = [
-  ["Explain the auth rate trend", /Best: \*\*98\.71%\*\*/],
+  [
+    "Explain the auth rate trend",
+    new RegExp(`Best: \\*\\*${escapeRegExp(formattedBestAuthRate)}\\*\\*`),
+  ],
   ["Show decline reasons as percentages", /% of declined requests/],
   [
     "How many Apple Pay transactions?",
     new RegExp(`${escapeRegExp(formattedApplePayCount)} transactions`),
   ],
-  ["What are IC fees per transaction?", /\$0\.24 per sales transaction/],
+  [
+    "What are IC fees per transaction?",
+    new RegExp(`${escapeRegExp(formattedIcFeePerTransaction)} per sales transaction`),
+  ],
   ["How does our auth rate compare with industry benchmarks?", /Directional authorization context/],
   ["Compare us with Starbucks, Dunkin, and 7 Brew", /Starbucks Card/],
   ["Is this data certified?", /Certified for publish: \*\*Yes\*\*/],

@@ -1,4 +1,4 @@
-/* YTD banner: on every tab, say how far back the year-to-date aggregate reaches.
+/* Available-history banner: say how far back each channel's aggregate reaches.
    Each channel registers its own coverage because feeds start on different weeks. */
 
 (function () {
@@ -11,7 +11,7 @@ function buildMessage(coverage) {
   const weekCount = Number(coverage?.weekCount);
   if (!startLabel || !Number.isFinite(weekCount) || weekCount < 1) return null;
   const weekWord = weekCount === 1 ? "week" : "weeks";
-  return `Fresh pour: YTD stacks up every week since ${startLabel} — ${weekCount} ${weekWord} in the cup so far.`;
+  return `Available history: every certified week since ${startLabel} — ${weekCount} ${weekWord} loaded.`;
 }
 
 function getCoverage(tabId) {
@@ -21,7 +21,7 @@ function getCoverage(tabId) {
 function render() {
   const banner = document.getElementById("ytd-banner");
   if (!banner) return;
-  const message = activePeriodId === "ytd" ? buildMessage(getCoverage(activeTabId)) : null;
+  const message = activePeriodId === "history" ? buildMessage(getCoverage(activeTabId)) : null;
   if (!message) {
     banner.hidden = true;
     banner.textContent = "";

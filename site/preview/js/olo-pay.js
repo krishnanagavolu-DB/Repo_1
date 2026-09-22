@@ -309,8 +309,8 @@ function normalizeOloData(raw) {
 function aggregateWeeks(weeks) {
   if (!weeks?.length) {
     return {
-      label: "YTD",
-      sortKey: "ytd",
+      label: "Available history",
+      sortKey: "history",
       weekCount: 0,
       sales: 0,
       transactions: 0,
@@ -369,8 +369,8 @@ function aggregateWeeks(weeks) {
   const singleBasis = bases.size === 1 ? [...bases][0] : null;
 
   return {
-    label: `YTD · ${first} – ${last}`,
-    sortKey: "ytd",
+    label: `Available history · ${first} – ${last}`,
+    sortKey: "history",
     weekCount: weeks.length,
     sales,
     transactions,
@@ -410,8 +410,12 @@ function getDataStart(weeks) {
   };
 }
 
+function isHistoryPeriod(periodId) {
+  return periodId === "history" || periodId === "ytd";
+}
+
 function findWeekForPeriod(weeks, periodId) {
-  if (!periodId || periodId === "ytd") return null;
+  if (!periodId || isHistoryPeriod(periodId)) return null;
   return weeks.find((week) => week.sortKey === periodId) || null;
 }
 
@@ -702,7 +706,7 @@ function selectPeriod(periodId) {
   if (!weeks.length) return;
   selectedPeriodId = periodId;
 
-  if (periodId === "ytd") {
+  if (isHistoryPeriod(periodId)) {
     renderWeek(aggregateWeeks(weeks));
     return;
   }
@@ -735,12 +739,16 @@ function renderOlo(weeks) {
   const latest = weeks[weeks.length - 1];
   window.__oloPayState = { weeks, latest, methodology: cachedMethodology };
   if (window.__oloPay) window.__oloPay.methodology = cachedMethodology;
+  window.__dashboardTabs?.registerPeriods(
+    "olo",
+    weeks.map((week) => ({ id: week.sortKey, label: week.label }))
+  );
   window.__ytdBanner?.register("olo", getDataStart(weeks));
   const requested = findWeekForPeriod(weeks, selectedPeriodId);
-  if (selectedPeriodId && selectedPeriodId !== "ytd" && !requested) {
+  if (selectedPeriodId && !isHistoryPeriod(selectedPeriodId) && !requested) {
     selectPeriod(selectedPeriodId);
-  } else if (selectedPeriodId === "ytd") {
-    selectPeriod("ytd");
+  } else if (isHistoryPeriod(selectedPeriodId)) {
+    selectPeriod(selectedPeriodId);
   } else {
     renderWeek(requested || latest);
   }
@@ -779,6 +787,7 @@ window.__oloPay = {
   aggregateWeeks,
   trendSeries,
   getDataStart,
+  isHistoryPeriod,
   findWeekForPeriod,
   usd,
   compactUsd,
@@ -797,7 +806,7 @@ window.__oloPay = {
   },
   getSelectedWeek() {
     const weeks = window.__oloPayState?.weeks || [];
-    if (selectedPeriodId === "ytd") return aggregateWeeks(weeks);
+    if (isHistoryPeriod(selectedPeriodId)) return aggregateWeeks(weeks);
     return findWeekForPeriod(weeks, selectedPeriodId) || window.__oloPayState?.latest || null;
   },
   getWeeks() {
@@ -814,6 +823,8 @@ function startOloWhenUnlocked() {
 }
 
 window.addEventListener("dashboard:period", (event) => {
+  const tabId = event.detail?.tabId;
+  if (tabId && tabId !== "olo") return;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
   if (!window.__oloPayState?.weeks?.length) {

@@ -108,9 +108,12 @@ if (Math.abs(giftShare - 1) > 0.000001) {
   failures.push({ name: "gift split sums to 1", expected: 1, actual: giftShare });
 }
 
-// YTD means the aggregate of every week held by All payments.
+// Available history means the aggregate of every week held by All payments.
 const liveYtd = pos.aggregateWeeks(live);
-check("YTD label", liveYtd.label, "YTD · Jun 29 – Sep 20, 2026");
+check("history label", liveYtd.label, "Available history · Jun 29 – Sep 20, 2026");
+check("history sort key", liveYtd.sortKey, "history");
+check("history id accepted", pos.isHistoryPeriod("history"), true);
+check("legacy ytd id accepted", pos.isHistoryPeriod("ytd"), true);
 check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), 552386112.87);
 check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), 552386112.87);
 check("YTD transactions", liveYtd.transactions, 51837171);

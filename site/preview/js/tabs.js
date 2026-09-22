@@ -1,10 +1,51 @@
-/* Channel tab switching. The period control only drives the Worldpay panel. */
+/* Channel tab switching and tab-aware period coordination. */
 
 (function () {
+const periodsByTab = {};
+let activeTabId = "overview";
+let periodListenerAttached = false;
+
+function optionForPeriod(period) {
+  const option = document.createElement("option");
+  option.value = period.id;
+  option.textContent = period.label;
+  return option;
+}
+
+function announcePeriod(periodId, tabId = activeTabId) {
+  window.dispatchEvent(
+    new CustomEvent("dashboard:period", { detail: { periodId, tabId } })
+  );
+}
+
+function populateSelect(tabId) {
+  const select = document.getElementById("period-select");
+  if (!select) return;
+  const periods = periodsByTab[tabId] || [];
+  const wanted = select.value;
+  select.replaceChildren(
+    ...periods.map(optionForPeriod),
+    optionForPeriod({ id: "history", label: "Available history" })
+  );
+  select.value = periods.some((item) => item.id === wanted)
+    ? wanted
+    : periods.at(-1)?.id || "history";
+  announcePeriod(select.value, tabId);
+}
+
+function registerPeriods(tabId, periods) {
+  periodsByTab[tabId] = periods;
+  if (tabId === activeTabId) populateSelect(tabId);
+}
+
+function getPeriods(tabId) {
+  return periodsByTab[tabId] || [];
+}
+
 function activate(tabId) {
+  activeTabId = tabId;
   const tabs = document.querySelectorAll(".tab[data-tab]");
   const panels = document.querySelectorAll(".tab-panel[data-panel]");
-  if (!tabs.length || !panels.length) return;
 
   for (const tab of tabs) {
     const isActive = tab.dataset.tab === tabId;
@@ -18,6 +59,7 @@ function activate(tabId) {
 
   // The period control drives every channel, so it stays visible on all tabs.
 
+  populateSelect(tabId);
   window.dispatchEvent(new CustomEvent("dashboard:tab", { detail: { tabId } }));
 }
 
@@ -26,11 +68,22 @@ function initTabs() {
   for (const tab of tabs) {
     tab.addEventListener("click", () => activate(tab.dataset.tab));
   }
+  const select = document.getElementById("period-select");
+  if (select && !periodListenerAttached) {
+    select.addEventListener("change", () => announcePeriod(select.value, activeTabId));
+    periodListenerAttached = true;
+  }
   const active = document.querySelector(".tab[data-tab].active");
-  activate(active ? active.dataset.tab : "pos");
+  activate(active ? active.dataset.tab : "overview");
 }
 
-window.__dashboardTabs = { activate };
+window.__dashboardTabs = { activate, getPeriods, registerPeriods };
+
+window.addEventListener("dashboard:periods", (event) => {
+  const tabId = event.detail?.tabId;
+  const periods = event.detail?.periods;
+  if (tabId && Array.isArray(periods)) registerPeriods(tabId, periods);
+});
 
 document.addEventListener("DOMContentLoaded", initTabs);
 })();

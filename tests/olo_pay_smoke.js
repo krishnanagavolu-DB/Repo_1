@@ -130,7 +130,10 @@ approx("Visa share pct", latest.brands[0].pctOfSales, 72.7);
 check("Visa transactions", latest.brands[0].transactions, 391606);
 
 const ytd = olo.aggregateWeeks(weeks);
-check("YTD label", ytd.label, "YTD · Jun 15 – Sep 20, 2026");
+check("history label", ytd.label, "Available history · Jun 15 – Sep 20, 2026");
+check("history sort key", ytd.sortKey, "history");
+check("history id accepted", olo.isHistoryPeriod("history"), true);
+check("legacy ytd id accepted", olo.isHistoryPeriod("ytd"), true);
 approx("YTD sales", ytd.sales, 75237215.10);
 check("YTD orders", ytd.orders, 7104253);
 check("YTD avg ticket", ytd.avgTicket.toFixed(2), "10.59");

@@ -1,5 +1,5 @@
-/* The YTD banner tells leadership how far back the aggregate reaches,
-   in Dutch Bros voice, on whichever tab they are looking at. */
+/* The available-history banner tells leadership how far back the aggregate
+   reaches on whichever tab they are looking at. */
 
 const fs = require("fs");
 const vm = require("vm");
@@ -30,20 +30,25 @@ function check(name, actual, expected) {
 check(
   "All payments coverage",
   banner.buildMessage({ startLabel: "Jul 27, 2026", weekCount: 3 }),
-  "Fresh pour: YTD stacks up every week since Jul 27, 2026 — 3 weeks in the cup so far."
+  "Available history: every certified week since Jul 27, 2026 — 3 weeks loaded."
 );
 
 check(
   "single week stays grammatical",
   banner.buildMessage({ startLabel: "Aug 10, 2026", weekCount: 1 }),
-  "Fresh pour: YTD stacks up every week since Aug 10, 2026 — 1 week in the cup so far."
+  "Available history: every certified week since Aug 10, 2026 — 1 week loaded."
 );
 
 // Card present reaches back further than All payments, so each tab reports its own start.
 check(
   "Card present coverage",
   banner.buildMessage({ startLabel: "Jul 20, 2026", weekCount: 4 }),
-  "Fresh pour: YTD stacks up every week since Jul 20, 2026 — 4 weeks in the cup so far."
+  "Available history: every certified week since Jul 20, 2026 — 4 weeks loaded."
+);
+check(
+  "message does not contain YTD",
+  banner.buildMessage({ startLabel: "Jul 27, 2026", weekCount: 3 }).includes("YTD"),
+  false
 );
 
 // Without a registered start date we say nothing rather than guess a date.
@@ -62,4 +67,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log("YTD banner smoke checks passed");
+console.log("Available history banner smoke checks passed");

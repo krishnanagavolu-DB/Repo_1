@@ -37,6 +37,7 @@ node tests/olo_pay_smoke.js
 node tests/executive_overview_smoke.js
 node tests/notices_smoke.js
 node tests/ytd_banner_smoke.js
+node tests/tab_period_smoke.js
 python3 scripts/stamp_asset_versions.py --check
 
 # Olo Pay raw→published byte parity (temp regen; does not alter importer CLI)

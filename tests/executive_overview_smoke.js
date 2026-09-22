@@ -155,10 +155,22 @@ check("watchlist slot 3 is the next distinct comparable movement", designedWatch
 const coverageWatchlist = overview.buildWatchlist({
   ...watchlistModel,
   coverage: { pos: true, worldpay: false, olo: true },
+  kpis: {
+    ...watchlistModel.kpis,
+    cardAuthRate: {
+      ...watchlistModel.kpis.cardAuthRate,
+      delta: null,
+    },
+  },
 });
 check("coverage watchlist stays capped at three", coverageWatchlist.length, 3);
 check(
-  "source coverage takes slot 3 without displacing Card auth slot",
+  "next comparable movement fills slot 2 when Card auth is unavailable",
+  coverageWatchlist[1]?.text,
+  "In-shop orders +2.2% vs prior week."
+);
+check(
+  "source coverage remains in slot 3 when Card auth is unavailable",
   /Worldpay.*not available/i.test(coverageWatchlist[2]?.text || ""),
   true
 );

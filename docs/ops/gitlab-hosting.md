@@ -39,28 +39,37 @@ not a project member is bounced to GitLab and sees a **404** (GitLab shows 404,
 not 403, for resources you cannot see). The Pages URL answers `302` to
 `projects.gitlab.io/auth` for signed-out visitors — that redirect is the tell.
 
-Pick one of these.
-
-### Option A — add the person to the project (keeps the site non-public)
-
-1. **Manage → Members → Invite members**
-2. Role **Guest** is enough for Pages access control
-3. They open the Pages URL while signed in to that GitLab account
-
-### Option B — make Pages public
+### Make Pages public (current setup, for feedback and buy-in)
 
 1. **Settings → General → Visibility, project features, permissions**
 2. **Pages** access: **Everyone**
 3. Save
 
 The repository stays private; only the published `site/` output becomes
-reachable. Raw Excels are never copied to Pages.
+reachable. Raw Excels are never copied to Pages. Anyone in the org can then open
+the link with no GitLab account, and the password gate is what they hit first.
 
-**Before choosing Option B:** the password gate is client-side only. It hides
-the UI, not the files. `/(preview/)data/*.json` — weekly sales, auth rates,
-interchange, Olo order counts — is fetchable directly by anyone who has the URL,
-with no password. Option B means treating those aggregates as public-if-linked.
-Option A does not have that exposure.
+The alternative, if you ever want the link locked to named people again, is
+**Manage → Members → Invite members** (role **Guest** is enough) with Pages
+access back on **Only project members**.
+
+### What "public" actually exposes
+
+The password gate is client-side. It hides the UI, not the files.
+`/(preview/)data/*.json` — weekly sales, auth rates, interchange, Olo order
+counts — is fetchable directly by anyone who has the URL, with no password.
+Treat the Pages URL itself as the secret while this is public.
+
+Two guards are in place so public does not also mean findable
+(`tests/test_public_exposure.py` fails if either is dropped):
+
+- `site/robots.txt` disallows every crawler for the whole domain, `/preview/`
+  included
+- both pages carry `noindex, nofollow, noarchive` and `referrer: no-referrer`
+
+Neither stops someone who is handed the URL. If the aggregates need to survive
+link-sharing, the fix is to encrypt the JSON payloads against the gate password
+at publish time so the files are useless without it.
 
 ## Optional: a cleaner URL later
 

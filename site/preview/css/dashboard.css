@@ -11,7 +11,7 @@
   --line: #d2dce5;
   --bg: #e8eef2;
   --panel: #ffffff;
-  --good: #168a45;
+  --good: #147f40;
   --font: "futura-pt", "Futura PT", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
@@ -1616,7 +1616,7 @@ body.auth-unlocked .auth-gate {
 }
 
 .executive-kpi small.flat {
-  color: var(--muted-2);
+  color: var(--muted);
   font-weight: 600;
 }
 

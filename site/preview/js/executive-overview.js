@@ -302,6 +302,15 @@ function overviewForPeriod(periodId, sources) {
     tenderMix: buildTenderMix(pos.selected),
   };
   model.watchlist = buildWatchlist(model);
+  if (!model.watchlist.length) {
+    model.watchlist = [
+      {
+        tone: "context",
+        text: "Prior-week comparison is unavailable for this period.",
+        movement: null,
+      },
+    ];
+  }
   return model;
 }
 

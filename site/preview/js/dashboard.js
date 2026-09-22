@@ -1035,9 +1035,18 @@ async function loadDashboard() {
 
 window.addEventListener?.("dashboard:period", (event) => {
   const tabId = event.detail?.tabId;
-  if (tabId && tabId !== "worldpay") return;
   const periodId = event.detail?.periodId;
-  if (!periodId || !dashboardData) return;
+  if (!periodId) return;
+
+  /* Ask Data is shared across tabs, so its selected Worldpay period follows
+     the global period control even while the Card Health panel is hidden.
+     Only Card Health events render the Worldpay visuals below. */
+  window.__dashboardState = {
+    data: window.__dashboardState?.data || dashboardData,
+    periodId,
+  };
+  if (tabId && tabId !== "worldpay") return;
+  if (!dashboardData) return;
   renderPeriod(dashboardData, periodId);
 });
 

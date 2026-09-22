@@ -586,9 +586,13 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
   const periodSelect = {
     value: "",
     options: [],
-    addEventListener() {},
+    listeners: {},
+    addEventListener(type, handler) {
+      this.listeners[type] = handler;
+    },
     replaceChildren(...opts) {
       this.options = opts;
+      this.value = "";
     },
   };
 
@@ -692,6 +696,10 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
     runDomContentLoaded() {
       for (const handler of documentEventListeners.DOMContentLoaded || []) handler();
     },
+    changePeriod(value) {
+      periodSelect.value = value;
+      periodSelect.listeners.change?.();
+    },
     resetCharts() {
       stats.salesCharts = 0;
       stats.tenderCharts = 0;
@@ -706,6 +714,7 @@ async function runRenderingRegressionChecks() {
   }
 
   const full = buildRenderingHarness();
+  full.runDomContentLoaded();
   await full.sandbox.window.__executiveOverview.loadOverview();
 
   renderCheck("sales chart is constructed exactly once on load", full.stats.salesCharts, 1);
@@ -797,7 +806,7 @@ async function runRenderingRegressionChecks() {
   renderCheck("overview activate/register builds one sales chart", full.stats.salesCharts, 1);
   renderCheck("overview activate/register builds one tender chart", full.stats.tenderCharts, 1);
 
-  full.periodSelect.value = "history";
+  full.changePeriod("history");
   full.resetCharts();
   full.sandbox.window.__dashboardTabs.activate("overview");
   renderCheck(

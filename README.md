@@ -10,11 +10,13 @@ Primary host is **GitLab Pages**. GitHub Pages stays up as a backup until GitLab
 
 | Audience | GitLab (primary) | GitHub (backup) |
 | --- | --- | --- |
-| Leadership | https://krishna.nagavolu.gitlab.io/db-payments-space/ | https://krishnanagavolu-db.github.io/Repo_1/ |
-| Preview | https://krishna.nagavolu.gitlab.io/db-payments-space/preview/ | https://krishnanagavolu-db.github.io/Repo_1/preview/ |
+| Leadership | Unique `*.gitlab.io` URL from **Deploy → Pages** (site root) | https://krishnanagavolu-db.github.io/Repo_1/ |
+| Preview | same unique URL + `/preview/` | https://krishnanagavolu-db.github.io/Repo_1/preview/ |
+
+The GitLab username contains a **dot**, so `https://krishna.nagavolu.gitlab.io/…` is **not** a working HTTPS link. Copy the unique Pages URL from the `pages` job (or Deploy → Pages). See [`docs/ops/gitlab-hosting.md`](docs/ops/gitlab-hosting.md).
 
 1. Push or merge to `main` on [GitLab](https://gitlab.com/Krishna.Nagavolu/db-payments-space). The `pages` job copies certified `site/` into GitLab Pages (`public/`).
-2. Share the **same GitLab URL** every week after the Monday refresh.
+2. Share that **same unique GitLab URL** every week after the Monday refresh.
 3. If the GitLab project is private: **Settings → General → Visibility → Pages: Everyone** so leadership can open the link without a GitLab login.
 4. Only aggregates are published (`site/`). Raw Excels stay in the private repo under `data/raw/`.
 

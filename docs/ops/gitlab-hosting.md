@@ -7,25 +7,55 @@ GitHub (`krishnanagavolu-db/repo_1`) stays as a backup until GitLab Pages is con
 This is a **hosting move**, not a rebuild. `site/` is still the app. GitLab Pages
 publishes that folder as `public/`.
 
-## URLs
+## Use the URL GitLab prints (do not guess)
 
-| Audience | URL |
+The GitLab username `Krishna.Nagavolu` contains a **dot**. GitLab’s default
+`https://krishna.nagavolu.gitlab.io/…` name is **not valid HTTPS** (`*.gitlab.io`
+does not cover that extra subdomain).
+
+After the first green **pages** job:
+
+1. Open the project → **Build → Pipelines** → latest pipeline on `main`.
+2. Open the **pages** job log. The last lines include `GitLab Pages URL: …`
+   (also shown as the job’s environment URL). That unique `*.gitlab.io` link is
+   the one to share. It looks like
+   `https://db-payments-space-<id>.gitlab.io/` (GitLab assigns the id).
+3. Also check **Deploy → Pages** for the same URL.
+
+| Audience | Path on that Pages URL |
 | --- | --- |
-| Leadership | https://krishna.nagavolu.gitlab.io/db-payments-space/ |
-| Preview | https://krishna.nagavolu.gitlab.io/db-payments-space/preview/ |
-| GitLab project | https://gitlab.com/Krishna.Nagavolu/db-payments-space |
+| Leadership | `/` (site root) |
+| Preview | `/preview/` |
 
-If the Pages URL 404s after the first green `pages` job, wait a few minutes, then
-hard-refresh. GitLab prints the exact URL on **Deploy → Pages**.
+GitHub backup (still live):
 
-## One-time GitLab settings
+- https://krishnanagavolu-db.github.io/Repo_1/
+- https://krishnanagavolu-db.github.io/Repo_1/preview/
 
-1. **CI/CD** is on by default. The first push to `main` that includes `.gitlab-ci.yml`
-   runs the `pages` job.
-2. If the project is **private**, leadership cannot log in to GitLab. Set
-   **Settings → General → Visibility, project features, permissions → Pages → Everyone**.
-   The site is still only the aggregates in `site/`; raw Excels are not published.
-3. Do **not** change the Pages source folder. The pipeline copies `site/` → `public/`.
+## Two clicks so leadership can open the link
+
+The GitLab project is private, so Pages may ask for a GitLab login until you
+change this:
+
+1. **Settings → General → Visibility, project features, permissions**
+2. **Pages** access: **Everyone**
+3. Save
+
+The published site is still only the aggregates in `site/`. Raw Excels are not
+copied to Pages.
+
+## Optional: a cleaner URL later
+
+To get a normal HTTPS path like
+`https://db-payments.gitlab.io/db-payments-space/`
+without a unique id:
+
+1. In GitLab, **New group** named `db-payments` (no dot in the name).
+2. **Transfer** this project into that group
+   (Settings → General → Advanced → Transfer project).
+3. Re-run the `main` pipeline. Share the new Pages URL from Deploy → Pages.
+
+Do not rename the GitLab username unless you want every other GitLab link to change.
 
 ## Weekly publish
 
@@ -46,3 +76,4 @@ we can retarget `origin` to GitLab.
 - Do not rebuild the dashboard for GitLab.
 - Do not publish `data/raw/`.
 - Do not overwrite leadership `site/index.html` from preview unless you say **promote**.
+- Do not send people `https://krishna.nagavolu.gitlab.io/…` — browsers will reject the certificate.

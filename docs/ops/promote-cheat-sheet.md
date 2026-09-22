@@ -8,8 +8,8 @@ A one-page note for you. You can copy this file into Notes, SharePoint, or a loc
 
 | Who it’s for | Link | What it is |
 |---|---|---|
-| **You / experiments** | https://krishna.nagavolu.gitlab.io/db-payments-space/preview/ | Safe sandbox. Labeled **Preview**. Try look, chat, and layout here first. GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/preview/ |
-| **Leadership** | https://krishna.nagavolu.gitlab.io/db-payments-space/ | Official scorecard. Same URL every week. Do not send people the preview link. GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/ |
+| **You / experiments** | GitLab unique Pages URL + `/preview/` (copy from Deploy → Pages). GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/preview/ | Safe sandbox. Labeled **Preview**. Try look, chat, and layout here first. |
+| **Leadership** | GitLab unique Pages URL (site root). GitHub backup: https://krishnanagavolu-db.github.io/Repo_1/ | Official scorecard. Same URL every week. Do not send people the preview link. |
 
 Hard-refresh (Cmd+Shift+R or Ctrl+Shift+R) if a page looks stale after a publish.
 

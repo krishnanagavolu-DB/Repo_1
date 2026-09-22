@@ -44,7 +44,8 @@ If Microsoft blocks sign-in: forward [`it-sharepoint-access-request.md`](it-shar
 
 ### GitLab Pages (primary)
 See [`gitlab-hosting.md`](gitlab-hosting.md). After the first green `pages` job, share
-https://krishna.nagavolu.gitlab.io/db-payments-space/
+the unique URL printed in the job log / **Deploy → Pages**. Do not use
+`https://krishna.nagavolu.gitlab.io/…` (the username contains a dot, so HTTPS fails).
 
 ### GitHub Pages (backup)
 1. Repo **Settings → Pages → Source: GitHub Actions**

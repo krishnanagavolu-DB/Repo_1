@@ -1,12 +1,15 @@
 {
-  "generated_at": "2026-08-31T15:15:25-07:00",
+  "generated_at": "2026-09-21T21:06:48-07:00",
   "week_cadence": "Monday-Sunday",
   "dashboard_tab": "Olo Pay",
   "environment": "prod",
   "definitions": {
-    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops. Tips sit in TIP_PORTION on the source row and are not subtracted here; amount is the billing total Olo stored.",
+    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION. Drink/order total, not the card billed total.",
+    "TIP_VOLUME": "Sum of TIP_PORTION on those approved Sales.",
+    "BILLED_VOLUME": "SALES_VOLUME + TIP_VOLUME (what Stripe captured).",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip).",
     "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
-    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales. Wallet service is Phase 2."
+    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales, using ex-tip dollars. Wallet service is Phase 2."
   },
   "methodology": {
     "title": "Olo Pay \u2014 data notes",
@@ -38,7 +41,17 @@
       {
         "name": "SALES_VOLUME",
         "type": "number",
-        "definition": "Sum of COALESCE(FINAL_AMOUNT, INITIAL_AMOUNT) for Stripe TYPE=Sale AND STATUS=Approved on Company Owned shops only."
+        "definition": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION (drink/order total, not the card billed total)."
+      },
+      {
+        "name": "TIP_VOLUME",
+        "type": "number",
+        "definition": "Sum of TIP_PORTION on those approved Sales."
+      },
+      {
+        "name": "BILLED_VOLUME",
+        "type": "number",
+        "definition": "SALES_VOLUME + TIP_VOLUME (what Stripe captured)."
       },
       {
         "name": "TRANSACTION_COUNT",
@@ -53,7 +66,7 @@
       {
         "name": "AVG_TICKET",
         "type": "number",
-        "definition": "SALES_VOLUME \u00f7 ORDER_COUNT."
+        "definition": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip)."
       },
       {
         "name": "auth_rate_pct",
@@ -63,7 +76,7 @@
       {
         "name": "card_brand_mix",
         "type": "object",
-        "definition": "ACCOUNT_ISSUER on approved Sales: Visa, Mastercard, Amex, Discover. Not Apple Pay / Google Pay."
+        "definition": "ACCOUNT_ISSUER on approved Sales: Visa, Mastercard, Amex, Discover using ex-tip dollars. Not Apple Pay / Google Pay."
       },
       {
         "name": "transaction_id",
@@ -92,9 +105,12 @@
       }
     ],
     "kpi_definitions": {
-      "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops. Tips sit in TIP_PORTION on the source row and are not subtracted here; amount is the billing total Olo stored.",
+      "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION. Drink/order total, not the card billed total.",
+      "TIP_VOLUME": "Sum of TIP_PORTION on those approved Sales.",
+      "BILLED_VOLUME": "SALES_VOLUME + TIP_VOLUME (what Stripe captured).",
+      "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip).",
       "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
-      "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales. Wallet service is Phase 2."
+      "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales, using ex-tip dollars. Wallet service is Phase 2."
     },
     "data_quality": [
       "Deduped on BILLING_TRANSACTION_ID (keep latest LOAD_DTTM).",
@@ -125,7 +141,9 @@
       "VoidSale"
     ],
     "sales_status": "Approved",
-    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded."
+    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded.",
+    "sales_excludes_tip": true,
+    "tip_field": "TIP_PORTION"
   },
   "brand_order": [
     "Visa",
@@ -135,601 +153,189 @@
   ],
   "weeks": [
     {
-      "week_start_date": "2026-06-15",
-      "week_end_date": "2026-06-21",
+      "week_start_date": "2026-08-31",
+      "week_end_date": "2026-09-06",
       "totals": {
-        "SALES_VOLUME": 5744116.99,
-        "TRANSACTION_COUNT": 492845,
-        "ORDER_COUNT": 492845,
-        "AVG_TICKET": 11.66,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1424.94,
-        "VOID_VOLUME": 461.44
+        "SALES_VOLUME": 5540545.76,
+        "TIP_VOLUME": 411390.87,
+        "BILLED_VOLUME": 5951936.63,
+        "TRANSACTION_COUNT": 526553,
+        "ORDER_COUNT": 526553,
+        "TIPPED_ORDER_COUNT": 207955,
+        "AVG_TICKET": 10.52,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.98,
+        "REFUND_VOLUME": 1419.34,
+        "VOID_VOLUME": 476.47
       },
       "authorization": {
-        "approved": 492845,
-        "declined": 16091,
+        "approved": 526553,
+        "declined": 17841,
         "failed": 0,
-        "auth_rate_pct": 96.84,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4176300.9,
-          "pct_of_digital_sales": 72.7,
-          "TRANSACTION_COUNT": 357441
-        },
-        "Mastercard": {
-          "amount": 1240491.57,
-          "pct_of_digital_sales": 21.6,
-          "TRANSACTION_COUNT": 107003
-        },
-        "Amex": {
-          "amount": 105536.3,
-          "pct_of_digital_sales": 1.8,
-          "TRANSACTION_COUNT": 8795
-        },
-        "Discover": {
-          "amount": 221788.22,
-          "pct_of_digital_sales": 3.9,
-          "TRANSACTION_COUNT": 19606
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5744116.99,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": null,
-        "TRANSACTION_COUNT_PCT": null,
-        "AUTH_RATE_PP": null
-      }
-    },
-    {
-      "week_start_date": "2026-06-22",
-      "week_end_date": "2026-06-28",
-      "totals": {
-        "SALES_VOLUME": 5413105.27,
-        "TRANSACTION_COUNT": 470110,
-        "ORDER_COUNT": 470110,
-        "AVG_TICKET": 11.51,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1013.91,
-        "VOID_VOLUME": 103.88
-      },
-      "authorization": {
-        "approved": 470110,
-        "declined": 15937,
-        "failed": 1,
         "auth_rate_pct": 96.72,
         "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
       },
       "card_brand_mix": {
         "Visa": {
-          "amount": 3920936.79,
-          "pct_of_digital_sales": 72.4,
-          "TRANSACTION_COUNT": 339572
-        },
-        "Mastercard": {
-          "amount": 1179913.63,
-          "pct_of_digital_sales": 21.8,
-          "TRANSACTION_COUNT": 103284
-        },
-        "Amex": {
-          "amount": 103529.8,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 8494
-        },
-        "Discover": {
-          "amount": 208725.05,
-          "pct_of_digital_sales": 3.9,
-          "TRANSACTION_COUNT": 18760
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5413105.27,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -5.8,
-        "TRANSACTION_COUNT_PCT": -4.6,
-        "AUTH_RATE_PP": -0.12
-      }
-    },
-    {
-      "week_start_date": "2026-06-29",
-      "week_end_date": "2026-07-05",
-      "totals": {
-        "SALES_VOLUME": 5638452.97,
-        "TRANSACTION_COUNT": 478558,
-        "ORDER_COUNT": 478558,
-        "AVG_TICKET": 11.78,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1048.36,
-        "VOID_VOLUME": 368.59
-      },
-      "authorization": {
-        "approved": 478558,
-        "declined": 15484,
-        "failed": 1,
-        "auth_rate_pct": 96.87,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4101758.3,
+          "amount": 4033057.34,
           "pct_of_digital_sales": 72.8,
-          "TRANSACTION_COUNT": 346807
+          "TRANSACTION_COUNT": 381808
         },
         "Mastercard": {
-          "amount": 1218005.54,
+          "amount": 1197338.97,
           "pct_of_digital_sales": 21.6,
-          "TRANSACTION_COUNT": 104237
+          "TRANSACTION_COUNT": 114902
         },
         "Amex": {
-          "amount": 103331.04,
+          "amount": 99889.95,
           "pct_of_digital_sales": 1.8,
-          "TRANSACTION_COUNT": 8563
+          "TRANSACTION_COUNT": 9317
         },
         "Discover": {
-          "amount": 215358.09,
+          "amount": 210259.5,
           "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 18951
+          "TRANSACTION_COUNT": 20526
         }
       },
       "mix_checksum": 100.0,
       "ownership_split": {
-        "company_owned_sales": 5638452.97,
+        "company_owned_sales": 5540545.76,
         "franchised_sales": 0.0,
         "unmapped_or_other_sales": 0.0
       },
       "week_over_week": {
-        "SALES_VOLUME_PCT": 4.2,
-        "TRANSACTION_COUNT_PCT": 1.8,
-        "AUTH_RATE_PP": 0.15
+        "SALES_VOLUME_PCT": -0.6,
+        "TRANSACTION_COUNT_PCT": -0.6,
+        "AUTH_RATE_PP": -0.06
       }
     },
     {
-      "week_start_date": "2026-07-06",
-      "week_end_date": "2026-07-12",
+      "week_start_date": "2026-09-07",
+      "week_end_date": "2026-09-13",
       "totals": {
-        "SALES_VOLUME": 5649066.07,
-        "TRANSACTION_COUNT": 491646,
-        "ORDER_COUNT": 491646,
-        "AVG_TICKET": 11.49,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 858.41,
-        "VOID_VOLUME": 433.54
+        "SALES_VOLUME": 5698661.24,
+        "TIP_VOLUME": 421936.16,
+        "BILLED_VOLUME": 6120597.4,
+        "TRANSACTION_COUNT": 547447,
+        "ORDER_COUNT": 547447,
+        "TIPPED_ORDER_COUNT": 213030,
+        "AVG_TICKET": 10.41,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.98,
+        "REFUND_VOLUME": 1058.99,
+        "VOID_VOLUME": 334.45
       },
       "authorization": {
-        "approved": 491646,
-        "declined": 15971,
-        "failed": 0,
-        "auth_rate_pct": 96.85,
+        "approved": 547447,
+        "declined": 17874,
+        "failed": 6,
+        "auth_rate_pct": 96.84,
         "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
       },
       "card_brand_mix": {
         "Visa": {
-          "amount": 4103927.32,
-          "pct_of_digital_sales": 72.6,
-          "TRANSACTION_COUNT": 355890
+          "amount": 4133961.72,
+          "pct_of_digital_sales": 72.5,
+          "TRANSACTION_COUNT": 395655
         },
         "Mastercard": {
-          "amount": 1218844.49,
-          "pct_of_digital_sales": 21.6,
-          "TRANSACTION_COUNT": 107057
-        },
-        "Amex": {
-          "amount": 104936.55,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 8866
-        },
-        "Discover": {
-          "amount": 221357.71,
-          "pct_of_digital_sales": 3.9,
-          "TRANSACTION_COUNT": 19833
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5649066.07,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": 0.2,
-        "TRANSACTION_COUNT_PCT": 2.7,
-        "AUTH_RATE_PP": -0.02
-      }
-    },
-    {
-      "week_start_date": "2026-07-13",
-      "week_end_date": "2026-07-19",
-      "totals": {
-        "SALES_VOLUME": 5774588.91,
-        "TRANSACTION_COUNT": 501167,
-        "ORDER_COUNT": 501167,
-        "AVG_TICKET": 11.52,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 858.47,
-        "VOID_VOLUME": 1370.56
-      },
-      "authorization": {
-        "approved": 501167,
-        "declined": 16759,
-        "failed": 1,
-        "auth_rate_pct": 96.76,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4182552.07,
-          "pct_of_digital_sales": 72.4,
-          "TRANSACTION_COUNT": 362082
-        },
-        "Mastercard": {
-          "amount": 1262547.82,
+          "amount": 1246000.73,
           "pct_of_digital_sales": 21.9,
-          "TRANSACTION_COUNT": 110295
+          "TRANSACTION_COUNT": 120580
         },
         "Amex": {
-          "amount": 108108.43,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 9099
+          "amount": 103456.84,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 9840
         },
         "Discover": {
-          "amount": 221380.59,
+          "amount": 215241.95,
           "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 19691
+          "TRANSACTION_COUNT": 21372
         }
       },
       "mix_checksum": 100.0,
       "ownership_split": {
-        "company_owned_sales": 5774588.91,
+        "company_owned_sales": 5698661.24,
         "franchised_sales": 0.0,
         "unmapped_or_other_sales": 0.0
       },
       "week_over_week": {
-        "SALES_VOLUME_PCT": 2.2,
-        "TRANSACTION_COUNT_PCT": 1.9,
-        "AUTH_RATE_PP": -0.09
-      }
-    },
-    {
-      "week_start_date": "2026-07-20",
-      "week_end_date": "2026-07-26",
-      "totals": {
-        "SALES_VOLUME": 5648511.31,
-        "TRANSACTION_COUNT": 495191,
-        "ORDER_COUNT": 495191,
-        "AVG_TICKET": 11.41,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1121.52,
-        "VOID_VOLUME": 186.49
-      },
-      "authorization": {
-        "approved": 495191,
-        "declined": 15929,
-        "failed": 0,
-        "auth_rate_pct": 96.88,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4113081.05,
-          "pct_of_digital_sales": 72.8,
-          "TRANSACTION_COUNT": 359118
-        },
-        "Mastercard": {
-          "amount": 1215007.26,
-          "pct_of_digital_sales": 21.5,
-          "TRANSACTION_COUNT": 107618
-        },
-        "Amex": {
-          "amount": 105068.3,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 8996
-        },
-        "Discover": {
-          "amount": 215354.7,
-          "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 19459
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5648511.31,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -2.2,
-        "TRANSACTION_COUNT_PCT": -1.2,
+        "SALES_VOLUME_PCT": 2.9,
+        "TRANSACTION_COUNT_PCT": 4.0,
         "AUTH_RATE_PP": 0.12
       }
     },
     {
-      "week_start_date": "2026-07-27",
-      "week_end_date": "2026-08-02",
+      "week_start_date": "2026-09-14",
+      "week_end_date": "2026-09-20",
       "totals": {
-        "SALES_VOLUME": 5569958.57,
-        "TRANSACTION_COUNT": 485997,
-        "ORDER_COUNT": 485997,
-        "AVG_TICKET": 11.46,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 912.11,
-        "VOID_VOLUME": 141.77
+        "SALES_VOLUME": 5581687.75,
+        "TIP_VOLUME": 411832.14,
+        "BILLED_VOLUME": 5993519.89,
+        "TRANSACTION_COUNT": 541049,
+        "ORDER_COUNT": 541049,
+        "TIPPED_ORDER_COUNT": 210790,
+        "AVG_TICKET": 10.32,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.95,
+        "REFUND_VOLUME": 1278.36,
+        "VOID_VOLUME": 294.34
       },
       "authorization": {
-        "approved": 485997,
-        "declined": 16245,
-        "failed": 0,
-        "auth_rate_pct": 96.77,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4041522.88,
-          "pct_of_digital_sales": 72.6,
-          "TRANSACTION_COUNT": 351589
-        },
-        "Mastercard": {
-          "amount": 1208475.78,
-          "pct_of_digital_sales": 21.7,
-          "TRANSACTION_COUNT": 106227
-        },
-        "Amex": {
-          "amount": 106419.87,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 8930
-        },
-        "Discover": {
-          "amount": 213540.04,
-          "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 19251
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5569958.57,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -1.4,
-        "TRANSACTION_COUNT_PCT": -1.9,
-        "AUTH_RATE_PP": -0.11
-      }
-    },
-    {
-      "week_start_date": "2026-08-03",
-      "week_end_date": "2026-08-09",
-      "totals": {
-        "SALES_VOLUME": 5760385.06,
-        "TRANSACTION_COUNT": 513057,
-        "ORDER_COUNT": 513057,
-        "AVG_TICKET": 11.23,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1219.4,
-        "VOID_VOLUME": 316.39
-      },
-      "authorization": {
-        "approved": 513057,
-        "declined": 16383,
+        "approved": 541049,
+        "declined": 18944,
         "failed": 1,
-        "auth_rate_pct": 96.91,
+        "auth_rate_pct": 96.62,
         "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
       },
       "card_brand_mix": {
         "Visa": {
-          "amount": 4179186.72,
-          "pct_of_digital_sales": 72.5,
-          "TRANSACTION_COUNT": 371129
-        },
-        "Mastercard": {
-          "amount": 1254564.54,
-          "pct_of_digital_sales": 21.8,
-          "TRANSACTION_COUNT": 112608
-        },
-        "Amex": {
-          "amount": 107724.88,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 9304
-        },
-        "Discover": {
-          "amount": 218908.92,
-          "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 20016
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5760385.06,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": 3.4,
-        "TRANSACTION_COUNT_PCT": 5.6,
-        "AUTH_RATE_PP": 0.14
-      }
-    },
-    {
-      "week_start_date": "2026-08-10",
-      "week_end_date": "2026-08-16",
-      "totals": {
-        "SALES_VOLUME": 5437252.58,
-        "TRANSACTION_COUNT": 487957,
-        "ORDER_COUNT": 487957,
-        "AVG_TICKET": 11.14,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1099.61,
-        "VOID_VOLUME": 963.87
-      },
-      "authorization": {
-        "approved": 487957,
-        "declined": 16309,
-        "failed": 42,
-        "auth_rate_pct": 96.76,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 3950762.79,
+          "amount": 4057761.8,
           "pct_of_digital_sales": 72.7,
-          "TRANSACTION_COUNT": 353199
+          "TRANSACTION_COUNT": 391606
         },
         "Mastercard": {
-          "amount": 1176237.72,
-          "pct_of_digital_sales": 21.6,
-          "TRANSACTION_COUNT": 106629
+          "amount": 1210321.54,
+          "pct_of_digital_sales": 21.7,
+          "TRANSACTION_COUNT": 118494
         },
         "Amex": {
-          "amount": 104292.85,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 9071
-        },
-        "Discover": {
-          "amount": 205959.22,
-          "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 19058
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5437252.58,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -5.6,
-        "TRANSACTION_COUNT_PCT": -4.9,
-        "AUTH_RATE_PP": -0.15
-      }
-    },
-    {
-      "week_start_date": "2026-08-17",
-      "week_end_date": "2026-08-23",
-      "totals": {
-        "SALES_VOLUME": 6133767.46,
-        "TRANSACTION_COUNT": 542924,
-        "ORDER_COUNT": 542924,
-        "AVG_TICKET": 11.3,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1639.4,
-        "VOID_VOLUME": 981.5
-      },
-      "authorization": {
-        "approved": 542924,
-        "declined": 17893,
-        "failed": 0,
-        "auth_rate_pct": 96.81,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4469152.64,
-          "pct_of_digital_sales": 72.9,
-          "TRANSACTION_COUNT": 394260
-        },
-        "Mastercard": {
-          "amount": 1315959.2,
-          "pct_of_digital_sales": 21.5,
-          "TRANSACTION_COUNT": 117649
-        },
-        "Amex": {
-          "amount": 112419.34,
+          "amount": 100432.98,
           "pct_of_digital_sales": 1.8,
-          "TRANSACTION_COUNT": 9661
+          "TRANSACTION_COUNT": 9654
         },
         "Discover": {
-          "amount": 236236.28,
+          "amount": 213171.43,
           "pct_of_digital_sales": 3.8,
-          "TRANSACTION_COUNT": 21354
+          "TRANSACTION_COUNT": 21295
         }
       },
       "mix_checksum": 100.0,
       "ownership_split": {
-        "company_owned_sales": 6133767.46,
+        "company_owned_sales": 5581687.75,
         "franchised_sales": 0.0,
         "unmapped_or_other_sales": 0.0
       },
       "week_over_week": {
-        "SALES_VOLUME_PCT": 12.8,
-        "TRANSACTION_COUNT_PCT": 11.3,
-        "AUTH_RATE_PP": 0.05
-      }
-    },
-    {
-      "week_start_date": "2026-08-24",
-      "week_end_date": "2026-08-30",
-      "totals": {
-        "SALES_VOLUME": 5987969.17,
-        "TRANSACTION_COUNT": 529752,
-        "ORDER_COUNT": 529752,
-        "AVG_TICKET": 11.3,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1248.19,
-        "VOID_VOLUME": 266.43
-      },
-      "authorization": {
-        "approved": 529752,
-        "declined": 17646,
-        "failed": 4,
-        "auth_rate_pct": 96.78,
-        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
-      },
-      "card_brand_mix": {
-        "Visa": {
-          "amount": 4357851.9,
-          "pct_of_digital_sales": 72.8,
-          "TRANSACTION_COUNT": 384203
-        },
-        "Mastercard": {
-          "amount": 1295565.87,
-          "pct_of_digital_sales": 21.6,
-          "TRANSACTION_COUNT": 115600
-        },
-        "Amex": {
-          "amount": 110758.55,
-          "pct_of_digital_sales": 1.9,
-          "TRANSACTION_COUNT": 9498
-        },
-        "Discover": {
-          "amount": 223792.85,
-          "pct_of_digital_sales": 3.7,
-          "TRANSACTION_COUNT": 20451
-        }
-      },
-      "mix_checksum": 100.0,
-      "ownership_split": {
-        "company_owned_sales": 5987969.17,
-        "franchised_sales": 0.0,
-        "unmapped_or_other_sales": 0.0
-      },
-      "week_over_week": {
-        "SALES_VOLUME_PCT": -2.4,
-        "TRANSACTION_COUNT_PCT": -2.4,
-        "AUTH_RATE_PP": -0.03
+        "SALES_VOLUME_PCT": -2.1,
+        "TRANSACTION_COUNT_PCT": -1.2,
+        "AUTH_RATE_PP": -0.22
       }
     }
   ],
   "shop_coverage": {
     "gold_store_ownership_counts": {
       "Company Owned": 1016,
-      "Franchised": 310
+      "Franchised": 312
     }
   },
   "certification": {
     "status": "certified",
     "certified": true,
-    "week_count": 11,
-    "latest_week_start": "2026-08-24",
-    "certified_at": "2026-08-31T15:15:25-07:00",
+    "week_count": 3,
+    "latest_week_start": "2026-09-14",
+    "certified_at": "2026-09-21T21:06:48-07:00",
     "scope": "Company Owned only; processor Stripe"
   }
 }

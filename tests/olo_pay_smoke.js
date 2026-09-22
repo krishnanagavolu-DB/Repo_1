@@ -104,18 +104,18 @@ if (!olo) {
 const raw = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 const weeks = olo.normalizeOloData(raw);
 
-check("week count", weeks.length, 11);
-check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Aug 24 – Aug 30, 2026");
-check("oldest first", weeks[0].label, "Jun 15 – Jun 21, 2026");
+check("week count", weeks.length, 3);
+check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Sep 14 – Sep 20, 2026");
+check("oldest first", weeks[0].label, "Aug 31 – Sep 6, 2026");
 
 const latest = weeks[weeks.length - 1];
-check("latest sales format", olo.usd(latest.sales), "$5,987,969.17");
-check("latest auth format", olo.authPct(latest.authRatePct), "96.78%");
-check("latest orders format", olo.count(latest.orders), "529,752");
-check("latest avg ticket format", olo.ticket(latest.avgTicket), "$11.30");
+check("latest sales format", olo.usd(latest.sales), "$5,581,687.75");
+check("latest auth format", olo.authPct(latest.authRatePct), "96.62%");
+check("latest orders format", olo.count(latest.orders), "541,049");
+check("latest avg ticket format", olo.ticket(latest.avgTicket), "$10.32");
 check("latest orders equal transactions", latest.orders, latest.transactions);
-check("latest refunds", Number(latest.refunds.toFixed(2)), 1248.19);
-check("latest voids", Number(latest.voids.toFixed(2)), 266.43);
+check("latest refunds", Number(latest.refunds.toFixed(2)), 1278.36);
+check("latest voids", Number(latest.voids.toFixed(2)), 294.34);
 
 const brandTotal = latest.brands.reduce((sum, row) => sum + row.amount, 0);
 const brandTxns = latest.brands.reduce((sum, row) => sum + row.transactions, 0);
@@ -125,30 +125,30 @@ check("brand order 0", latest.brands[0].label, "Visa");
 check("brand order 1", latest.brands[1].label, "Mastercard");
 check("brand order 2", latest.brands[2].label, "Amex");
 check("brand order 3", latest.brands[3].label, "Discover");
-approx("Visa amount", latest.brands[0].amount, 4357851.9);
-approx("Visa share pct", latest.brands[0].pctOfSales, 72.8);
-check("Visa transactions", latest.brands[0].transactions, 384203);
+approx("Visa amount", latest.brands[0].amount, 4057761.8);
+approx("Visa share pct", latest.brands[0].pctOfSales, 72.7);
+check("Visa transactions", latest.brands[0].transactions, 391606);
 
 const ytd = olo.aggregateWeeks(weeks);
-check("YTD label", ytd.label, "YTD · Jun 15 – Aug 30, 2026");
-approx("YTD sales", ytd.sales, 62757174.36);
-check("YTD orders", ytd.orders, 5489204);
-check("YTD avg ticket", ytd.avgTicket.toFixed(2), "11.43");
-check("YTD auth format", olo.authPct(ytd.authRatePct), "96.81%");
-approx("YTD refunds", ytd.refunds, 12444.32);
-approx("YTD voids", ytd.voids, 5594.46);
+check("YTD label", ytd.label, "YTD · Aug 31 – Sep 20, 2026");
+approx("YTD sales", ytd.sales, 16820894.75);
+check("YTD orders", ytd.orders, 1615049);
+check("YTD avg ticket", ytd.avgTicket.toFixed(2), "10.42");
+check("YTD auth format", olo.authPct(ytd.authRatePct), "96.73%");
+approx("YTD refunds", ytd.refunds, 3756.69);
+approx("YTD voids", ytd.voids, 1105.26);
 check("YTD has no wow sales", ytd.wow.salesPct, null);
 check("YTD brand Visa share", olo.sharePct(ytd.brands[0].pctOfSales / 100), "72.7%");
 
 const salesTrend = olo.trendSeries(weeks, "sales");
-check("sales trend length", salesTrend.length, 11);
+check("sales trend length", salesTrend.length, 3);
 check("sales trend starts oldest", salesTrend[0].value, weeks[0].sales);
-check("auth trend ends newest", olo.trendSeries(weeks, "auth")[10].value, latest.authRatePct);
+check("auth trend ends newest", olo.trendSeries(weeks, "auth")[2].value, latest.authRatePct);
 
-check("find published week", olo.findWeekForPeriod(weeks, "2026-08-24").label, latest.label);
+check("find published week", olo.findWeekForPeriod(weeks, "2026-09-14").label, latest.label);
 check("missing period returns null", olo.findWeekForPeriod(weeks, "2025-01-01"), null);
-check("olo data start label", olo.getDataStart(weeks).startLabel, "Jun 15, 2026");
-check("olo data week count", olo.getDataStart(weeks).weekCount, 11);
+check("olo data start label", olo.getDataStart(weeks).startLabel, "Aug 31, 2026");
+check("olo data week count", olo.getDataStart(weeks).weekCount, 3);
 
 const oloJs = fs.readFileSync(scriptPath, "utf8");
 check(

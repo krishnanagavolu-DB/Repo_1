@@ -21,6 +21,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
 WORKFLOW = ROOT / ".github" / "workflows" / "deploy-pages.yml"
+GITLAB_CI = ROOT / ".gitlab-ci.yml"
 RUNNER = ROOT / "scripts" / "run_ci_checks.sh"
 
 # `scripts/` holds standalone entrypoints and has no __init__.py, so a
@@ -158,4 +159,21 @@ def test_local_runner_uses_the_same_pytest_entrypoint_as_ci():
         "The local runner must call the bare `pytest` entrypoint, like CI does. "
         "`python -m pytest` silently prepends the repo root to sys.path and hides "
         "import errors that break the deploy:\n  " + "\n  ".join(module_form)
+    )
+
+
+def test_gitlab_pages_job_runs_the_same_local_runner():
+    """GitLab host must certify with the same script GitHub CI uses."""
+    assert GITLAB_CI.is_file(), (
+        f"{GITLAB_CI.relative_to(ROOT)} is missing. GitLab Pages will not publish."
+    )
+    text = GITLAB_CI.read_text(encoding="utf-8")
+    assert re.search(r"^pages\s*:", text, re.MULTILINE), (
+        "GitLab requires a job named `pages` to publish the dashboard."
+    )
+    assert "scripts/run_ci_checks.sh" in text, (
+        "GitLab CI must call scripts/run_ci_checks.sh so publish checks match GitHub."
+    )
+    assert re.search(r"cp\s+-a\s+site/\.\s+public/", text), (
+        "GitLab Pages must copy site/ into public/ so raw data/ is not published."
     )

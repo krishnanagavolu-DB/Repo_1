@@ -1,0 +1,38 @@
+# GitLab Pages host for the executive dashboard.
+# Job name `pages` is required. Only `site/` is copied to `public/` (no data/raw).
+#
+# Leadership: https://krishna.nagavolu.gitlab.io/db-payments-space/
+# Preview:     https://krishna.nagavolu.gitlab.io/db-payments-space/preview/
+
+stages:
+  - certify
+  - deploy
+
+.certify:
+  image: python:3.12-bookworm
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y -qq nodejs
+    - pip install -r requirements.txt
+
+certify:
+  extends: .certify
+  stage: certify
+  script:
+    - bash scripts/run_ci_checks.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+pages:
+  extends: .certify
+  stage: deploy
+  script:
+    - bash scripts/run_ci_checks.sh
+    - mkdir -p public
+    - cp -a site/. public/
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

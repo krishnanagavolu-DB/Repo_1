@@ -1,6 +1,6 @@
 # Worldpay data certification
 
-The dashboard is now **fail closed**: data must pass certification before GitHub Pages can publish it.
+The dashboard is now **fail closed**: data must pass certification before GitLab Pages or GitHub Pages can publish it.
 
 ## What a data science / data engineer does here
 

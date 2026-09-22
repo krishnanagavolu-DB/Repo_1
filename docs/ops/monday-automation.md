@@ -30,8 +30,8 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
    - `site/data/dashboard.json` (leadership homepage)
    - `site/preview/data/dashboard.json` (preview page, if present)
 4. Certification checks the output copies and writes `data/processed/validation_report.json`.
-5. A certified data-only commit pushes directly to `main`; GitHub Pages deploys it and CI certifies it again.
-6. Leadership opens the **same Pages URL** — no new link needed.
+5. A certified data-only commit pushes directly to `main` on GitLab and GitHub. GitLab Pages is the primary host; GitHub Pages stays as backup. Both certify again in CI.
+6. Leadership opens the **same GitLab Pages URL** — no new link needed.
    Preview UI work stays at `/preview/` until promoted (see `docs/ops/preview-workflow.md`).
 
 ## One-time setup (you must click this — agents cannot create Automations)
@@ -42,10 +42,14 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
 Prompt file to paste: [`monday-automation-prompt.txt`](monday-automation-prompt.txt).  
 If Microsoft blocks sign-in: forward [`it-sharepoint-access-request.md`](it-sharepoint-access-request.md) to Tech Help.
 
-### GitHub Pages
+### GitLab Pages (primary)
+See [`gitlab-hosting.md`](gitlab-hosting.md). After the first green `pages` job, share
+https://krishna.nagavolu.gitlab.io/db-payments-space/
+
+### GitHub Pages (backup)
 1. Repo **Settings → Pages → Source: GitHub Actions**
 2. Private repo Pages requires **GitHub Pro** (or org Team+)
-3. After first deploy, share the Pages URL with leadership
+3. Backup URL: https://krishnanagavolu-db.github.io/Repo_1/
 
 ### Why your browser login is not enough
 Signing into SharePoint on your laptop only authenticates **your browser**.
@@ -89,7 +93,7 @@ under `refresh_schedule.automation_id` so agents can look it up with `get-automa
 
 ### C. After that, weekly ops is hands-off
 Michelle drops the two Excels → Monday 11 AM Pacific Automation runs → certification
-passes → data pushes to `main` → GitHub Pages updates the same leadership URL.
+passes → data pushes to `main` on GitLab and GitHub → GitLab Pages updates the same leadership URL.
 
 ## Agent prompt (paste into the automation)
 
@@ -124,8 +128,9 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
 5. If validation has any ERROR, do NOT publish. If it has WARNING, review and
    explain the movement before publishing. Never suppress a check just to make CI green.
 
-6. This is a certified data-only refresh. Commit directly to main and push so
-   GitHub Pages deploys without requiring a person to merge a PR:
+6. This is a certified data-only refresh. Commit directly to main and push to
+   GitHub origin and the gitlab remote so GitLab Pages (primary) and GitHub Pages
+   (backup) deploy without requiring a person to merge a PR:
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json

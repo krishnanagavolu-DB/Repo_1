@@ -824,9 +824,13 @@ function startOloWhenUnlocked() {
 
 window.addEventListener("dashboard:period", (event) => {
   const tabId = event.detail?.tabId;
-  if (tabId && tabId !== "olo") return;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
+  if (tabId === "overview") {
+    selectedPeriodId = periodId;
+    return;
+  }
+  if (tabId && tabId !== "olo") return;
   if (!window.__oloPayState?.weeks?.length) {
     selectedPeriodId = periodId;
     return;

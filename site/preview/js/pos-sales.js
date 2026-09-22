@@ -871,9 +871,13 @@ function startPosWhenUnlocked() {
 
 window.addEventListener("dashboard:period", (event) => {
   const tabId = event.detail?.tabId;
-  if (tabId && tabId !== "pos") return;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
+  if (tabId === "overview") {
+    selectedPeriodId = periodId;
+    return;
+  }
+  if (tabId && tabId !== "pos") return;
   if (!window.__posSalesState?.weeks?.length) {
     selectedPeriodId = periodId;
     return;

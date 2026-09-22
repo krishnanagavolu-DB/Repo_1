@@ -216,6 +216,21 @@ function buildWatchlist(model) {
           movement: Math.abs(cardAuth.delta.value),
         };
 
+  const orderAheadAuth = model.kpis?.orderAheadAuthRate;
+  const orderAheadAuthMovement =
+    finiteNumber(orderAheadAuth?.delta?.value) === null
+      ? null
+      : {
+          tone:
+            orderAheadAuth.delta.value > 0
+              ? "positive"
+              : orderAheadAuth.delta.value < 0
+                ? "watch"
+                : "context",
+          text: `${orderAheadAuth.label} ${orderAheadAuth.delta.text}.`,
+          movement: Math.abs(orderAheadAuth.delta.value),
+        };
+
   const items = [];
   let nextComparable = 0;
   if (comparableMovements[nextComparable]) {
@@ -228,6 +243,7 @@ function buildWatchlist(model) {
     nextComparable += 1;
   }
   if (coverageNotice) items.push(coverageNotice);
+  else if (orderAheadAuthMovement) items.push(orderAheadAuthMovement);
   else if (comparableMovements[nextComparable]) items.push(comparableMovements[nextComparable]);
 
   return items.slice(0, 3);

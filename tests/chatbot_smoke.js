@@ -77,7 +77,7 @@ const checks = [
   ["Show wallet mix", /Physical Card/],
   ["Show that as a table", /table view/],
   ["Show the POS tender mix", /All payments data isn’t published yet|All payments tender mix/],
-  ["What is All payments?", /Every tender taken at company-owned shops/i],
+  ["What is All payments?", /In-Shop Sales.*Company-owned POS sales.*Gold Semantic Sales/i],
   ["help", /every channel tab/i],
 ];
 

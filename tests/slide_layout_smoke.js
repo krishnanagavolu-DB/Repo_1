@@ -12,6 +12,9 @@ check("All payments uses slide", html.includes('aria-label="All payments sales a
 check("All payments sales trend canvas", html.includes('id="chart-pos-sales-trend"'), true);
 check("All payments payments trend canvas", html.includes('id="chart-pos-payments-trend"'), true);
 check("actionable decline heading", html.includes("Actionable decline reasons"), true);
+check("In-Shop Sales nav", html.includes(">In-Shop Sales</button>"), true);
+check("Card Health nav", html.includes(">Card Health</button>"), true);
+check("Order Ahead nav", html.includes(">Order Ahead</button>"), true);
 
 const labelsRef = html.indexOf('src="js/chart-labels.js');
 const dashboardRef = html.indexOf('src="js/dashboard.js');

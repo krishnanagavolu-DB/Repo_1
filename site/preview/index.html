@@ -6,7 +6,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=9b7c6e84d8" />
+    <link rel="stylesheet" href="css/dashboard.css?v=cb6dbdc2eb" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -15,6 +15,7 @@
     <script src="js/dashboard.js?v=50f532ebc1" defer></script>
     <script src="js/pos-sales.js?v=d9a2f0d77e" defer></script>
     <script src="js/olo-pay.js?v=254a6480f6" defer></script>
+    <script src="js/executive-overview.js?v=4f4f0401e3" defer></script>
     <script src="js/tabs.js?v=7d1fe93723" defer></script>
     <script src="js/chatbot.js?v=5510dd7f96" defer></script>
   </head>
@@ -69,14 +70,15 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
+          <button type="button" class="tab active" data-tab="overview" aria-current="page">Executive Overview</button>
           <div class="tab-group" role="group" aria-label="In Shop">
             <span class="tab-group-label">In Shop</span>
             <div class="tab-group-items">
-              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
-              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+              <button type="button" class="tab" data-tab="pos">In-Shop Sales</button>
+              <button type="button" class="tab" data-tab="worldpay">Card Health</button>
             </div>
           </div>
-          <button type="button" class="tab" data-tab="olo">Olo Pay</button>
+          <button type="button" class="tab" data-tab="olo">Order Ahead</button>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Gift Cards
             <span class="tab-badge">
@@ -106,7 +108,43 @@
         <!-- Shown for Available history; each channel reports its own certified start. -->
         <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
 
-        <section id="panel-pos" class="tab-panel" data-panel="pos">
+        <section id="panel-overview" class="tab-panel" data-panel="overview">
+          <section class="slide executive-slide" aria-label="Payments Executive Overview">
+            <header class="slide-band">
+              <div>
+                <h2>Payments Executive Overview</h2>
+                <span>Company-owned shops &middot; completed weeks</span>
+              </div>
+              <p id="overview-period-label">Most recent common week</p>
+            </header>
+            <div class="executive-board">
+              <div class="executive-kpis" id="overview-kpis"></div>
+              <article class="slide-panel executive-sales-panel">
+                <div class="panel-band">Sales trend by channel</div>
+                <div class="panel-body">
+                  <div class="chart-wrap"><canvas id="chart-overview-sales"></canvas></div>
+                </div>
+              </article>
+              <article class="slide-panel executive-mix-panel">
+                <div class="panel-band">How guests paid in shop</div>
+                <div class="panel-body">
+                  <canvas id="chart-overview-tender"></canvas>
+                  <table id="legend-overview-tender" class="mix-legend compact-legend"></table>
+                </div>
+              </article>
+              <article class="slide-panel executive-watch-panel">
+                <div class="panel-band">Leadership watchlist</div>
+                <ol id="overview-watchlist" class="executive-watchlist"></ol>
+              </article>
+            </div>
+            <p id="overview-reconciliation" class="executive-reconciliation">
+              POS sales are ex-tip. Worldpay card dollars include tip and overlap POS card sales.
+              Olo Pay is order-ahead and is not added to Worldpay.
+            </p>
+          </section>
+        </section>
+
+        <section id="panel-pos" class="tab-panel" data-panel="pos" hidden>
           <div id="pos-empty" class="pos-empty" hidden></div>
 
           <div id="pos-content" hidden>

@@ -89,6 +89,28 @@ check(
   true
 );
 
+const html = fs.readFileSync("site/preview/index.html", "utf8");
+check(
+  "overview tab is first and active",
+  /class="tab active"[^>]*data-tab="overview"/.test(html),
+  true
+);
+check("overview panel exists", html.includes('data-panel="overview"'), true);
+check("six-card grid exists", html.includes('id="overview-kpis"'), true);
+check("sales chart exists", html.includes('id="chart-overview-sales"'), true);
+check("tender chart exists", html.includes('id="chart-overview-tender"'), true);
+check("watchlist exists", html.includes('id="overview-watchlist"'), true);
+check("reconciliation note names overlap", /Worldpay[^<]*overlap/i.test(html), true);
+
+const overviewRef = html.indexOf('src="js/executive-overview.js');
+const posRef = html.indexOf('src="js/pos-sales.js');
+const oloRef = html.indexOf('src="js/olo-pay.js');
+check(
+  "overview script loads after POS and Olo helpers",
+  overviewRef > posRef && overviewRef > oloRef,
+  true
+);
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

@@ -62,6 +62,8 @@ function worldpayWeeks(payload) {
         : Number(week.kpis.auth_rate.delta) * 100,
       icRate: finiteNumber(week?.kpis?.ic_rate?.value),
       icFee: finiteNumber(week?.kpis?.ic_fee?.value),
+      authApprovedCnt: finiteNumber(week?.totals?.auth_approved_cnt),
+      authAttemptsCnt: finiteNumber(week?.totals?.auth_total_cnt),
     }))
     .sort((a, b) => String(a.id).localeCompare(String(b.id)));
 }
@@ -255,16 +257,26 @@ function isHistoryPeriod(periodId) {
   return periodId === "history" || periodId === "ytd";
 }
 
-/* Worldpay's normalized overview shape (worldpayWeeks()) carries only a
-   per-week rate, not the underlying attempt counts, so a plain mean across
-   the overview's common weeks is the safest aggregate available without
-   inventing a weighting scheme the source data cannot support. */
-function meanAuthRate(weeks) {
-  const rates = (weeks || [])
-    .map((week) => finiteNumber(week?.authRate))
-    .filter((value) => value !== null);
-  if (!rates.length) return null;
-  return rates.reduce((sum, value) => sum + value, 0) / rates.length;
+/* Volume-weighted card auth rate: sum(approved) / sum(attempts) across the
+   given weeks, matching the certified aggregation the Worldpay pipeline
+   itself uses for periods.ytd (src/worldpay_dashboard/kpis.py sums
+   auth_approved_cnt/auth_total_cnt across weeks, not the mean of weekly
+   rates) — restricted here to the overview's common weeks rather than
+   Worldpay's own longer history. A simple mean of weekly rates would let a
+   low-volume week move the aggregate as much as a high-volume week; this
+   does not. */
+function weightedAuthRate(weeks) {
+  let approvedSum = 0;
+  let attemptsSum = 0;
+  for (const week of weeks || []) {
+    const approved = finiteNumber(week?.authApprovedCnt);
+    const attempts = finiteNumber(week?.authAttemptsCnt);
+    if (approved === null || attempts === null || attempts <= 0) continue;
+    approvedSum += approved;
+    attemptsSum += attempts;
+  }
+  if (attemptsSum <= 0) return null;
+  return (approvedSum / attemptsSum) * 100;
 }
 
 /* Cross-channel "Available history" aggregate, restricted to the periods
@@ -282,7 +294,7 @@ function overviewForHistory(periodIds, sources) {
 
   const posAgg = window.__posSales?.aggregateWeeks(posSubset) || null;
   const oloAgg = window.__oloPay?.aggregateWeeks(oloSubset) || null;
-  const worldpayAuthRate = meanAuthRate(worldpaySubset);
+  const worldpayAuthRate = weightedAuthRate(worldpaySubset);
 
   const posSales = finiteNumber(posAgg?.reportedTotal ?? posAgg?.tenderTotal);
   const posOrders = finiteNumber(posAgg?.orderCount);
@@ -334,6 +346,23 @@ function overviewForHistory(periodIds, sources) {
     tenderMix: buildTenderMix(posAgg),
   };
   model.watchlist = buildWatchlist(model);
+  /* An aggregate has no per-week delta and (by construction) no coverage
+     gaps, so buildWatchlist() above returns nothing to show. A blank panel
+     reads as broken; state one neutral, factual line about the coverage
+     itself instead of inventing a trend or cause. */
+  if (!model.watchlist.length) {
+    const coverage = overviewDataStart(periodIds, sources);
+    if (coverage) {
+      const endLabel = endOfWeekLabel(periodLabelFor((periodIds || []).at(-1), sources));
+      model.watchlist = [
+        {
+          tone: "context",
+          text: `Available history covers ${coverage.weekCount} common certified weeks from ${coverage.startLabel} through ${endLabel}.`,
+          movement: null,
+        },
+      ];
+    }
+  }
   return model;
 }
 
@@ -374,6 +403,12 @@ function sharePct(fraction) {
 /** "Sep 14 – Sep 20, 2026" -> "Sep 14", to fit the sales-trend x-axis. */
 function shortLabel(label) {
   return String(label || "").replace(/\s*–.*$/, "");
+}
+
+/** "Sep 14 – Sep 20, 2026" -> "Sep 20, 2026", the week's certified end date. */
+function endOfWeekLabel(label) {
+  const match = String(label || "").match(/–\s*(.+)$/);
+  return match ? match[1].trim() : String(label || "");
 }
 
 function periodLabelFor(periodId, sources) {
@@ -537,7 +572,7 @@ function overviewDataStart(periodIds, sources) {
   };
 }
 
-function renderOverview(periodId) {
+function renderOverview(periodId, { force = false } = {}) {
   const state = window.__executiveOverviewState;
   if (!state?.periodIds?.length) return;
   const resolvedId = isHistoryPeriod(periodId)
@@ -549,8 +584,10 @@ function renderOverview(periodId) {
   /* registerPeriods() below can synchronously echo a "dashboard:period"
      event back into this same listener before loadOverview()'s own explicit
      call runs; skip the second call for the same resolved period instead of
-     re-building both charts twice on every load. */
-  if (resolvedId === selectedPeriodId && overviewSalesChart) return;
+     re-building both charts twice on every load. `force` bypasses this for
+     the dashboard:tab handler below, which needs a real rebuild even when
+     the period id hasn't changed. */
+  if (!force && resolvedId === selectedPeriodId && overviewSalesChart) return;
   selectedPeriodId = resolvedId;
 
   const sources = { pos: state.pos, worldpay: state.worldpay, olo: state.olo };
@@ -636,6 +673,25 @@ window.addEventListener("dashboard:period", (event) => {
     return;
   }
   renderOverview(periodId);
+});
+
+/* If a viewer switches away from Executive Overview before loadOverview()
+   finishes fetching, loadOverview()'s own render call still fires while the
+   panel is hidden, building both charts against a 0×0 canvas. Chrome's
+   ResizeObserver-driven Chart.js responsive resize happens to self-correct
+   once the panel is unhidden again (confirmed by measuring canvas width/
+   height before and after re-activating the tab), but that isn't guaranteed
+   across browsers/Chart.js versions, and the period-echo render this module
+   already listens for is guarded against re-firing for an unchanged period
+   id. Force a fresh render whenever the overview tab is (re)activated and
+   data is already loaded, so the charts are deterministically rebuilt
+   against the panel's real, visible dimensions rather than depending on
+   that self-correction. */
+window.addEventListener("dashboard:tab", (event) => {
+  if (event.detail?.tabId !== "overview") return;
+  const state = window.__executiveOverviewState;
+  if (!state?.periodIds?.length) return;
+  renderOverview(selectedPeriodId || state.periodIds.at(-1), { force: true });
 });
 
 document.addEventListener("DOMContentLoaded", startOverviewWhenUnlocked);

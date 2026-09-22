@@ -260,6 +260,7 @@ function overviewForPeriod(periodId, sources) {
   const posAvgTicket = finiteNumber(pos.selected?.avgTicket);
   const cardAuthRate = finiteNumber(worldpay.selected?.authRate);
   const oloSales = finiteNumber(olo.selected?.sales);
+  const oloOrders = finiteNumber(olo.selected?.orders);
   const oloAuthRate = finiteNumber(olo.selected?.authRatePct);
 
   const model = {
@@ -305,6 +306,13 @@ function overviewForPeriod(periodId, sources) {
         oloSales === null ? "Not available" : compactUsd(oloSales),
         delta(percentChange(oloSales, olo.prior?.sales), "percent"),
         "Olo Pay · ex-tip"
+      ),
+      orderAheadOrders: kpi(
+        "Order-ahead orders",
+        oloOrders,
+        oloOrders === null ? "Not available" : compactCount(oloOrders),
+        delta(percentChange(oloOrders, olo.prior?.orders), "percent"),
+        "Olo Pay · approved"
       ),
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",
@@ -377,6 +385,7 @@ function overviewForHistory(periodIds, sources) {
   const posOrders = finiteNumber(posAgg?.orderCount);
   const posAvgTicket = finiteNumber(posAgg?.avgTicket);
   const oloSales = finiteNumber(oloAgg?.sales);
+  const oloOrders = finiteNumber(oloAgg?.orders);
   const oloAuthRate = finiteNumber(oloAgg?.authRatePct);
 
   const model = {
@@ -422,6 +431,13 @@ function overviewForHistory(periodIds, sources) {
         oloSales === null ? "Not available" : compactUsd(oloSales),
         null,
         "Olo Pay · ex-tip"
+      ),
+      orderAheadOrders: kpi(
+        "Order-ahead orders",
+        oloOrders,
+        oloOrders === null ? "Not available" : compactCount(oloOrders),
+        null,
+        "Olo Pay · approved"
       ),
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",

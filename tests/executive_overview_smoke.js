@@ -98,7 +98,17 @@ check(
   model.kpis.inShopSales.value !== model.kpis.orderAheadSales.value,
   true
 );
-check("overview has six KPI cards", Object.keys(model.kpis).length, 6);
+check("overview has seven KPI cards", Object.keys(model.kpis).length, 7);
+check(
+  "Order-ahead orders matches the normalized Olo order count",
+  model.kpis.orderAheadOrders.value,
+  latestOloWeek.orders
+);
+check(
+  "Order-ahead orders keeps the Olo source label",
+  model.kpis.orderAheadOrders.source,
+  "Olo Pay · approved"
+);
 check("sales trend excludes Worldpay dollars", model.salesTrend.datasets.length, 2);
 check("watchlist maximum", model.watchlist.length <= 3, true);
 check(
@@ -448,6 +458,11 @@ check(
   "history Order-ahead sales matches Olo aggregateWeeks over the common weeks",
   historyModel.kpis.orderAheadSales.value,
   expectedOloAgg.sales
+);
+check(
+  "history Order-ahead orders matches Olo aggregateWeeks over the common weeks",
+  historyModel.kpis.orderAheadOrders.value,
+  expectedOloAgg.orders
 );
 check(
   "history Card auth rate matches sum(approved)/sum(attempts) over the common weeks",

@@ -127,15 +127,15 @@ check("Is Olo Pay company owned only?", /company[- ]owned/i);
 check("What is the scope of Olo Pay?", /company[- ]owned/i);
 
 // Phase 1 limitations — unavailable, never invent numbers.
-const wallet = check("Show Olo wallet mix", /unavailable|not (available|in)|Phase 1|phase 1/i);
-if (/\$\d/.test(wallet) && !/unavailable|not (available|in)|Phase 1/i.test(wallet)) {
+const wallet = check("Show Olo wallet mix", /unavailable|not (available|in)|Coming next|Phase 1|phase 1/i);
+if (/\$\d/.test(wallet) && !/unavailable|not (available|in)|Coming next|Phase 1/i.test(wallet)) {
   failures.push({ question: "Show Olo wallet mix", problem: "invented wallet figures", answer: wallet });
 }
 const declines = check(
   "What are the Olo decline reasons?",
-  /unavailable|not (available|in)|Phase 1|phase 1/i
+  /unavailable|not (available|in)|Coming next|Phase 1|phase 1/i
 );
-if (/\d{2,}/.test(declines) && !/unavailable|not (available|in)|Phase 1/i.test(declines)) {
+if (/\d{2,}/.test(declines) && !/unavailable|not (available|in)|Coming next|Phase 1/i.test(declines)) {
   failures.push({
     question: "What are the Olo decline reasons?",
     problem: "invented decline counts",
@@ -338,8 +338,8 @@ const help = ask("help");
 if (!/Olo Pay/i.test(help)) {
   failures.push({ name: "help mentions Olo Pay", answer: help });
 }
-if (!/Phase 1|wallet|decline/i.test(help)) {
-  failures.push({ name: "help mentions Phase 1 limitations", answer: help });
+if (!/Coming next|Phase 1|wallet|decline/i.test(help)) {
+  failures.push({ name: "help mentions Coming next / Phase 1 limitations", answer: help });
 }
 
 // Required: sticky Olo must yield generic wallet/decline asks to Worldpay.
@@ -352,9 +352,9 @@ if (!/\*\*Wallet mix/i.test(stickyWallet)) {
     answer: stickyWallet,
   });
 }
-if (/Olo Pay · Phase 1|Phase 1:.*wallet/i.test(stickyWallet)) {
+if (/Olo Pay · (Coming next|Phase 1)|Coming next:.*wallet|Phase 1:.*wallet/i.test(stickyWallet)) {
   failures.push({
-    name: "after Olo, Show wallet mix is not Olo Phase 1 unavailable",
+    name: "after Olo, Show wallet mix is not Olo Coming next unavailable",
     answer: stickyWallet,
   });
 }
@@ -368,16 +368,16 @@ if (!/\*\*Decline reasons/i.test(stickyDeclines)) {
     answer: stickyDeclines,
   });
 }
-if (/Olo Pay · Phase 1|Phase 1:.*decline/i.test(stickyDeclines)) {
+if (/Olo Pay · (Coming next|Phase 1)|Coming next:.*decline|Phase 1:.*decline/i.test(stickyDeclines)) {
   failures.push({
-    name: "after Olo, decline reasons is not Olo Phase 1 unavailable",
+    name: "after Olo, decline reasons is not Olo Coming next unavailable",
     answer: stickyDeclines,
   });
 }
 
-// Explicit Olo-named wallet/decline asks keep Phase 1 unavailable.
-check("Olo Pay wallet mix", /unavailable|not (available|in)|Phase 1|phase 1/i);
-check("Olo Pay decline reasons", /unavailable|not (available|in)|Phase 1|phase 1/i);
+// Explicit Olo-named wallet/decline asks keep Coming next unavailable.
+check("Olo Pay wallet mix", /unavailable|not (available|in)|Coming next|Phase 1|phase 1/i);
+check("Olo Pay decline reasons", /unavailable|not (available|in)|Coming next|Phase 1|phase 1/i);
 
 // Clarifier chips include Olo; auth offers Card present + Olo only.
 reset();

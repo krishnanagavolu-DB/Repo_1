@@ -420,8 +420,11 @@ function findWeekForPeriod(weeks, periodId) {
 }
 
 function deltaHtml(wow) {
-  if (!wow) return "";
-  return `<div class="kpi-delta ${wow.tone}">${wow.text}</div>`;
+  if (!wow) return `<div class="kpi-delta flat">—</div>`;
+  /* Slide cells are narrow; keep the comparison short and put the full
+     "vs prior week" wording in the title for hover/screen readers. */
+  const short = String(wow.text || "").replace(/\s+vs prior week$/i, "");
+  return `<div class="kpi-delta ${wow.tone}" title="${wow.text}">${short}</div>`;
 }
 
 function renderSummary(week) {
@@ -441,7 +444,7 @@ function renderSummary(week) {
       delta: wowPtsLabel(week.wow?.authRatePp),
     },
     {
-      label: "Approved orders",
+      label: "Order-ahead orders",
       value: week.orders != null ? compactCount(week.orders) : "—",
       detail: week.orders != null ? count(week.orders) : null,
       delta: wowLabel(week.wow?.ordersPct),
@@ -457,9 +460,9 @@ function renderSummary(week) {
     .map(
       (card) => `
       <div class="pos-slide-stat">
+        <div class="hero-label">${card.label}</div>
         <div class="hero-value">${card.value}</div>
         ${deltaHtml(card.delta)}
-        <div class="hero-label">${card.label}</div>
         ${card.detail ? `<div class="hero-sub">${card.detail}</div>` : ""}
       </div>`
     )
@@ -478,7 +481,7 @@ function renderSupport(week) {
       <span class="olo-support-label">Voids</span>
       <span class="olo-support-value">${usd(week.voids)}</span>
     </div>
-    <p class="panel-note">Approved captures match approved orders on Olo. Wallet mix and decline reasons are not in Phase 1.</p>
+    <p class="panel-note">Approved captures match approved orders on Olo.</p>
   `;
 }
 

@@ -865,13 +865,13 @@ function answerOloUnavailable(kind) {
   chatContext.topic = "olo";
   if (kind === "wallet") {
     return (
-      "**Olo Pay · Phase 1:** wallet mix (Apple Pay, Google Pay, and similar) is **not available**. " +
+      "**Olo Pay · Coming next:** wallet mix (Apple Pay, Google Pay, and similar) is **not available** in this extract yet. " +
       "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is the card brand, not the wallet. " +
       "I won’t invent wallet shares."
     );
   }
   return (
-    "**Olo Pay · Phase 1:** decline reasons / decline codes are **not available** in the published extract. " +
+    "**Olo Pay · Coming next:** decline reasons / response codes are **not available** in this extract yet. " +
     "Authorization rate is published as Approved ÷ (Approved + Declined + Failure) Sale attempts, without a reason breakdown. " +
     "I won’t invent decline reasons."
   );
@@ -1439,7 +1439,7 @@ function answerQuestion(raw) {
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); Phase 1 has no wallet mix or decline reasons\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); wallet mix and decline reasons are Coming next\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
   }
 
   const namesPosAndWorldpay =

@@ -440,8 +440,9 @@ function renderBanner() {
 }
 
 function deltaHtml(wow) {
-  if (!wow) return "";
-  return `<div class="kpi-delta ${wow.tone}">${wow.text}</div>`;
+  if (!wow) return `<div class="kpi-delta flat">—</div>`;
+  const short = String(wow.text || "").replace(/\s+vs prior week$/i, "");
+  return `<div class="kpi-delta ${wow.tone}" title="${wow.text}">${short}</div>`;
 }
 
 function renderSummary(week) {
@@ -479,9 +480,9 @@ function renderSummary(week) {
     .map((card) => {
       return `
       <div class="pos-slide-stat">
+        <div class="hero-label">${card.label}</div>
         <div class="hero-value">${card.value}</div>
         ${deltaHtml(card.delta)}
-        <div class="hero-label">${card.label}</div>
         ${card.detail ? `<div class="hero-sub">${card.detail}</div>` : ""}
       </div>`;
     })

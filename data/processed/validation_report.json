@@ -3,17 +3,8 @@
   "certified": true,
   "error_count": 0,
   "warning_count": 14,
-  "weeks_checked": 8,
+  "weeks_checked": 9,
   "checks": [
-    {
-      "severity": "warning",
-      "code": "week_gap",
-      "message": "Expected a 7-day gap; found 14 days",
-      "week": "2026-09-07",
-      "details": {
-        "prior_week": "2026-08-24"
-      }
-    },
     {
       "severity": "warning",
       "code": "unlabeled_declines",
@@ -72,6 +63,16 @@
       "details": {
         "unlabeled_count": 3378.0,
         "decline_count": 31976.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.7% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-31",
+      "details": {
+        "unlabeled_count": 3374.0,
+        "decline_count": 31495.0
       }
     },
     {
@@ -147,6 +148,7 @@
           "2026-08-10",
           "2026-08-17",
           "2026-08-24",
+          "2026-08-31",
           "2026-09-07",
           "2026-09-14"
         ]
@@ -243,6 +245,21 @@
       "interchange_fee": 548134.7300000001,
       "auth_to_sales_count_ratio": 1.0069862832558232,
       "auth_to_sales_amount_ratio": 1.0086722425803452
+    },
+    {
+      "week_start": "2026-08-31",
+      "auth_rows": 307,
+      "interchange_rows": 548,
+      "auth_total_cnt": 2291213.0,
+      "auth_approved_cnt": 2259718.0,
+      "auth_rate": 0.9862540060657826,
+      "approved_auth_amt": 27163296.0,
+      "sales_cnt": 2260127.0,
+      "sales_amt": 27113887.240000002,
+      "return_amt": 24283.43,
+      "interchange_fee": 530546.65,
+      "auth_to_sales_count_ratio": 1.0001809960357886,
+      "auth_to_sales_amount_ratio": 0.9981810469539485
     },
     {
       "week_start": "2026-09-07",

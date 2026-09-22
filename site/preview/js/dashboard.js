@@ -1033,7 +1033,7 @@ async function loadDashboard() {
   }
 }
 
-window.addEventListener("dashboard:period", (event) => {
+window.addEventListener?.("dashboard:period", (event) => {
   const tabId = event.detail?.tabId;
   if (tabId && tabId !== "worldpay") return;
   const periodId = event.detail?.periodId;

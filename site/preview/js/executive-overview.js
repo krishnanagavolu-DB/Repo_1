@@ -251,6 +251,92 @@ function overviewForPeriod(periodId, sources) {
   return model;
 }
 
+function isHistoryPeriod(periodId) {
+  return periodId === "history" || periodId === "ytd";
+}
+
+/* Worldpay's normalized overview shape (worldpayWeeks()) carries only a
+   per-week rate, not the underlying attempt counts, so a plain mean across
+   the overview's common weeks is the safest aggregate available without
+   inventing a weighting scheme the source data cannot support. */
+function meanAuthRate(weeks) {
+  const rates = (weeks || [])
+    .map((week) => finiteNumber(week?.authRate))
+    .filter((value) => value !== null);
+  if (!rates.length) return null;
+  return rates.reduce((sum, value) => sum + value, 0) / rates.length;
+}
+
+/* Cross-channel "Available history" aggregate, restricted to the periods
+   common to POS, Worldpay, and Olo (never each source's own full history,
+   which differ in length). Reuses each channel's own existing aggregateWeeks
+   helper for POS and Olo, and never sums POS, Worldpay, or Olo sales
+   together. There is no meaningful "prior period" for an aggregate, so KPI
+   deltas stay null (rendered as "Comparison unavailable") rather than
+   inventing one. */
+function overviewForHistory(periodIds, sources) {
+  const ids = new Set(periodIds || []);
+  const posSubset = (sources?.pos || []).filter((week) => ids.has(week.sortKey));
+  const oloSubset = (sources?.olo || []).filter((week) => ids.has(week.sortKey));
+  const worldpaySubset = (sources?.worldpay || []).filter((week) => ids.has(week.id));
+
+  const posAgg = window.__posSales?.aggregateWeeks(posSubset) || null;
+  const oloAgg = window.__oloPay?.aggregateWeeks(oloSubset) || null;
+  const worldpayAuthRate = meanAuthRate(worldpaySubset);
+
+  const posSales = finiteNumber(posAgg?.reportedTotal ?? posAgg?.tenderTotal);
+  const posOrders = finiteNumber(posAgg?.orderCount);
+  const posAvgTicket = finiteNumber(posAgg?.avgTicket);
+  const oloSales = finiteNumber(oloAgg?.sales);
+  const oloAuthRate = finiteNumber(oloAgg?.authRatePct);
+
+  const model = {
+    periodId: "history",
+    label: "Available history",
+    coverage: {
+      pos: Boolean(posSubset.length),
+      worldpay: Boolean(worldpaySubset.length),
+      olo: Boolean(oloSubset.length),
+    },
+    kpis: {
+      inShopSales: kpi("In-shop sales", posSales, compactUsd(posSales), null, "POS · ex-tip"),
+      inShopOrders: kpi(
+        "In-shop orders",
+        posOrders,
+        compactCount(posOrders),
+        null,
+        "POS · guest checks"
+      ),
+      inShopAvgTicket: kpi(
+        "In-shop avg ticket",
+        posAvgTicket,
+        posAvgTicket === null ? "—" : `$${posAvgTicket.toFixed(2)}`,
+        null,
+        "POS · ex-tip"
+      ),
+      cardAuthRate: kpi(
+        "Card auth rate",
+        worldpayAuthRate,
+        worldpayAuthRate === null ? "—" : `${worldpayAuthRate.toFixed(2)}%`,
+        null,
+        "Worldpay · card present"
+      ),
+      orderAheadSales: kpi("Order-ahead sales", oloSales, compactUsd(oloSales), null, "Olo Pay · ex-tip"),
+      orderAheadAuthRate: kpi(
+        "Order-ahead auth rate",
+        oloAuthRate,
+        oloAuthRate === null ? "—" : `${oloAuthRate.toFixed(2)}%`,
+        null,
+        "Stripe · order ahead"
+      ),
+    },
+    salesTrend: buildSalesTrend((periodIds || []).at(-1) || "", sources?.pos, sources?.olo),
+    tenderMix: buildTenderMix(posAgg),
+  };
+  model.watchlist = buildWatchlist(model);
+  return model;
+}
+
 /* Screenshot-ready overview panel: loads its own three certified feeds,
    intersects their periods, and renders the compact leadership slide. */
 
@@ -371,14 +457,17 @@ function renderSalesChart(model, sources) {
   });
 }
 
-function renderTenderLegend(rows, colors) {
+/* Legend dots use tenderInk, not the raw chart-slice color: brand yellow
+   fails WCAG as small text/iconography, so Gift Card / Dutch Pass reads as
+   navy in the legend even though its doughnut slice stays true yellow. */
+function renderTenderLegend(rows) {
   const el = document.getElementById("legend-overview-tender");
   if (!el) return;
   el.innerHTML = rows
     .map(
       (row, idx) => `
       <tr>
-        <td><span style="color:${colors[idx]}" aria-hidden="true">●</span> ${row.label}</td>
+        <td><span style="color:${tenderInk(row.label, idx)}" aria-hidden="true">●</span> ${row.label}</td>
         <td>${sharePct(row.pct)} <span class="mix-hint">${compactUsd(row.amount)}</span></td>
       </tr>`
     )
@@ -391,7 +480,7 @@ function renderTenderChart(model) {
   if (overviewTenderChart) overviewTenderChart.destroy();
   const rows = model.tenderMix.rows;
   const colors = rows.map((row, idx) => tenderColor(row.label, idx));
-  renderTenderLegend(rows, colors);
+  renderTenderLegend(rows);
   overviewTenderChart = new Chart(canvas, {
     type: "doughnut",
     data: {
@@ -434,16 +523,42 @@ function renderWatchlist(model) {
     .join("");
 }
 
+/** Earliest common week, used to register a meaningful available-history
+    banner for the overview tab (the intersection, not any one source's
+    own longer history). */
+function overviewDataStart(periodIds, sources) {
+  if (!periodIds?.length) return null;
+  const firstId = periodIds[0];
+  const label = shortLabel(periodLabelFor(firstId, sources));
+  const year = String(firstId).slice(0, 4);
+  return {
+    startLabel: year ? `${label}, ${year}` : label,
+    weekCount: periodIds.length,
+  };
+}
+
 function renderOverview(periodId) {
   const state = window.__executiveOverviewState;
   if (!state?.periodIds?.length) return;
-  const resolvedId = state.periodIds.includes(periodId) ? periodId : state.periodIds.at(-1);
+  const resolvedId = isHistoryPeriod(periodId)
+    ? "history"
+    : state.periodIds.includes(periodId)
+      ? periodId
+      : state.periodIds.at(-1);
+
+  /* registerPeriods() below can synchronously echo a "dashboard:period"
+     event back into this same listener before loadOverview()'s own explicit
+     call runs; skip the second call for the same resolved period instead of
+     re-building both charts twice on every load. */
+  if (resolvedId === selectedPeriodId && overviewSalesChart) return;
   selectedPeriodId = resolvedId;
-  const model = overviewForPeriod(resolvedId, {
-    pos: state.pos,
-    worldpay: state.worldpay,
-    olo: state.olo,
-  });
+
+  const sources = { pos: state.pos, worldpay: state.worldpay, olo: state.olo };
+  const model =
+    resolvedId === "history"
+      ? overviewForHistory(state.periodIds, sources)
+      : overviewForPeriod(resolvedId, sources);
+
   const periodLabel = document.getElementById("overview-period-label");
   if (periodLabel) periodLabel.textContent = model.label;
   renderKpis(model);
@@ -471,12 +586,18 @@ async function loadOverview() {
     const periodIds = intersectPeriodIds(pos, worldpay, olo);
     window.__executiveOverviewState = { pos, worldpay, olo, periodIds };
     if (!periodIds.length) return;
+    const sources = { pos, worldpay, olo };
+    window.__ytdBanner?.register("overview", overviewDataStart(periodIds, sources));
     window.__dashboardTabs?.registerPeriods(
       "overview",
-      periodIds.map((id) => ({ id, label: periodLabelFor(id, { pos, worldpay, olo }) }))
+      periodIds.map((id) => ({ id, label: periodLabelFor(id, sources) }))
     );
-    const requested = periodIds.includes(selectedPeriodId) ? selectedPeriodId : periodIds.at(-1);
-    renderOverview(requested);
+    /* If registerPeriods() above already rendered via its event echo (the
+       common case, since Executive Overview is the default active tab),
+       renderOverview()'s own guard makes this a no-op; it only does real
+       work when the echo did not fire (e.g. overview is not the active
+       tab, or the tab coordinator is unavailable). */
+    renderOverview(selectedPeriodId || periodIds.at(-1));
   } catch (err) {
     console.error(err);
   }
@@ -486,6 +607,8 @@ window.__executiveOverview = {
   worldpayWeeks,
   intersectPeriodIds,
   overviewForPeriod,
+  isHistoryPeriod,
+  overviewForHistory,
   buildWatchlist,
   formatSignedPct,
   loadOverview,

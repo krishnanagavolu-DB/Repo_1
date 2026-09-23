@@ -918,18 +918,46 @@ async function runRenderingRegressionChecks() {
     full.elements["overview-kpis"].innerHTML.includes(model.kpis.totalSales.display),
     true
   );
-  /* With no certified channel feed the band must say so and must not print a
-     share of any kind. */
+  /* The published POS weeks carry channel rows, so the band must render the
+     split and its segments must add back to the headline total. */
+  const bandHtml = full.elements["overview-channel-band"].innerHTML;
+  const publishedChannels = posPayload.weeks.at(-1).channels;
   renderCheck(
-    "band states the split is coming when no channel feed exists",
-    /coming next/i.test(full.elements["overview-channel-band"].innerHTML),
-    true
+    "band renders the certified split rather than a placeholder",
+    /coming next/i.test(bandHtml),
+    !publishedChannels
   );
-  renderCheck(
-    "pending band prints no percentage",
-    /\d+(\.\d+)?%/.test(full.elements["overview-channel-band"].innerHTML),
-    false
+  if (publishedChannels) {
+    renderCheck(
+      "band names every published channel",
+      publishedChannels.every((row) => bandHtml.includes(row.label)),
+      true
+    );
+    renderCheck(
+      "band shows the headline total it splits",
+      bandHtml.includes(model.kpis.totalSales.display),
+      true
+    );
+  }
+
+  /* With no channel rows the band must say so and must not print a share of
+     any kind, so an executive never sees an implied split. */
+  const noChannels = buildRenderingHarness((url) =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      json: async () => {
+        const payload = payloadForUrl(url);
+        if (!url.includes("in_shop_sales_data")) return payload;
+        return { ...payload, weeks: payload.weeks.map(({ channels, ...rest }) => rest) };
+      },
+    })
   );
+  noChannels.runDomContentLoaded();
+  await noChannels.sandbox.window.__executiveOverview.loadOverview();
+  const pendingHtml = noChannels.elements["overview-channel-band"].innerHTML;
+  renderCheck("band states the split is coming when no channel feed exists", /coming next/i.test(pendingHtml), true);
+  renderCheck("pending band prints no percentage", /\d+(\.\d+)?%/.test(pendingHtml), false);
   renderCheck(
     "legend dot ink uses the WCAG-safe navy for Gift Card / Dutch Pass, not raw brand yellow",
     full.elements["legend-overview-tender"].innerHTML.includes("color:#154167") &&

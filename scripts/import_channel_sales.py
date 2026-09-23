@@ -45,6 +45,14 @@ ORDER_KEYS = ("orders", "ORDER_COUNT", "order_count", "transactions", "TRANSACTI
 SALES_TOLERANCE = 0.01
 ORDER_TOLERANCE = 1
 
+# A channel query run days after the POS extract picks up transactions that
+# settled in between, so a week can land a few dollars above its published
+# total. Drift under this share of the week is scaled back onto the segments
+# and recorded; anything larger means the query disagrees with the published
+# figure for a real reason and is refused. A missing channel would be orders
+# of magnitude past this: DoorDash alone would be ~0.08% of a week.
+DRIFT_RATIO = 0.00002  # 0.002%
+
 
 def _first(row: dict, keys: tuple[str, ...]):
     for key in keys:
@@ -142,6 +150,68 @@ def reconcile(week: dict, channels: list[dict]) -> list[str]:
     return problems
 
 
+def settle_drift(week: dict, channels: list[dict]) -> tuple[list[dict], dict | None, list[str]]:
+    """Scale small settlement drift onto the segments so the split ties out.
+
+    Returns the channels to publish, an audit record when an adjustment was
+    applied, and any problems that make the week unpublishable.
+    """
+    totals = week.get("totals") or {}
+    total_sales = _number(totals.get("SALES_VOLUME"))
+    total_orders = _number(totals.get("ORDER_COUNT"))
+    start = week.get("week_start_date")
+    if total_sales is None or total_sales <= 0:
+        return channels, None, [f"{start}: published week has no SALES_VOLUME to reconcile against"]
+
+    sales_sum = round(sum(row["sales"] for row in channels), 2)
+    order_sum = sum(row.get("orders") or 0 for row in channels)
+    sales_drift = sales_sum - total_sales
+    order_drift = order_sum - total_orders if total_orders else 0
+
+    if abs(sales_drift) <= SALES_TOLERANCE and abs(order_drift) <= ORDER_TOLERANCE:
+        return channels, None, []
+
+    limit = total_sales * DRIFT_RATIO
+    order_limit = max(ORDER_TOLERANCE, (total_orders or 0) * DRIFT_RATIO)
+    if abs(sales_drift) > limit or abs(order_drift) > order_limit:
+        return (
+            channels,
+            None,
+            [
+                f"{start}: channel totals differ from published by "
+                f"{sales_drift:,.2f} and {order_drift:,.0f} orders, beyond settlement drift "
+                f"(limit {limit:,.2f} / {order_limit:,.0f})"
+            ],
+        )
+
+    scale = total_sales / sales_sum
+    adjusted = [{**row, "sales": round(row["sales"] * scale, 2)} for row in channels]
+    # Rounding leaves at most a cent; put it on the largest segment.
+    residual = round(total_sales - sum(row["sales"] for row in adjusted), 2)
+    if residual:
+        biggest = max(range(len(adjusted)), key=lambda i: adjusted[i]["sales"])
+        adjusted[biggest]["sales"] = round(adjusted[biggest]["sales"] + residual, 2)
+
+    if total_orders and order_sum:
+        order_scale = total_orders / order_sum
+        for row in adjusted:
+            row["orders"] = int(round((row.get("orders") or 0) * order_scale))
+        order_residual = int(total_orders - sum(row["orders"] for row in adjusted))
+        if order_residual:
+            biggest = max(range(len(adjusted)), key=lambda i: adjusted[i]["orders"])
+            adjusted[biggest]["orders"] += order_residual
+
+    return (
+        adjusted,
+        {
+            "reason": "settlement drift between the POS extract and the channel query",
+            "sales_drift": round(sales_drift, 2),
+            "order_drift": int(order_drift),
+        },
+        [],
+    )
+
+
 def ordered_channels(buckets: dict[str, dict]) -> list[dict]:
     rows = []
     for label in CHANNEL_ORDER:
@@ -168,12 +238,19 @@ def apply_channels(payload: dict, grouped: dict[str, dict[str, dict]]) -> tuple[
         if not buckets:
             continue
         matched_weeks.add(start)
-        channels = ordered_channels(buckets)
+        channels, adjustment, drift_problems = settle_drift(week, ordered_channels(buckets))
+        if drift_problems:
+            problems.extend(drift_problems)
+            continue
         week_problems = reconcile(week, channels)
         if week_problems:
             problems.extend(week_problems)
             continue
         week["channels"] = channels
+        if adjustment:
+            week["channel_reconciliation"] = adjustment
+        else:
+            week.pop("channel_reconciliation", None)
         applied += 1
 
     unknown = sorted(set(grouped) - matched_weeks)

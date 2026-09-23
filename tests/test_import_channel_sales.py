@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from import_channel_sales import (  # noqa: E402
+    DRIFT_RATIO,
     apply_channels,
     bucket_for,
     check_published,
@@ -71,11 +72,41 @@ def test_reconciling_rows_are_applied():
     assert round(sum(row["sales"] for row in channels), 2) == 1000.0
 
 
+def test_settlement_drift_is_scaled_back_onto_the_segments():
+    """A channel query run after the POS extract sees a few late transactions."""
+    payload = _payload(sales=1_000_000.0, orders=100_000)
+    rows = _rows(in_shop=840_002.0, ahead=158_000.0, other=2_000.0, orders=(84_001, 15_000, 1_000))
+    applied, problems = apply_channels(payload, group_rows(rows))
+    assert problems == []
+    assert applied == 1
+    week = payload["weeks"][0]
+    assert round(sum(row["sales"] for row in week["channels"]), 2) == 1_000_000.0
+    assert sum(row["orders"] for row in week["channels"]) == 100_000
+    assert week["channel_reconciliation"]["sales_drift"] == 2.0
+
+
+def test_drift_beyond_settlement_size_is_refused():
+    """A whole missing channel is far past drift and must not be smoothed away."""
+    payload = _payload(sales=1_000_000.0, orders=100_000)
+    over = 1_000_000.0 * DRIFT_RATIO * 10
+    rows = _rows(in_shop=840_000.0 + over, ahead=158_000.0, other=2_000.0, orders=(84_000, 15_000, 1_000))
+    applied, problems = apply_channels(payload, group_rows(rows))
+    assert applied == 0
+    assert any("beyond settlement drift" in item for item in problems)
+    assert "channels" not in payload["weeks"][0]
+
+
+def test_an_exact_week_records_no_adjustment():
+    payload = _payload()
+    apply_channels(payload, group_rows(_rows()))
+    assert "channel_reconciliation" not in payload["weeks"][0]
+
+
 def test_sales_that_miss_the_published_total_are_refused():
     payload = _payload()
     applied, problems = apply_channels(payload, group_rows(_rows(in_shop=800.0)))
     assert applied == 0
-    assert any("!= published" in item for item in problems)
+    assert any("differ from published" in item or "!= published" in item for item in problems)
     assert "channels" not in payload["weeks"][0]
 
 

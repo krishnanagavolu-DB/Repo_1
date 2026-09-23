@@ -139,7 +139,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": null,
         "TRANSACTION_COUNT_PCT": null
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 39999316.29,
+          "orders": 3456793
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7563695.03,
+          "orders": 757089
+        }
+      ]
     },
     {
       "week_start_date": "2026-07-06",
@@ -212,7 +224,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -3.8,
         "TRANSACTION_COUNT_PCT": -0.8
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38243938.71,
+          "orders": 3401756
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7510161.94,
+          "orders": 781279
+        }
+      ]
     },
     {
       "week_start_date": "2026-07-13",
@@ -285,7 +309,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 3.8,
         "TRANSACTION_COUNT_PCT": 3.0
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 39831595.49,
+          "orders": 3514751
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7674298.23,
+          "orders": 792070
+        }
+      ]
     },
     {
       "week_start_date": "2026-07-20",
@@ -358,6 +394,23 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -3.3,
         "TRANSACTION_COUNT_PCT": -2.6
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38406764.81,
+          "orders": 3414048
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7526588.67,
+          "orders": 784745
+        }
+      ],
+      "channel_reconciliation": {
+        "reason": "settlement drift between the POS extract and the channel query",
+        "sales_drift": 45.65,
+        "order_drift": 4
       }
     },
     {
@@ -431,7 +484,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -0.5,
         "TRANSACTION_COUNT_PCT": -0.2
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38292385.75,
+          "orders": 3421452
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7427314.91,
+          "orders": 770437
+        }
+      ]
     },
     {
       "week_start_date": "2026-08-03",
@@ -504,7 +569,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 1.7,
         "TRANSACTION_COUNT_PCT": 2.8
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38774431.0,
+          "orders": 3491521
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7738867.79,
+          "orders": 817049
+        }
+      ]
     },
     {
       "week_start_date": "2026-08-10",
@@ -577,7 +654,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -2.1,
         "TRANSACTION_COUNT_PCT": -1.7
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38291345.73,
+          "orders": 3456676
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7267791.84,
+          "orders": 777112
+        }
+      ]
     },
     {
       "week_start_date": "2026-08-17",
@@ -650,7 +739,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 2.7,
         "TRANSACTION_COUNT_PCT": 3.1
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38584635.75,
+          "orders": 3509007
+        },
+        {
+          "label": "Order ahead",
+          "sales": 8201143.78,
+          "orders": 859394
+        }
+      ]
     },
     {
       "week_start_date": "2026-08-24",
@@ -723,7 +824,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -2.5,
         "TRANSACTION_COUNT_PCT": -2.0
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 37657217.78,
+          "orders": 3444009
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7939365.62,
+          "orders": 837400
+        }
+      ]
     },
     {
       "week_start_date": "2026-08-31",
@@ -796,7 +909,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -1.3,
         "TRANSACTION_COUNT_PCT": -2.0
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 37090262.72,
+          "orders": 3365873
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7898753.6,
+          "orders": 831709
+        }
+      ]
     },
     {
       "week_start_date": "2026-09-07",
@@ -869,7 +994,19 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 2.9,
         "TRANSACTION_COUNT_PCT": 2.1
-      }
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 38223547.76,
+          "orders": 3426431
+        },
+        {
+          "label": "Order ahead",
+          "sales": 8091299.87,
+          "orders": 858066
+        }
+      ]
     },
     {
       "week_start_date": "2026-09-14",
@@ -942,6 +1079,23 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -4.7,
         "TRANSACTION_COUNT_PCT": -2.0
+      },
+      "channels": [
+        {
+          "label": "In shop",
+          "sales": 36216526.05,
+          "orders": 3347367
+        },
+        {
+          "label": "Order ahead",
+          "sales": 7934863.75,
+          "orders": 850546
+        }
+      ],
+      "channel_reconciliation": {
+        "reason": "settlement drift between the POS extract and the channel query",
+        "sales_drift": 106.09,
+        "order_drift": 11
       }
     }
   ],

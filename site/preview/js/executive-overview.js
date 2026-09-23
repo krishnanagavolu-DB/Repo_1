@@ -149,7 +149,7 @@ function buildSalesTrend(periodId, posWeeks, oloWeeks) {
     labels,
     datasets: [
       {
-        label: "In-shop sales",
+        label: "Total sales",
         source: "POS · ex-tip",
         data: labels.map((id) => {
           const week = posById.get(id);
@@ -157,12 +157,116 @@ function buildSalesTrend(periodId, posWeeks, oloWeeks) {
         }),
       },
       {
-        label: "Order-ahead sales",
+        label: "Order-ahead card sales",
         source: "Olo Pay · ex-tip",
         data: labels.map((id) => finiteNumber(oloById.get(id)?.sales)),
       },
     ],
   };
+}
+
+/* Channel split: which door the money came through, not how it was tendered.
+   In shop covers drive-thru and walk-up; order ahead is paid in the app; other
+   is third-party delivery. Colors reuse the slide's existing assignments —
+   brand yellow is skipped because the tender doughnut already owns it and it
+   fails contrast at band size. */
+const CHANNEL_ORDER = ["In shop", "Order ahead", "Other / delivery"];
+const CHANNEL_COLORS = {
+  "In shop": "#006098",
+  "Order ahead": "#154167",
+  "Other / delivery": "#4094A7",
+};
+/* Below this share a true-width segment renders sub-pixel and disappears. */
+const MIN_SEGMENT_WIDTH_PCT = 1.5;
+const RECONCILE_TOLERANCE = 0.01;
+
+/* Reads the channel rows the POS extract will carry once Gold publishes
+   CHANNEL. Shapes without them yield an empty list, which the band reports as
+   coming next. */
+function normalizeChannelWeeks(payload) {
+  const weeks = Array.isArray(payload?.weeks) ? payload.weeks : [];
+  const normalized = [];
+  for (const week of weeks) {
+    const rows = week?.channels || week?.channel_mix;
+    if (!rows) continue;
+    const list = Array.isArray(rows)
+      ? rows.map((row) => ({
+          label: String(row?.label ?? row?.name ?? row?.channel ?? "").trim(),
+          sales: finiteNumber(row?.sales ?? row?.amount ?? row?.SALES_VOLUME),
+          orders: finiteNumber(row?.orders ?? row?.ORDER_COUNT ?? row?.order_count),
+        }))
+      : Object.entries(rows).map(([label, row]) => ({
+          label: String(label).trim(),
+          sales: finiteNumber(row?.sales ?? row?.amount ?? row?.SALES_VOLUME),
+          orders: finiteNumber(row?.orders ?? row?.ORDER_COUNT ?? row?.order_count),
+        }));
+    if (!list.length) continue;
+    normalized.push({
+      sortKey: String(week?.week_start_date ?? week?.sortKey ?? ""),
+      channels: list,
+    });
+  }
+  return normalized;
+}
+
+function findChannelWeek(channelWeeks, periodId) {
+  if (!Array.isArray(channelWeeks) || !periodId) return null;
+  return channelWeeks.find((week) => week.sortKey === periodId) || null;
+}
+
+/* Returns null rather than a partial or estimated split. A channel breakdown
+   that disagrees with the headline total is worse than none: it invites a
+   reader to trust arithmetic the dashboard cannot stand behind. */
+function buildChannelSplit(posWeek, channelWeek) {
+  const total = finiteNumber(posWeek?.reportedTotal ?? posWeek?.tenderTotal);
+  const totalOrders = finiteNumber(posWeek?.orderCount);
+  const rows = Array.isArray(channelWeek?.channels) ? channelWeek.channels : [];
+  if (total === null || total <= 0 || !rows.length) return null;
+
+  const segments = [];
+  for (const row of rows) {
+    const sales = finiteNumber(row?.sales);
+    if (sales === null) return null;
+    const orders = finiteNumber(row?.orders);
+    segments.push({
+      label: String(row?.label || "").trim(),
+      sales,
+      orders,
+      avgTicket: orders ? sales / orders : null,
+      share: sales / total,
+      color: CHANNEL_COLORS[String(row?.label || "").trim()] || "#4094A7",
+    });
+  }
+
+  const salesSum = segments.reduce((sum, segment) => sum + segment.sales, 0);
+  if (Math.abs(salesSum - total) > RECONCILE_TOLERANCE) return null;
+  if (totalOrders !== null) {
+    const orderSum = segments.reduce((sum, segment) => sum + (segment.orders || 0), 0);
+    if (Math.abs(orderSum - totalOrders) > 1) return null;
+  }
+
+  segments.sort((a, b) => {
+    const ai = CHANNEL_ORDER.indexOf(a.label);
+    const bi = CHANNEL_ORDER.indexOf(b.label);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return b.sales - a.sales;
+  });
+
+  /* Widths are scaled so the floor given to a tiny segment is taken back from
+     the others, keeping the bar exactly 100% wide without overstating it. */
+  const raw = segments.map((segment) => segment.share * 100);
+  const floored = raw.map((value) => (value > 0 && value < MIN_SEGMENT_WIDTH_PCT ? MIN_SEGMENT_WIDTH_PCT : value));
+  const borrowed = floored.reduce((sum, v) => sum + v, 0) - 100;
+  const donors = floored.reduce((sum, v, i) => sum + (raw[i] >= MIN_SEGMENT_WIDTH_PCT ? v : 0), 0);
+  segments.forEach((segment, i) => {
+    let width = floored[i];
+    if (borrowed > 0 && donors > 0 && raw[i] >= MIN_SEGMENT_WIDTH_PCT) {
+      width -= borrowed * (floored[i] / donors);
+    }
+    segment.renderWidth = Math.max(width, 0);
+  });
+
+  return { total, totalOrders, segments };
 }
 
 function buildTenderMix(posWeek) {
@@ -255,12 +359,9 @@ function overviewForPeriod(periodId, sources) {
   const olo = selectedAndPrior(sources?.olo, periodId, "sortKey");
 
   const posSales = finiteNumber(pos.selected?.reportedTotal ?? pos.selected?.tenderTotal);
-  const priorPosSales = finiteNumber(pos.prior?.reportedTotal ?? pos.prior?.tenderTotal);
   const posOrders = finiteNumber(pos.selected?.orderCount);
   const posAvgTicket = finiteNumber(pos.selected?.avgTicket);
   const cardAuthRate = finiteNumber(worldpay.selected?.authRate);
-  const oloSales = finiteNumber(olo.selected?.sales);
-  const oloOrders = finiteNumber(olo.selected?.orders);
   const oloAuthRate = finiteNumber(olo.selected?.authRatePct);
 
   const model = {
@@ -271,23 +372,26 @@ function overviewForPeriod(periodId, sources) {
       worldpay: Boolean(worldpay.selected),
       olo: Boolean(olo.selected),
     },
+    /* The POS extract carries no channel filter, so SALES_VOLUME spans every
+       channel. These read "Total", not "In-shop"; the channel band below
+       splits them once Gold publishes CHANNEL. */
     kpis: {
-      inShopSales: kpi(
-        "In-shop sales",
+      totalSales: kpi(
+        "Total sales",
         posSales,
         posSales === null ? "Not available" : compactUsd(posSales),
         delta(percentChange(posSales, pos.prior?.reportedTotal ?? pos.prior?.tenderTotal), "percent"),
         "POS · ex-tip"
       ),
-      inShopOrders: kpi(
-        "In-shop orders",
+      totalOrders: kpi(
+        "Total orders",
         posOrders,
         posOrders === null ? "Not available" : compactCount(posOrders),
         delta(percentChange(posOrders, pos.prior?.orderCount), "percent"),
         "POS · guest checks"
       ),
-      inShopAvgTicket: kpi(
-        "In-shop avg ticket",
+      avgTicket: kpi(
+        "Avg ticket",
         posAvgTicket,
         posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
         delta(percentChange(posAvgTicket, pos.prior?.avgTicket), "percent"),
@@ -300,20 +404,9 @@ function overviewForPeriod(periodId, sources) {
         delta(pointChange(cardAuthRate, worldpay.prior?.authRate), "points"),
         "Worldpay · card present"
       ),
-      orderAheadSales: kpi(
-        "Order-ahead sales",
-        oloSales,
-        oloSales === null ? "Not available" : compactUsd(oloSales),
-        delta(percentChange(oloSales, olo.prior?.sales), "percent"),
-        "Olo Pay · ex-tip"
-      ),
-      orderAheadOrders: kpi(
-        "Order-ahead orders",
-        oloOrders,
-        oloOrders === null ? "Not available" : compactCount(oloOrders),
-        delta(percentChange(oloOrders, olo.prior?.orders), "percent"),
-        "Olo Pay · approved"
-      ),
+      /* Olo stays as payment health only. Its sales cover card captures, so
+         app orders paid by Dutch Pass or gift card never reach Stripe and it
+         cannot stand in for the order-ahead channel total. */
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",
         oloAuthRate,
@@ -322,6 +415,7 @@ function overviewForPeriod(periodId, sources) {
         "Stripe · order ahead"
       ),
     },
+    channelSplit: buildChannelSplit(pos.selected, findChannelWeek(sources?.channels, periodId)),
     salesTrend: buildSalesTrend(periodId, sources?.pos, sources?.olo),
     tenderMix: buildTenderMix(pos.selected),
   };
@@ -384,8 +478,6 @@ function overviewForHistory(periodIds, sources) {
   const posSales = finiteNumber(posAgg?.reportedTotal ?? posAgg?.tenderTotal);
   const posOrders = finiteNumber(posAgg?.orderCount);
   const posAvgTicket = finiteNumber(posAgg?.avgTicket);
-  const oloSales = finiteNumber(oloAgg?.sales);
-  const oloOrders = finiteNumber(oloAgg?.orders);
   const oloAuthRate = finiteNumber(oloAgg?.authRatePct);
 
   const model = {
@@ -397,22 +489,22 @@ function overviewForHistory(periodIds, sources) {
       olo: Boolean(oloSubset.length),
     },
     kpis: {
-      inShopSales: kpi(
-        "In-shop sales",
+      totalSales: kpi(
+        "Total sales",
         posSales,
         posSales === null ? "Not available" : compactUsd(posSales),
         null,
         "POS · ex-tip"
       ),
-      inShopOrders: kpi(
-        "In-shop orders",
+      totalOrders: kpi(
+        "Total orders",
         posOrders,
         posOrders === null ? "Not available" : compactCount(posOrders),
         null,
         "POS · guest checks"
       ),
-      inShopAvgTicket: kpi(
-        "In-shop avg ticket",
+      avgTicket: kpi(
+        "Avg ticket",
         posAvgTicket,
         posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
         null,
@@ -425,20 +517,6 @@ function overviewForHistory(periodIds, sources) {
         null,
         "Worldpay · card present"
       ),
-      orderAheadSales: kpi(
-        "Order-ahead sales",
-        oloSales,
-        oloSales === null ? "Not available" : compactUsd(oloSales),
-        null,
-        "Olo Pay · ex-tip"
-      ),
-      orderAheadOrders: kpi(
-        "Order-ahead orders",
-        oloOrders,
-        oloOrders === null ? "Not available" : compactCount(oloOrders),
-        null,
-        "Olo Pay · approved"
-      ),
       orderAheadAuthRate: kpi(
         "Order-ahead auth rate",
         oloAuthRate,
@@ -447,6 +525,10 @@ function overviewForHistory(periodIds, sources) {
         "Stripe · order ahead"
       ),
     },
+    /* Aggregating a channel split across weeks needs certified per-week
+       channel rows to sum; until they exist history shows the same
+       coming-next band as a single week. */
+    channelSplit: null,
     salesTrend: buildSalesTrend((periodIds || []).at(-1) || "", sources?.pos, sources?.olo),
     tenderMix: buildTenderMix(posAgg),
   };
@@ -547,6 +629,66 @@ function renderKpis(model) {
       </article>`
     )
     .join("");
+}
+
+/* The band states a certified split or says it is coming. It never estimates
+   channel share from Olo, which would undercount app orders paid by Dutch
+   Pass or gift card. */
+function renderChannelBand(model) {
+  const band = document.getElementById("overview-channel-band");
+  if (!band) return;
+  const split = model.channelSplit;
+
+  if (!split) {
+    band.classList.add("is-pending");
+    band.innerHTML = `
+      <div class="channel-band-head">
+        <span class="channel-band-title">Where the money came from</span>
+        <span class="channel-band-flag">Coming next</span>
+      </div>
+      <p class="channel-band-pending">
+        In shop, order ahead, and delivery split publishes once the weekly
+        extract carries the Gold <code>CHANNEL</code> field.
+      </p>`;
+    return;
+  }
+
+  band.classList.remove("is-pending");
+  const totals = `${compactUsd(split.total)} total${
+    split.totalOrders === null ? "" : ` · ${compactCount(split.totalOrders)} orders`
+  }`;
+  const bar = split.segments
+    .map((segment) => {
+      const inlineLabel =
+        segment.renderWidth >= 12 ? `${segment.label} ${sharePct(segment.share)}` : "";
+      return `<span class="channel-seg" style="width:${segment.renderWidth.toFixed(
+        3
+      )}%;background:${segment.color}" title="${segment.label} ${sharePct(
+        segment.share
+      )}">${inlineLabel}</span>`;
+    })
+    .join("");
+  const keys = split.segments
+    .map(
+      (segment) => `
+      <span class="channel-key">
+        <i class="channel-dot" style="background:${segment.color}" aria-hidden="true"></i>
+        ${segment.label}
+        <b>${compactUsd(segment.sales)}</b>
+        <em>${sharePct(segment.share)}</em>
+        ${segment.orders === null ? "" : `<span>${compactCount(segment.orders)} orders</span>`}
+        ${segment.avgTicket === null ? "" : `<span>$${segment.avgTicket.toFixed(2)} ticket</span>`}
+      </span>`
+    )
+    .join("");
+
+  band.innerHTML = `
+    <div class="channel-band-head">
+      <span class="channel-band-title">Where the money came from</span>
+      <span class="channel-band-total">${totals}</span>
+    </div>
+    <div class="channel-bar" role="img" aria-label="Sales share by order channel">${bar}</div>
+    <div class="channel-keys">${keys}</div>`;
 }
 
 function renderSalesChart(model, sources) {
@@ -724,7 +866,12 @@ function renderOverview(periodId, { force = false } = {}) {
   if (!force && resolvedId === selectedPeriodId && overviewSalesChart) return;
   selectedPeriodId = resolvedId;
 
-  const sources = { pos: state.pos, worldpay: state.worldpay, olo: state.olo };
+  const sources = {
+    pos: state.pos,
+    worldpay: state.worldpay,
+    olo: state.olo,
+    channels: state.channels,
+  };
   const model =
     resolvedId === "history"
       ? overviewForHistory(state.periodIds, sources)
@@ -733,6 +880,7 @@ function renderOverview(periodId, { force = false } = {}) {
   const periodLabel = document.getElementById("overview-period-label");
   if (periodLabel) periodLabel.textContent = model.label;
   renderKpis(model);
+  renderChannelBand(model);
   renderSalesChart(model, state);
   renderTenderChart(model);
   renderWatchlist(model);
@@ -744,11 +892,11 @@ async function loadOverview() {
       const payload = await window.__dashboardAuth.loadJson(url);
       const weeks = normalize(payload);
       if (!Array.isArray(weeks) || !weeks.length) {
-        return { weeks: [], error: `${label}: ${url} contained no usable completed weeks.` };
+        return { weeks: [], payload, error: `${label}: ${url} contained no usable completed weeks.` };
       }
-      return { weeks, error: null };
+      return { weeks, payload, error: null };
     } catch (err) {
-      return { weeks: [], error: `${label}: ${String(err?.message || err)}` };
+      return { weeks: [], payload: null, error: `${label}: ${String(err?.message || err)}` };
     }
   }
 
@@ -767,9 +915,13 @@ async function loadOverview() {
     worldpay: worldpayResult.weeks,
     olo: oloResult.weeks,
   };
+  /* Channel rows ride along in the POS payload, since the contract adds
+     CHANNEL to that same extract. Absent until it lands, which the band
+     reports rather than estimating around. */
+  const channels = normalizeChannelWeeks(posResult.payload);
   const periodIds = periodIdsForAvailableSources(sources);
   const errors = [posResult.error, worldpayResult.error, oloResult.error].filter(Boolean);
-  window.__executiveOverviewState = { ...sources, periodIds, sourceErrors: errors };
+  window.__executiveOverviewState = { ...sources, channels, periodIds, sourceErrors: errors };
 
   if (!periodIds.length) {
     const technical = errors.length
@@ -801,6 +953,9 @@ window.__executiveOverview = {
   isHistoryPeriod,
   overviewForHistory,
   buildWatchlist,
+  buildChannelSplit,
+  findChannelWeek,
+  normalizeChannelWeeks,
   tenderInk,
   formatSignedPct,
   loadOverview,

@@ -8,7 +8,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=5596387ab9" />
+    <link rel="stylesheet" href="css/dashboard.css?v=1748252cc9" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -17,7 +17,7 @@
     <script src="js/dashboard.js?v=d30c21b1e9" defer></script>
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
-    <script src="js/executive-overview.js?v=780cb2729d" defer></script>
+    <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
     <script src="js/tabs.js?v=67cae82701" defer></script>
     <script src="js/chatbot.js?v=b99841c961" defer></script>
   </head>
@@ -122,14 +122,15 @@
             </header>
             <div class="executive-board">
               <div class="executive-kpis" id="overview-kpis" aria-live="polite"></div>
+              <section class="channel-band" id="overview-channel-band" aria-live="polite" aria-label="Sales by order channel"></section>
               <article class="slide-panel executive-sales-panel">
-                <div class="panel-band">Sales trend by channel</div>
+                <div class="panel-band">Sales trend</div>
                 <div class="panel-body">
-                  <div class="chart-wrap"><canvas id="chart-overview-sales" role="img" aria-label="Weekly In-Shop Sales and Order Ahead sales trend"></canvas></div>
+                  <div class="chart-wrap"><canvas id="chart-overview-sales" role="img" aria-label="Weekly Total sales and Order-ahead card sales trend"></canvas></div>
                 </div>
               </article>
               <article class="slide-panel executive-mix-panel">
-                <div class="panel-band">How guests paid in shop</div>
+                <div class="panel-band">How guests paid</div>
                 <div class="panel-body">
                   <div class="chart-wrap"><canvas id="chart-overview-tender" role="img" aria-label="In-Shop Sales tender mix by Card, Cash, and Gift Card / Dutch Pass"></canvas></div>
                   <table id="legend-overview-tender" class="mix-legend compact-legend"></table>
@@ -141,8 +142,9 @@
               </article>
             </div>
             <p id="overview-reconciliation" class="executive-reconciliation">
-              POS sales are ex-tip. Worldpay card dollars include tip and overlap POS card sales.
-              Olo Pay is order-ahead and is not added to Worldpay.
+              Total sales are POS ex-tip and cover every channel, order ahead included.
+              Worldpay card dollars include tip and overlap POS card sales. Olo Pay is the
+              processor for order-ahead card payments, not the order-ahead channel total.
             </p>
           </section>
         </section>

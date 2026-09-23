@@ -1593,10 +1593,12 @@ body.auth-unlocked .auth-gate {
   color: rgba(255, 255, 255, 0.82);
 }
 
+/* Rows: KPI cards, channel band, the two charts, watchlist. Only the chart
+   row stretches; the band sizes to its content. */
 .executive-board {
   display: grid;
   grid-template-columns: 1.45fr 0.85fr;
-  grid-template-rows: auto minmax(240px, 1fr) auto;
+  grid-template-rows: auto auto minmax(240px, 1fr) auto;
   gap: 8px;
   padding: 8px;
   background: var(--bg);
@@ -1661,6 +1663,131 @@ body.auth-unlocked .auth-gate {
 .executive-kpi small.flat {
   color: var(--muted);
   font-weight: 600;
+}
+
+/* ===== Channel band: which door the money came through ===== */
+.channel-band {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 14px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.channel-band-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.channel-band-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.channel-band-total {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.channel-band-flag {
+  padding: 2px 9px;
+  border: 1px dashed #c5d0db;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.channel-band-pending {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.channel-band-pending code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 11px;
+  color: var(--dark);
+}
+
+.channel-bar {
+  display: flex;
+  width: 100%;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.channel-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.channel-seg + .channel-seg {
+  border-left: 1px solid var(--panel);
+}
+
+.channel-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+}
+
+.channel-key {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-key b {
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.channel-key em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--blue);
+}
+
+.channel-key span {
+  color: var(--muted-2);
+}
+
+.channel-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
 }
 
 .executive-sales-panel .panel-body {

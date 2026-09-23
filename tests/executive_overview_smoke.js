@@ -84,30 +84,153 @@ const model = overview.overviewForPeriod(latestPeriodId, {
   olo: oloWeeks,
 });
 check(
-  "POS sales stays equal to the normalized POS source only",
-  model.kpis.inShopSales.value,
+  "Total sales stays equal to the normalized POS source only",
+  model.kpis.totalSales.value,
   latestPosWeek.reportedTotal ?? latestPosWeek.tenderTotal
 );
+/* The POS extract applies no channel filter, so its SALES_VOLUME is every
+   channel. Calling it "in-shop" overstates the in-shop business by the
+   order-ahead share and invites adding it to an overlapping Olo figure. */
 check(
-  "Olo sales stays equal to the normalized Olo source only",
-  model.kpis.orderAheadSales.value,
-  latestOloWeek.sales
+  "no KPI presents an all-channel POS figure as in-shop",
+  Object.values(model.kpis).some((item) => /in[- ]shop/i.test(item.label)),
+  false
+);
+check("overview has five KPI cards", Object.keys(model.kpis).length, 5);
+/* Olo sees card captures only, so app orders paid by Dutch Pass or gift card
+   never reach Stripe. Showing Olo sales beside a Gold channel total would put
+   two different "order ahead" numbers on one slide. */
+check(
+  "Olo sales does not appear as an overview KPI",
+  Object.keys(model.kpis).includes("orderAheadSales"),
+  false
 );
 check(
-  "POS and Olo remain concretely separate source values",
-  model.kpis.inShopSales.value !== model.kpis.orderAheadSales.value,
+  "Olo orders does not appear as an overview KPI",
+  Object.keys(model.kpis).includes("orderAheadOrders"),
+  false
+);
+check(
+  "Olo stays on the overview as payment health only",
+  model.kpis.orderAheadAuthRate.source,
+  "Stripe · order ahead"
+);
+
+// --- Channel split: reconciles to the published total, or renders nothing ---
+const channelWeek = {
+  sortKey: latestPeriodId,
+  channels: [
+    { label: "In shop", sales: 37130000, orders: 3506000 },
+    { label: "Order ahead", sales: 6970000, orders: 689000 },
+    { label: "Other / delivery", sales: 51389.8, orders: 2913 },
+  ],
+};
+const posTotalForSplit = latestPosWeek.reportedTotal ?? latestPosWeek.tenderTotal;
+const balanced = {
+  ...channelWeek,
+  channels: [
+    { label: "In shop", sales: posTotalForSplit - 6970000 - 51389.8, orders: 3506000 },
+    { label: "Order ahead", sales: 6970000, orders: 689000 },
+    { label: "Other / delivery", sales: 51389.8, orders: latestPosWeek.orderCount - 3506000 - 689000 },
+  ],
+};
+const split = overview.buildChannelSplit(latestPosWeek, balanced);
+check("channel split is produced when segments reconcile", Boolean(split), true);
+check("channel split keeps three segments", split.segments.length, 3);
+check(
+  "channel segments sum to the published POS sales total",
+  Math.round(split.segments.reduce((sum, s) => sum + s.sales, 0) * 100) / 100,
+  Math.round(posTotalForSplit * 100) / 100
+);
+check(
+  "channel shares sum to 100 percent",
+  Math.round(split.segments.reduce((sum, s) => sum + s.share, 0) * 1e6) / 1e6,
+  1
+);
+check(
+  "channel segments carry their own average ticket",
+  Math.round(split.segments[1].avgTicket * 100) / 100,
+  Math.round((6970000 / 689000) * 100) / 100
+);
+check(
+  "channel colors reuse the slide's existing blue and navy",
+  `${split.segments[0].color}|${split.segments[1].color}`,
+  "#006098|#154167"
+);
+check(
+  "brand yellow is not reused for a channel segment",
+  split.segments.some((s) => String(s.color).toLowerCase() === "#f6e300"),
+  false
+);
+/* A split that disagrees with the headline number is worse than no split. */
+const drifted = {
+  ...balanced,
+  channels: balanced.channels.map((c, i) => (i === 0 ? { ...c, sales: c.sales - 25000 } : c)),
+};
+check(
+  "a split that misses the published total is refused",
+  overview.buildChannelSplit(latestPosWeek, drifted),
+  null
+);
+check(
+  "no channel data yields no split rather than an estimate",
+  overview.buildChannelSplit(latestPosWeek, null),
+  null
+);
+check(
+  "channel split is never derived from Olo",
+  overview.buildChannelSplit(latestPosWeek, { sortKey: latestPeriodId, channels: [] }),
+  null
+);
+/* Regression: the model must actually receive channel rows from sources.
+   renderOverview once built its sources object without them, so a certified
+   feed would have rendered the coming-next state forever. */
+const withChannels = overview.overviewForPeriod(latestPeriodId, {
+  pos: posWeeks,
+  worldpay: worldpayWeeks,
+  olo: oloWeeks,
+  channels: [balanced],
+});
+check(
+  "a certified channel feed reaches the overview model",
+  Boolean(withChannels.channelSplit),
   true
 );
-check("overview has seven KPI cards", Object.keys(model.kpis).length, 7);
 check(
-  "Order-ahead orders matches the normalized Olo order count",
-  model.kpis.orderAheadOrders.value,
-  latestOloWeek.orders
+  "no channel feed leaves the split null",
+  overview.overviewForPeriod(latestPeriodId, { pos: posWeeks, worldpay: worldpayWeeks, olo: oloWeeks })
+    .channelSplit,
+  null
 );
 check(
-  "Order-ahead orders keeps the Olo source label",
-  model.kpis.orderAheadOrders.source,
-  "Olo Pay · approved"
+  "channel rows are read from the POS payload shape",
+  overview.normalizeChannelWeeks({
+    weeks: [
+      {
+        week_start_date: "2026-09-14",
+        channels: [{ label: "In shop", sales: 10, orders: 1 }],
+      },
+    ],
+  })[0].channels[0].sales,
+  10
+);
+check(
+  "a POS payload without channel rows yields none",
+  overview.normalizeChannelWeeks({ weeks: [{ week_start_date: "2026-09-14" }] }).length,
+  0
+);
+
+/* At ~0.1% a segment is one pixel wide; it keeps a floor so it stays visible,
+   while the key reports the true share. */
+check(
+  "a tiny segment keeps a visible minimum width",
+  split.segments[2].renderWidth >= 1.5,
+  true
+);
+check(
+  "the tiny segment still reports its true share",
+  split.segments[2].share < 0.005,
+  true
 );
 check("sales trend excludes Worldpay dollars", model.salesTrend.datasets.length, 2);
 check("watchlist maximum", model.watchlist.length <= 3, true);
@@ -135,12 +258,12 @@ check(
 const watchlistModel = {
   coverage: { pos: true, worldpay: true, olo: true },
   kpis: {
-    inShopSales: {
-      label: "In-shop sales",
+    totalSales: {
+      label: "Total sales",
       delta: { value: -4.7, unit: "percent", text: "-4.7% vs prior week" },
     },
-    inShopOrders: {
-      label: "In-shop orders",
+    totalOrders: {
+      label: "Total orders",
       delta: { value: 2.2, unit: "percent", text: "+2.2% vs prior week" },
     },
     cardAuthRate: {
@@ -158,7 +281,7 @@ const watchlistModel = {
   },
 };
 const designedWatchlist = overview.buildWatchlist(watchlistModel);
-check("watchlist slot 1 is largest comparable movement", designedWatchlist[0]?.text, "In-shop sales -4.7% vs prior week.");
+check("watchlist slot 1 is largest comparable movement", designedWatchlist[0]?.text, "Total sales -4.7% vs prior week.");
 check("watchlist slot 2 always carries Card auth health", designedWatchlist[1]?.text, "Card auth rate -0.35 pts vs prior week.");
 check(
   "watchlist slot 3 reserves Order-ahead auth health without comparing magnitudes",
@@ -181,7 +304,7 @@ check("coverage watchlist stays capped at three", coverageWatchlist.length, 3);
 check(
   "next comparable movement fills slot 2 when Card auth is unavailable",
   coverageWatchlist[1]?.text,
-  "In-shop orders +2.2% vs prior week."
+  "Total orders +2.2% vs prior week."
 );
 check(
   "source coverage remains in slot 3 when Card auth is unavailable",
@@ -194,8 +317,8 @@ const coverageOverrideWatchlist = overview.buildWatchlist({
   coverage: { pos: false, worldpay: true, olo: true },
   kpis: {
     ...watchlistModel.kpis,
-    inShopSales: { ...watchlistModel.kpis.inShopSales, delta: null },
-    inShopOrders: { ...watchlistModel.kpis.inShopOrders, delta: null },
+    totalSales: { ...watchlistModel.kpis.totalSales, delta: null },
+    totalOrders: { ...watchlistModel.kpis.totalOrders, delta: null },
   },
 });
 check(
@@ -233,7 +356,7 @@ const gappedModel = overview.overviewForPeriod("2099-01-15", {
   worldpay: [],
   olo: [],
 });
-check("a fourteen-day source gap has no prior-week comparison", gappedModel.kpis.inShopSales.delta, null);
+check("a fourteen-day source gap has no prior-week comparison", gappedModel.kpis.totalSales.delta, null);
 
 const adjacentModel = overview.overviewForPeriod("2099-01-08", {
   pos: [
@@ -243,7 +366,7 @@ const adjacentModel = overview.overviewForPeriod("2099-01-08", {
   worldpay: [],
   olo: [],
 });
-check("a seven-day adjacent source week has a prior-week comparison", Boolean(adjacentModel.kpis.inShopSales.delta), true);
+check("a seven-day adjacent source week has a prior-week comparison", Boolean(adjacentModel.kpis.totalSales.delta), true);
 
 const oneWeekId = "2099-02-01";
 const oneWeekModel = overview.overviewForPeriod(oneWeekId, {
@@ -290,7 +413,23 @@ check(
   true
 );
 check("overview panel exists", html.includes('data-panel="overview"'), true);
-check("six-card grid exists", html.includes('id="overview-kpis"'), true);
+check("KPI grid exists", html.includes('id="overview-kpis"'), true);
+check("channel band exists", html.includes('id="overview-channel-band"'), true);
+check(
+  "channel band is announced politely",
+  /id="overview-channel-band"[^>]*aria-live="polite"/.test(html),
+  true
+);
+check(
+  "tender panel no longer calls an all-channel figure in-shop",
+  /How guests paid in shop/i.test(html),
+  false
+);
+check(
+  "reconciliation note says the total covers every channel",
+  /every channel|all channels/i.test(html),
+  true
+);
 check("sales chart exists", html.includes('id="chart-overview-sales"'), true);
 check("tender chart exists", html.includes('id="chart-overview-tender"'), true);
 check("watchlist exists", html.includes('id="overview-watchlist"'), true);
@@ -299,8 +438,20 @@ check("overview has a hideable content container", html.includes('id="overview-c
 check("reconciliation note names overlap", /Worldpay[^<]*overlap/i.test(html), true);
 check(
   "overview sales canvas has a grounded image label",
-  /<canvas id="chart-overview-sales" role="img" aria-label="[^"]*In-Shop Sales[^"]*Order Ahead[^"]*"><\/canvas>/.test(html),
+  /<canvas id="chart-overview-sales" role="img" aria-label="[^"]*Total sales[^"]*Order-ahead card sales[^"]*"><\/canvas>/.test(html),
   true
+);
+/* The POS line is every channel and the Olo line is card captures only, so
+   neither may be labelled as the in-shop channel. */
+check(
+  "sales trend series are not labelled in-shop",
+  model.salesTrend.datasets.some((set) => /in[- ]shop/i.test(set.label)),
+  false
+);
+check(
+  "sales trend names the Olo series as card sales",
+  model.salesTrend.datasets[1].label,
+  "Order-ahead card sales"
 );
 check(
   "overview tender canvas has a grounded image label",
@@ -450,19 +601,9 @@ const historyModel = overview.overviewForHistory(periodIds, {
 });
 check("history model labels itself Available history", historyModel.label, "Available history");
 check(
-  "history In-shop sales matches POS aggregateWeeks over the common weeks",
-  historyModel.kpis.inShopSales.value,
+  "history Total sales matches POS aggregateWeeks over the common weeks",
+  historyModel.kpis.totalSales.value,
   expectedPosAgg.reportedTotal ?? expectedPosAgg.tenderTotal
-);
-check(
-  "history Order-ahead sales matches Olo aggregateWeeks over the common weeks",
-  historyModel.kpis.orderAheadSales.value,
-  expectedOloAgg.sales
-);
-check(
-  "history Order-ahead orders matches Olo aggregateWeeks over the common weeks",
-  historyModel.kpis.orderAheadOrders.value,
-  expectedOloAgg.orders
 );
 check(
   "history Card auth rate matches sum(approved)/sum(attempts) over the common weeks",
@@ -470,26 +611,15 @@ check(
   expectedWeightedAuthRate
 );
 check(
-  "history In-shop sales is not the latest-week fallback value",
-  historyModel.kpis.inShopSales.value !== model.kpis.inShopSales.value,
+  "history Total sales is not the latest-week fallback value",
+  historyModel.kpis.totalSales.value !== model.kpis.totalSales.value,
   true
 );
+check("history Total sales keeps the POS-only source label", historyModel.kpis.totalSales.source, "POS · ex-tip");
 check(
-  "history Order-ahead sales is not the latest-week fallback value",
-  historyModel.kpis.orderAheadSales.value !== model.kpis.orderAheadSales.value,
-  true
-);
-check(
-  "history does not sum POS and Olo sales together",
-  historyModel.kpis.inShopSales.value + historyModel.kpis.orderAheadSales.value !==
-    historyModel.kpis.inShopSales.value,
-  true
-);
-check("history In-shop sales keeps the POS-only source label", historyModel.kpis.inShopSales.source, "POS · ex-tip");
-check(
-  "history Order-ahead sales keeps the Olo-only source label",
-  historyModel.kpis.orderAheadSales.source,
-  "Olo Pay · ex-tip"
+  "history never presents the all-channel POS total as in-shop",
+  Object.values(historyModel.kpis).some((item) => /in[- ]shop/i.test(item.label)),
+  false
 );
 
 // --- Review fix: card auth rate must be volume-weighted (sum(approved) /
@@ -583,6 +713,12 @@ function makeClassList(active = false) {
     contains(value) {
       return values.has(value);
     },
+    add(value) {
+      values.add(value);
+    },
+    remove(value) {
+      values.delete(value);
+    },
     toggle(value, enabled) {
       if (enabled) values.add(value);
       else values.delete(value);
@@ -614,6 +750,7 @@ function buildRenderingHarness(fetchImpl = successfulFetch) {
 
   const elements = {
     "overview-kpis": makeElementStub(),
+    "overview-channel-band": { ...makeElementStub(), classList: makeClassList() },
     "overview-watchlist": makeElementStub(),
     "legend-overview-tender": makeElementStub(),
     "overview-period-label": makeElementStub(),
@@ -778,8 +915,20 @@ async function runRenderingRegressionChecks() {
   );
   renderCheck(
     "initial KPI grid shows the latest-week sales figure",
-    full.elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(model.kpis.totalSales.display),
     true
+  );
+  /* With no certified channel feed the band must say so and must not print a
+     share of any kind. */
+  renderCheck(
+    "band states the split is coming when no channel feed exists",
+    /coming next/i.test(full.elements["overview-channel-band"].innerHTML),
+    true
+  );
+  renderCheck(
+    "pending band prints no percentage",
+    /\d+(\.\d+)?%/.test(full.elements["overview-channel-band"].innerHTML),
+    false
   );
   renderCheck(
     "legend dot ink uses the WCAG-safe navy for Gift Card / Dutch Pass, not raw brand yellow",
@@ -806,12 +955,12 @@ async function runRenderingRegressionChecks() {
   );
   renderCheck(
     "Available history renders the aggregated POS sales figure",
-    full.elements["overview-kpis"].innerHTML.includes(historyModel.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(historyModel.kpis.totalSales.display),
     true
   );
   renderCheck(
     "Available history no longer shows the latest single-week POS figure",
-    full.elements["overview-kpis"].innerHTML.includes(model.kpis.inShopSales.display),
+    full.elements["overview-kpis"].innerHTML.includes(model.kpis.totalSales.display),
     false
   );
   renderCheck("history selection re-renders the sales chart once", full.stats.salesCharts, 1);

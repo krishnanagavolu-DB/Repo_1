@@ -57,6 +57,7 @@ if ! cmp "$tmpdir/preview_olo_pay_data.json" data/processed/olo_pay_data.json; t
   exit 1
 fi
 python3 scripts/encrypt_site_data.py --check
+python3 scripts/import_channel_sales.py --check
 
 python3 scripts/validate_worldpay.py \
   --raw data/raw \

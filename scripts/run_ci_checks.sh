@@ -35,6 +35,7 @@ node tests/slide_layout_smoke.js
 node tests/pos_sales_smoke.js
 node tests/olo_pay_smoke.js
 node tests/executive_overview_smoke.js
+node tests/payment_devices_smoke.js
 node tests/notices_smoke.js
 node tests/ytd_banner_smoke.js
 node tests/tab_period_smoke.js

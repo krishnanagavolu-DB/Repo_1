@@ -65,8 +65,9 @@ function activate(tabId) {
   for (const panel of panels) {
     panel.hidden = panel.dataset.panel !== tabId;
   }
+  if (document.body?.dataset) document.body.dataset.activeTab = tabId;
 
-  // The period control drives every channel, so it stays visible on all tabs.
+  // The period control drives weekly channels. Payment Devices is a snapshot.
 
   const periodId = populateSelect(tabId, "tab-activation");
   window.dispatchEvent(new CustomEvent("dashboard:tab", { detail: { tabId, periodId } }));

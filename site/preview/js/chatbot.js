@@ -28,6 +28,11 @@ const PAYMENT_DEFINITIONS = [
     body: "Olo Pay order-ahead transactions processed by Stripe at company-owned shops. Published sales and average ticket exclude tip.",
   },
   {
+    terms: ["payment devices", "verifone", "e285", "burndown"],
+    title: "Payment Devices",
+    body: "Projected remaining Verifone e285 handhelds. Starting inventory comes from the vendor remaining-balance note. Each unfulfilled PO shop (NewCo ID not in shipped End Customer Name) consumes 10 units on its projected opening date. After the latest PO opening date, remaining units burn at 5.5 shops per week.",
+  },
+  {
     terms: ["auth rate", "authorization rate", "approval rate"],
     title: "Auth rate",
     body: "Approved authorization requests (response code 00) divided by all authorization requests.",
@@ -834,6 +839,52 @@ function answerDataQuality() {
   return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitHub Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
 }
 
+function wantsDevices(q) {
+  return /\b(payment devices?|verifone|e285|po pipeline|po extract|newco|unfulfilled|run-?rate|5\.5 shops|hardware order|starting inventory|shipped shops)\b/.test(
+    q
+  );
+}
+
+function answerDevicesQuestion(q) {
+  const payload = window.__paymentDevicesState;
+  if (/\bmatch|newco|shipped shops|end customer\b/.test(q)) {
+    return (
+      "**Exact match.** `NewCo ID` and `End Customer Name` are the same 6-character shop id " +
+      "(2-letter state + 4 digits), for example AL0107. Shipped shops are removed from the PO " +
+      "pipeline with a standard string match — no fuzzy matching."
+    );
+  }
+  if (/\b5\.5|run-?rate|after the last|projected opening\b/.test(q)) {
+    return (
+      "After the latest Projected Opening Date in the PO extract, remaining inventory burns at " +
+      "**5.5 shops per week** (10 Verifone e285 units per shop → **55 devices per week**)."
+    );
+  }
+  if (/\b2,?500|order threshold|order more hardware|safety buffer\b/.test(q)) {
+    return (
+      "The **2,500-unit** line is the target threshold to place a new hardware order. " +
+      "The **1,000-unit** line is the safety buffer. Those two numbers are standing assumptions, " +
+      "not values from the vendor files."
+    );
+  }
+  if (!payload?.certified || !payload.summary) {
+    return (
+      "Payment Devices is waiting on the vendor inventory text, PO extract, and booked/shipped " +
+      "orders report. Drop those files into data/raw/payment-devices/ and rerun the importer — " +
+      "no inventory number is invented until those files land."
+    );
+  }
+  const summary = payload.summary;
+  return (
+    `Starting inventory is **${Number(summary.starting_inventory).toLocaleString("en-US")}** ` +
+    `Verifone e285 units as of **${summary.as_of}**. ` +
+    `**${summary.unfulfilled_shops}** of **${summary.po_pipeline_shops}** PO shops are still unfulfilled ` +
+    `(**${summary.shipped_shops}** already shipped). ` +
+    `The PO pipeline is expected to leave **${Number(summary.pipeline_end_inventory).toLocaleString("en-US")}** ` +
+    `units on **${summary.pipeline_end_date}**.`
+  );
+}
+
 function latestPosWeek() {
   return (
     window.__posSales?.getSelectedWeek?.() ||
@@ -1487,6 +1538,8 @@ function answerQuestion(raw) {
   const oloAnswer = answerOloQuestion(q, raw);
   if (oloAnswer) return oloAnswer;
 
+  if (wantsDevices(q)) return answerDevicesQuestion(q);
+
   const ambiguous = ambiguousChannelMetric(q, raw);
   if (ambiguous) {
     chatContext.topic = "clarify";
@@ -1761,6 +1814,12 @@ const TAB_PROMPTS = {
     { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
+  devices: [
+    { question: "How many Verifone e285 units do we still have?", label: "What’s the starting inventory?" },
+    { question: "How are shipped shops matched to the PO pipeline?", label: "How do we match shipped shops?" },
+    { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
+    { question: "When should we order more hardware?", label: "What’s the 2,500-unit order threshold?" },
+  ],
 };
 
 function tabBlurb(tabId) {
@@ -1769,6 +1828,9 @@ function tabBlurb(tabId) {
   }
   if (tabId === "pos") {
     return "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab";
+  }
+  if (tabId === "devices") {
+    return "Payment Devices: ask about Verifone e285 inventory, the PO pipeline, shipped shops, and the 5.5 shops/week run-rate";
   }
   return "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
 }

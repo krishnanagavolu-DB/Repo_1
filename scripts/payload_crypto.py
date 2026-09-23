@@ -52,7 +52,24 @@ PAYLOAD_MAP: tuple[tuple[Path, tuple[Path, ...]], ...] = (
         ROOT / "data" / "processed" / "olo_pay_data.json",
         (ROOT / "site" / "preview" / "data" / "olo_pay_data.json",),
     ),
+    (
+        ROOT / "data" / "processed" / "payment_devices.json",
+        (ROOT / "site" / "preview" / "data" / "payment_devices.json",),
+    ),
 )
+
+
+# Preview-only until the first certified drop is imported and encrypted.
+OPTIONAL_PLAINTEXT = {
+    ROOT / "data" / "processed" / "payment_devices.json",
+}
+
+
+def _payload_pairs():
+    for source, destinations in PAYLOAD_MAP:
+        if source in OPTIONAL_PLAINTEXT and not source.is_file():
+            continue
+        yield source, destinations
 
 
 def sha256_hex(data: bytes) -> str:
@@ -128,9 +145,7 @@ def envelope_sha256(envelope: dict) -> str | None:
 
 def encrypt_site_payloads(password: str) -> list[str]:
     log = []
-    for source, destinations in PAYLOAD_MAP:
-        if not source.is_file():
-            raise FileNotFoundError(f"missing plaintext source {source}")
+    for source, destinations in _payload_pairs():
         plaintext = source.read_bytes()
         envelope = encrypt_bytes(plaintext, password)
         encoded = json.dumps(envelope, indent=2) + "\n"
@@ -147,7 +162,7 @@ def check_site_payloads() -> list[str]:
     Does not need the password. Catches a plaintext publish or a stale encrypt.
     """
     problems = []
-    for source, destinations in PAYLOAD_MAP:
+    for source, destinations in _payload_pairs():
         if not source.is_file():
             problems.append(f"missing plaintext source {source.relative_to(ROOT)}")
             continue

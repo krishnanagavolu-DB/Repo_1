@@ -42,7 +42,9 @@ def test_published_site_json_is_encrypted_and_matches_processed():
 
 
 def test_published_envelopes_are_not_plaintext_metrics():
-    for _source, destinations in PAYLOAD_MAP:
+    for source, destinations in PAYLOAD_MAP:
+        if not source.is_file():
+            continue
         for dest in destinations:
             payload = json.loads(dest.read_text(encoding="utf-8"))
             assert is_envelope(payload), dest

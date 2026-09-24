@@ -8,7 +8,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=1942a39e8c" />
+    <link rel="stylesheet" href="css/dashboard.css?v=6d9fe5a0c1" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -18,7 +18,7 @@
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
     <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
-    <script src="js/payment-devices.js?v=ac102ca116" defer></script>
+    <script src="js/payment-devices.js?v=4b555221ab" defer></script>
     <script src="js/tabs.js?v=835b13ae94" defer></script>
     <script src="js/chatbot.js?v=d8302ab850" defer></script>
   </head>
@@ -410,23 +410,56 @@
                 <span>Verifone e285 lifecycle &middot; 5,700-unit contract, workbook is the source of truth</span>
               </div>
             </header>
+            <section id="devices-ribbon" class="devices-ribbon" aria-label="Current device position">
+              <article class="devices-kpi" id="devices-kpi-firm">
+                <div class="devices-kpi-label">Firm Balance</div>
+                <div class="devices-kpi-value"><span id="devices-kpi-firm-value">—</span> <span class="devices-kpi-unit">Units</span></div>
+                <p class="devices-kpi-note" id="devices-kpi-firm-note"></p>
+              </article>
+              <article class="devices-kpi" id="devices-kpi-pending">
+                <div class="devices-kpi-label">Pending Pipeline</div>
+                <div class="devices-kpi-value"><span id="devices-kpi-pending-value">—</span></div>
+                <p class="devices-kpi-note" id="devices-kpi-pending-note"></p>
+              </article>
+              <article class="devices-kpi" id="devices-kpi-shipped">
+                <div class="devices-kpi-label">Shipped to Date</div>
+                <div class="devices-kpi-value"><span id="devices-kpi-shipped-value">—</span> <span class="devices-kpi-unit">Units</span></div>
+                <p class="devices-kpi-note" id="devices-kpi-shipped-note"></p>
+              </article>
+              <article class="devices-kpi devices-kpi-modelled" id="devices-kpi-zero">
+                <div class="devices-kpi-label">Projected Depletion</div>
+                <div class="devices-kpi-value"><span id="devices-kpi-zero-value">—</span></div>
+                <p class="devices-kpi-note" id="devices-kpi-zero-note"></p>
+              </article>
+            </section>
             <article class="panel devices-chart-panel">
-              <h3>Verifone e285 Lifecycle Burndown</h3>
+              <div class="devices-chart-head">
+                <h3>Verifone e285 Lifecycle Burndown</h3>
+                <div class="devices-runrate" role="group" aria-label="Projected run rate">
+                  <span class="devices-runrate-label">Projected Run-Rate</span>
+                  <button type="button" id="devices-runrate-down" aria-label="Decrease run rate by half a shop">−</button>
+                  <output id="devices-runrate-value" for="devices-runrate">5.5 Shops/Wk</output>
+                  <button type="button" id="devices-runrate-up" aria-label="Increase run rate by half a shop">+</button>
+                  <label for="devices-runrate" class="visually-hidden">Projected shop openings per week</label>
+                  <input
+                    type="range"
+                    id="devices-runrate"
+                    min="0.5"
+                    max="10"
+                    step="0.5"
+                    value="5.5"
+                  />
+                </div>
+              </div>
               <div class="chart-wrap devices-chart-wrap">
                 <canvas id="chart-devices-burndown" aria-label="Projected e285 inventory remaining"></canvas>
                 <aside id="devices-gap-callout" class="devices-gap-callout" hidden></aside>
               </div>
               <p id="devices-source-note" class="devices-source-note"></p>
             </article>
-            <section class="devices-context" aria-label="Burndown context and assumptions">
-              <div>
-                <h3>What the files currently say</h3>
-                <ul id="devices-live"></ul>
-              </div>
-              <div>
-                <h3>Assumptions that stay fixed</h3>
-                <ul id="devices-assumptions"></ul>
-              </div>
+            <section class="devices-context" aria-label="Assumptions behind the projection">
+              <h3>Assumptions</h3>
+              <div class="devices-assumptions" id="devices-assumptions"></div>
             </section>
           </div>
         </section>

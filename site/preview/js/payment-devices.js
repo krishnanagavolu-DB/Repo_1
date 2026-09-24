@@ -7,7 +7,13 @@ const MUTED = "#9aa8b5";
 const BLACK = "#111111";
 const RED = "#d9272d";
 
+const RUN_RATE_MIN = 0.5;
+const RUN_RATE_MAX = 10;
+const RUN_RATE_STEP = 0.5;
+const DAY_MS = 86400000;
+
 let burndownChart = null;
+let runRate = null;
 
 function fmtInt(value) {
   const n = Number(value);
@@ -46,6 +52,96 @@ function toMs(iso) {
    projection is weekly, so an index axis would stretch 2026 and squash 2028. */
 function pointsFor(series) {
   return (series || []).map((point) => ({ x: toMs(point.date), y: point.inventory }));
+}
+
+function fmtRate(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return n.toFixed(1);
+}
+
+function clampRunRate(value, fallback = 5.5) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  const snapped = Math.round(n / RUN_RATE_STEP) * RUN_RATE_STEP;
+  return Math.min(RUN_RATE_MAX, Math.max(RUN_RATE_MIN, Number(snapped.toFixed(1))));
+}
+
+function addDays(iso, days) {
+  const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
+  const next = new Date(year, month - 1, (day || 1) + days);
+  const mm = String(next.getMonth() + 1).padStart(2, "0");
+  const dd = String(next.getDate()).padStart(2, "0");
+  return `${next.getFullYear()}-${mm}-${dd}`;
+}
+
+function dayCount(fromIso, toIso) {
+  return Math.round((toMs(toIso) - toMs(fromIso)) / DAY_MS);
+}
+
+/* Committed pending orders are fixed; only the open-ended tail after the PO
+   pipeline responds to the run-rate control, so the slider never rewrites
+   demand that is already booked. */
+function projectSeries(payload, shopsPerWeek) {
+  const projected = payload?.series?.projected || [];
+  const devicesPerShop = Number(payload?.assumptions?.devices_per_shop) || 10;
+  const pipelineEnd = payload?.summary?.pipeline_end_date || projected.at(-1)?.date;
+  const thresholds = payload?.thresholds || [];
+  const head = projected
+    .filter((point) => String(point.date) <= String(pipelineEnd))
+    .map((point) => ({ date: point.date, inventory: Number(point.inventory) }));
+  const points = head.length ? head : projected.map((p) => ({ date: p.date, inventory: Number(p.inventory) }));
+
+  const perDay = (devicesPerShop * clampRunRate(shopsPerWeek)) / 7;
+  let remaining = points.at(-1)?.inventory ?? 0;
+  let offset = 0;
+  while (remaining > 0 && perDay > 0) {
+    offset += 1;
+    remaining = Math.max(0, remaining - perDay);
+    if (remaining < 1e-9) remaining = 0;
+    if (remaining === 0 || offset % 7 === 0) {
+      points.push({ date: addDays(pipelineEnd, offset), inventory: remaining });
+    }
+  }
+
+  return {
+    points,
+    zeroDate: points.at(-1)?.date || null,
+    crossings: crossingsFor(points, thresholds),
+    shopsPerWeek: clampRunRate(shopsPerWeek),
+  };
+}
+
+function crossingsFor(points, thresholds) {
+  const rows = [];
+  for (const threshold of thresholds) {
+    const when = crossingDate(points, threshold);
+    if (when) rows.push({ threshold, date: when, label: monthLabel(when) });
+  }
+  return rows;
+}
+
+function crossingDate(points, threshold) {
+  if (!points.length) return null;
+  if (points[0].inventory <= threshold) return points[0].date;
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const from = points[i];
+    const to = points[i + 1];
+    if (from.inventory > threshold && threshold >= to.inventory) {
+      if (from.inventory === to.inventory) return to.date;
+      const frac = (from.inventory - threshold) / (from.inventory - to.inventory);
+      const span = dayCount(from.date, to.date);
+      return addDays(from.date, Math.floor(span * frac));
+    }
+  }
+  return null;
+}
+
+function tickStepMonths(minMs, maxMs) {
+  const months = (maxMs - minMs) / (DAY_MS * 30.44);
+  if (months <= 30) return 3;
+  if (months <= 60) return 6;
+  return 12;
 }
 
 function monthTicks(minMs, maxMs, stepMonths) {
@@ -181,14 +277,21 @@ function positionCallout(chart, gap) {
   box.style.top = `${Math.min(top, Math.max(8, wrap.clientHeight - height - 8))}px`;
 }
 
-function renderChart(payload) {
+function renderChart(payload, shopsPerWeek) {
   const canvas = document.getElementById("chart-devices-burndown");
   if (!canvas || typeof Chart === "undefined") return;
+  const rate = clampRunRate(shopsPerWeek ?? payload.assumptions?.shops_per_week);
+  const projection = projectSeries(payload, rate);
   const firmData = pointsFor(payload.series?.firm);
-  const projectedData = pointsFor(payload.series?.projected);
+  const projectedData = pointsFor(projection.points);
   const yMax = Number(payload.chart?.y_max) || 6000;
   const xMin = toMs(payload.chart?.x_min || payload.series?.firm?.[0]?.date);
-  const xMax = toMs(payload.chart?.x_max || payload.series?.projected?.at(-1)?.date);
+  // The tail moves with the run rate, so the axis follows the longer of the
+  // certified window and the modelled depletion.
+  const xMax = Math.max(
+    toMs(payload.chart?.x_max || projection.zeroDate),
+    toMs(projection.zeroDate || payload.chart?.x_max)
+  );
 
   if (burndownChart) burndownChart.destroy();
   burndownChart = new Chart(canvas, {
@@ -205,7 +308,7 @@ function renderChart(payload) {
           tension: 0,
         },
         {
-          label: "Projected Demand (Pending Orders + 5.5 Shops/Wk)",
+          label: `Projected Demand (Pending Orders + ${fmtRate(rate)} Shops/Wk)`,
           data: projectedData,
           borderColor: RED,
           backgroundColor: RED,
@@ -228,7 +331,7 @@ function renderChart(payload) {
         },
         deviceThresholds: {
           thresholds: payload.thresholds || [3000, 2500, 2000, 1500, 1000],
-          crossings: payload.crossings || [],
+          crossings: projection.crossings,
           gap: payload.gap || null,
         },
       },
@@ -238,7 +341,11 @@ function renderChart(payload) {
           min: xMin,
           max: xMax,
           afterBuildTicks(axis) {
-            axis.ticks = monthTicks(axis.min, axis.max, 3).map((value) => ({ value }));
+            // A slow run rate can push depletion years out; widen the step so
+            // the axis never turns into a wall of overlapping labels.
+            axis.ticks = monthTicks(axis.min, axis.max, tickStepMonths(axis.min, axis.max)).map(
+              (value) => ({ value })
+            );
           },
           ticks: {
             maxRotation: 0,
@@ -258,28 +365,114 @@ function renderChart(payload) {
   });
 }
 
-function renderSummary(payload) {
-  const live = document.getElementById("devices-live");
-  const assumptions = document.getElementById("devices-assumptions");
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
+function renderRibbon(payload, projection) {
   const summary = payload.summary || {};
+  setText("devices-kpi-firm-value", `${fmtInt(summary.firm_inventory)}`);
+  setText(
+    "devices-kpi-firm-note",
+    `${fmtInt(summary.baseline_inventory)} contracted − ${fmtInt(summary.shipped_qty)} shipped − ${fmtInt(summary.booked_qty)} booked`
+  );
+  setText("devices-kpi-pending-value", `${fmtInt(summary.pending_shops)} shops`);
+  setText(
+    "devices-kpi-pending-note",
+    `${fmtInt(summary.pending_units)} units in the PO pipeline awaiting MIDs/booking`
+  );
+  setText("devices-kpi-shipped-value", `${fmtInt(summary.shipped_qty)}`);
+  setText(
+    "devices-kpi-shipped-note",
+    `${fmtInt(summary.shipped_shops)} shops shipped since ${fmtDate(payload.assumptions?.baseline_date)}`
+  );
+  setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
+  setText(
+    "devices-kpi-zero-note",
+    `Pool exhausted ${fmtDate(projection.zeroDate)} at ${fmtRate(projection.shopsPerWeek)} shops/wk`
+  );
+}
+
+function renderAssumptions(payload) {
+  const grid = document.getElementById("devices-assumptions");
+  if (!grid) return;
   const a = payload.assumptions || {};
-  if (live) {
-    live.innerHTML = `
-      <li><strong>Current firm inventory</strong> ${fmtInt(summary.firm_inventory)} = ${fmtInt(summary.baseline_inventory)} − ${fmtInt(summary.shipped_qty)} shipped since Feb − ${fmtInt(summary.booked_qty)} booked</li>
-      <li><strong>Shops already shipped</strong> ${fmtInt(summary.shipped_shops)} since Feb 2026 (${fmtInt(summary.shipped_qty)} units)</li>
-      <li><strong>Pending orders</strong> ${fmtInt(summary.pending_shops)} shops in the PO extract without a booked e285 order (${fmtInt(summary.pending_units)} units)</li>
-    `;
+  const cards = [
+    {
+      title: "Master Contract",
+      value: `${fmtInt(a.baseline_inventory)} Units`,
+      note: `${fmtDate(a.baseline_date)} baseline, covers all entity types.`,
+    },
+    {
+      title: "Shop Allocation",
+      value: `${fmtInt(a.devices_per_shop)} Units/Shop`,
+      note: `Assumed shipped ${fmtInt(a.staging_lead_days)} days pre-opening.`,
+    },
+    {
+      title: "Safety Buffer",
+      value: `${fmtInt(a.safety_buffer)} Units`,
+      note: "Reserved for field service / break-fix.",
+    },
+    {
+      title: "e235 Cutover Target",
+      value: `${fmtInt(a.order_threshold)} Units`,
+      note: "Remaining e285 balance that triggers the next hardware order.",
+    },
+    {
+      title: "Scope",
+      value: "Whole network",
+      note: "Company-owned and franchise/Boersma shops draw from one pool.",
+    },
+    {
+      title: "Tracked Item",
+      value: a.target_item || "—",
+      note: "Only this e285 SKU burns the contract pool.",
+    },
+  ];
+  grid.innerHTML = cards
+    .map(
+      (card) => `
+      <div class="devices-assumption">
+        <div class="devices-assumption-title">${card.title}</div>
+        <div class="devices-assumption-value">${card.value}</div>
+        <p class="devices-assumption-note">${card.note}</p>
+      </div>`
+    )
+    .join("");
+}
+
+function renderRunRateControl(rate) {
+  const slider = document.getElementById("devices-runrate");
+  if (slider && Number(slider.value) !== rate) slider.value = String(rate);
+  setText("devices-runrate-value", `${fmtRate(rate)} Shops/Wk`);
+}
+
+function applyRunRate(nextRate, payload) {
+  const data = payload || window.__paymentDevicesState;
+  if (!data?.certified) return;
+  runRate = clampRunRate(nextRate, clampRunRate(data.assumptions?.shops_per_week));
+  const projection = projectSeries(data, runRate);
+  renderRunRateControl(runRate);
+  renderRibbon(data, projection);
+  renderChart(data, runRate);
+}
+
+function bindRunRateControl(payload) {
+  const slider = document.getElementById("devices-runrate");
+  const down = document.getElementById("devices-runrate-down");
+  const up = document.getElementById("devices-runrate-up");
+  if (slider && !slider.dataset.bound) {
+    slider.dataset.bound = "true";
+    slider.addEventListener("input", () => applyRunRate(slider.value, payload));
   }
-  if (assumptions) {
-    assumptions.innerHTML = `
-      <li>Baseline contract allocation: ${fmtInt(a.baseline_inventory)} units (${fmtDate(a.baseline_date)})</li>
-      <li>Scope: ${a.scope || "Tracks total ecosystem hardware depletion (Company-Owned and Franchise/Boersma locations combined) against the 5,700-unit master contract"}</li>
-      <li>Standard hardware allocation: ${fmtInt(a.devices_per_shop)} e285 units per shop</li>
-      <li>Stratix staging lead time: devices ship ${fmtInt(a.staging_lead_days)} days before a shop’s projected opening</li>
-      <li>Post-pipeline projection: ${a.shops_per_week} shop openings per week</li>
-      <li>The ${fmtInt(a.safety_buffer)}-unit threshold is the safety buffer for field service and hardware support</li>
-      <li>Target threshold to begin ordering e235 hardware is ${fmtInt(a.order_threshold)} remaining e285 units</li>
-    `;
+  if (down && !down.dataset.bound) {
+    down.dataset.bound = "true";
+    down.addEventListener("click", () => applyRunRate(runRate - RUN_RATE_STEP, payload));
+  }
+  if (up && !up.dataset.bound) {
+    up.dataset.bound = "true";
+    up.addEventListener("click", () => applyRunRate(runRate + RUN_RATE_STEP, payload));
   }
 }
 
@@ -306,9 +499,11 @@ function renderDevices(payload) {
     return;
   }
   showContent();
-  renderSummary(payload);
+  runRate = clampRunRate(payload.assumptions?.shops_per_week);
+  renderAssumptions(payload);
   setCalloutText(payload);
-  renderChart(payload);
+  bindRunRateControl(payload);
+  applyRunRate(runRate, payload);
   registerSnapshot(payload);
   const note = document.getElementById("devices-source-note");
   if (note && payload.sources) {
@@ -342,12 +537,19 @@ function startWhenUnlocked() {
 
 window.__paymentDevices = {
   fmtInt,
+  fmtRate,
   toMs,
+  addDays,
   pointsFor,
   monthTicks,
+  tickStepMonths,
   monthLabel,
+  clampRunRate,
+  projectSeries,
+  crossingsFor,
   renderDevices,
   renderChart,
+  applyRunRate,
   loadDevices,
 };
 

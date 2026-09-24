@@ -1,0 +1,32 @@
+{
+  "sample": true,
+  "disclaimer": "Invented numbers for layout only. This is not Dutch Bros operational data.",
+  "title": "Team KPI Dashboard",
+  "scope": "Sample shops · fictional week",
+  "periods": [
+    { "id": "2026-09-07", "label": "Week of Sep 7 (sample)" },
+    { "id": "2026-09-14", "label": "Week of Sep 14 (sample)" }
+  ],
+  "kpis": [
+    { "id": "completion", "label": "Completion rate", "value": "96.4%", "delta": "▲ 0.4 pts", "good": true },
+    { "id": "volume", "label": "Weekly volume", "value": "12,480", "delta": "▼ 210", "good": false },
+    { "id": "cost", "label": "Unit cost", "value": "$1.18", "delta": "▼ $0.03", "good": true },
+    { "id": "open", "label": "Open items", "value": "37", "delta": "▲ 4", "good": false }
+  ],
+  "mix": [
+    { "label": "Channel A", "pct": 0.52 },
+    { "label": "Channel B", "pct": 0.31 },
+    { "label": "Channel C", "pct": 0.17 }
+  ],
+  "reasons": [
+    { "label": "Missing field", "count": 42 },
+    { "label": "Late file", "count": 18 },
+    { "label": "Duplicate row", "count": 9 }
+  ],
+  "trend": [
+    { "label": "Aug 24", "value": 94.1 },
+    { "label": "Aug 31", "value": 95.0 },
+    { "label": "Sep 7", "value": 96.0 },
+    { "label": "Sep 14", "value": 96.4 }
+  ]
+}

@@ -253,14 +253,15 @@ function renderSummary(payload) {
   const a = payload.assumptions || {};
   if (live) {
     live.innerHTML = `
-      <li><strong>Current firm inventory</strong> ${fmtInt(summary.firm_inventory)} as of ${fmtDate(summary.as_of)}</li>
-      <li><strong>Shops already shipped</strong> ${fmtInt(summary.shipped_shops)} since Feb 2026</li>
+      <li><strong>Current firm inventory</strong> ${fmtInt(summary.firm_inventory)} = ${fmtInt(summary.baseline_inventory)} − ${fmtInt(summary.shipped_qty)} shipped since Feb − ${fmtInt(summary.booked_qty)} booked</li>
+      <li><strong>Shops already shipped</strong> ${fmtInt(summary.shipped_shops)} since Feb 2026 (${fmtInt(summary.shipped_qty)} units)</li>
       <li><strong>Pending orders</strong> ${fmtInt(summary.pending_shops)} shops in the PO extract without a booked e285 order (${fmtInt(summary.pending_units)} units)</li>
     `;
   }
   if (assumptions) {
     assumptions.innerHTML = `
       <li>Baseline contract allocation: ${fmtInt(a.baseline_inventory)} units (${fmtDate(a.baseline_date)})</li>
+      <li>Scope: ${a.scope || "Tracks total ecosystem hardware depletion (Company-Owned and Franchise/Boersma locations combined) against the 5,700-unit master contract"}</li>
       <li>Standard hardware allocation: ${fmtInt(a.devices_per_shop)} e285 units per shop</li>
       <li>Stratix staging lead time: devices ship ${fmtInt(a.staging_lead_days)} days before a shop’s projected opening</li>
       <li>Post-pipeline projection: ${a.shops_per_week} shop openings per week</li>

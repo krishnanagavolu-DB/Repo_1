@@ -43,6 +43,13 @@ const labels = api.uniqueDates({
 });
 check("unique dates include firm, projected, crossings, and gap", labels.join(","), "2026-02-01,2026-04-01,2026-10-15,2026-12-01");
 check("fmtInt groups thousands", api.fmtInt(5700), "5,700");
+check(
+  "scope assumption is rendered from payload text",
+  fs.readFileSync("site/preview/js/payment-devices.js", "utf8").includes(
+    "Company-Owned and Franchise/Boersma locations combined"
+  ),
+  true
+);
 
 const mapped = api.seriesOnLabels(
   [

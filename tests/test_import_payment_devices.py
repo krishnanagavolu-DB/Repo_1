@@ -33,7 +33,15 @@ def _write_orders(path: Path, booked: list[tuple], shipped: list[tuple]) -> None
     booked_ws = wb.active
     booked_ws.title = "Booked Orders"
     booked_ws.append(["Daily Dutch Bros Booked Shipped Orders Report"])
-    booked_ws.append(["End Customer Name", "Item Number", "Ordered Qty", "Requested Date", "Shipping Date"])
+    booked_ws.append(
+        [
+            "End Customer Name",
+            "Item Number",
+            "Ordered Qty",
+            "Requested Date (Approx. Ship Date)",
+            "Shipping Date",
+        ]
+    )
     for row in booked:
         booked_ws.append(list(row))
     shipped_ws = wb.create_sheet("Shipped Orders")
@@ -71,6 +79,34 @@ def test_shipped_shop_ignores_matching_booked_row():
     assert events[0]["source"] == "shipped"
     assert events[0]["qty"] == 10
     assert events[0]["date"] == date(2026, 3, 10)
+
+
+def test_firm_burn_excludes_pre_feb_shipment_for_repeat_shop():
+    events = devices.reconcile_order_lifecycle(
+        booked=[],
+        shipped=[
+            {
+                "id": "AZ0533",
+                "item": TARGET,
+                "qty": 10,
+                "requested_date": date(2025, 2, 1),
+                "shipping_date": date(2025, 2, 3),
+            },
+            {
+                "id": "AZ0533",
+                "item": TARGET,
+                "qty": 4,
+                "requested_date": date(2026, 3, 1),
+                "shipping_date": date(2026, 3, 2),
+            },
+        ],
+    )
+    assert [(event["qty"], event["date"]) for event in events] == [
+        (10, date(2025, 2, 3)),
+        (4, date(2026, 3, 2)),
+    ]
+    result = devices.project_lifecycle(events, pending=[], po_shops=[], today=date(2026, 4, 1))
+    assert result["firm_end_inventory"] == 5696
 
 
 def test_booked_only_shop_uses_ordered_qty_and_requested_date():
@@ -125,6 +161,29 @@ def test_pending_shops_are_po_ids_absent_from_booked_and_shipped():
     ]
     pending = devices.pending_shops(po, {"AL0107", "KS0406"})
     assert [shop["id"] for shop in pending] == ["CA2909"]
+
+
+def test_network_shops_are_not_filtered_by_name():
+    events = devices.reconcile_order_lifecycle(
+        booked=[],
+        shipped=[
+            {
+                "id": "AZ0533",
+                "item": TARGET,
+                "qty": 10,
+                "requested_date": date(2026, 3, 1),
+                "shipping_date": date(2026, 3, 6),
+            }
+        ],
+    )
+    pending = devices.pending_shops(
+        [{"id": "SC0901", "opening_date": date(2027, 3, 15)}],
+        {event["id"] for event in events},
+    )
+    result = devices.project_lifecycle(events, pending, pending, today=date(2026, 4, 1))
+    assert events[0]["id"] == "AZ0533"
+    assert pending[0]["id"] == "SC0901"
+    assert result["firm_end_inventory"] == 5690
 
 
 def test_firm_inventory_starts_at_5700_on_feb_1_and_stops_at_cutoff():
@@ -191,7 +250,9 @@ def test_cli_builds_lifecycle_payload(tmp_path: Path):
     assert payload["summary"]["baseline_inventory"] == 5700
     assert payload["summary"]["firm_inventory"] == 5680
     assert payload["summary"]["shipped_shops"] == 1
-    assert payload["summary"]["pending_shops"] == 1
+    assert payload["summary"]["shipped_qty"] == 10
+    assert payload["summary"]["booked_qty"] == 10
+    assert "Franchise/Boersma" in payload["assumptions"]["scope"]
     assert payload["summary"]["pending_units"] == 10
     assert payload["series"]["firm"][0]["inventory"] == 5700
     assert payload["series"]["projected"][0]["inventory"] == 5680

@@ -771,6 +771,16 @@ function answerDerived(q) {
 }
 
 function answerScope() {
+  if (chatContext.activeTab === "devices" || window.__paymentDevicesState) {
+    const devicesTab = chatContext.activeTab === "devices";
+    if (devicesTab) {
+      return (
+        "Payment Devices tracks **physical e285 units for the whole network** — company-owned and " +
+        "franchise/Boersma shops combined — against the **5,700-unit Verifone master contract**. " +
+        "It is not the company-owned sales footprint used on the other tabs."
+      );
+    }
+  }
   const state = getState();
   const scope = state?.data?.meta?.scope || "Company owned shops only";
   const channel = state?.data?.meta?.channel || "In Shop · Worldpay";

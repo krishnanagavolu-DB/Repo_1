@@ -36,6 +36,10 @@ THRESHOLDS = (3000, 2500, 2000, 1500, 1000)
 SAFETY_BUFFER = 1000
 ORDER_THRESHOLD = 2500
 CHART_END = date(2028, 6, 30)
+SCOPE = (
+    "Tracks total ecosystem hardware depletion (Company-Owned and Franchise/Boersma "
+    "locations combined) against the 5,700-unit master contract"
+)
 
 PO_NAME = re.compile(r"PO_Extract_.*\.(xlsx|json)$", re.I)
 ORDERS_NAME = re.compile(r"Daily Dutch Bros Booked Shipped Orders Report.*\.(xlsx|json)$", re.I)
@@ -53,7 +57,13 @@ CUSTOMER_HEADERS = ("end customer name", "end_customer_name", "end customer", "s
 ITEM_HEADERS = ("item number", "item", "item no", "item #", "item_number")
 ORDERED_QTY_HEADERS = ("ordered qty", "order qty", "qty ordered", "ordered_qty", "qty")
 SHIPPED_QTY_HEADERS = ("shipped qty", "qty shipped", "ship qty", "shipped_qty", "qty")
-REQUESTED_HEADERS = ("requested date", "approx. ship date", "approx ship date", "requested_date")
+REQUESTED_HEADERS = (
+    "requested date",
+    "requested date (approx. ship date)",
+    "approx. ship date",
+    "approx ship date",
+    "requested_date",
+)
 SHIPPING_HEADERS = ("shipping date", "ship date", "shipped date", "shipping_date")
 
 
@@ -233,8 +243,8 @@ def parse_orders_report(path: Path) -> tuple[list[dict], list[dict]]:
     return booked, shipped
 
 
-def _collapse(rows: list[dict], source: str) -> dict[str, dict]:
-    grouped: dict[str, dict] = {}
+def _order_events(rows: list[dict], source: str) -> list[dict]:
+    events = []
     for row in rows:
         if not is_target_item(row.get("item")):
             continue
@@ -245,28 +255,21 @@ def _collapse(rows: list[dict], source: str) -> dict[str, dict]:
         if source == "shipped" and when is None:
             when = row.get("requested_date")
         qty = int(row.get("qty") or 0)
-        current = grouped.get(shop_id)
-        if current is None:
-            grouped[shop_id] = {"id": shop_id, "qty": qty, "date": when, "source": source}
-            continue
-        current["qty"] += qty
-        if when and (current["date"] is None or when > current["date"]):
-            current["date"] = when
-    return grouped
+        if qty > 0 and when is not None:
+            events.append({"id": shop_id, "qty": qty, "date": when, "source": source})
+    return events
 
 
 def reconcile_order_lifecycle(booked: list[dict], shipped: list[dict]) -> list[dict]:
     """Shipped shops win. Booked-only shops use ordered qty on requested date."""
-    shipped_map = _collapse(shipped, "shipped")
-    booked_map = _collapse(booked, "booked")
-    events = list(shipped_map.values())
-    for shop_id, row in booked_map.items():
-        if shop_id not in shipped_map:
-            events.append(row)
-    return sorted(
-        [event for event in events if event["qty"] > 0 and event["date"] is not None],
-        key=lambda event: (event["date"], event["id"]),
-    )
+    shipped_events = _order_events(shipped, "shipped")
+    shipped_ids = {event["id"] for event in shipped_events}
+    booked_events = [
+        event
+        for event in _order_events(booked, "booked")
+        if event["id"] not in shipped_ids
+    ]
+    return sorted(shipped_events + booked_events, key=lambda event: (event["date"], event["id"]))
 
 
 def pending_shops(po_shops: list[dict], ordered_ids: set[str]) -> list[dict]:
@@ -391,6 +394,7 @@ def awaiting_payload(warnings: list[str] | None = None) -> dict:
             "safety_buffer": SAFETY_BUFFER,
             "order_threshold": ORDER_THRESHOLD,
             "target_item": TARGET_ITEM,
+            "scope": SCOPE,
         },
         "thresholds": list(THRESHOLDS),
         "summary": None,
@@ -433,6 +437,10 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         for event in events
         if event["source"] == "shipped" and event["date"] and event["date"] >= BASELINE_DATE
     ]
+    booked_events = [event for event in events if event["source"] == "booked"]
+    shipped_qty = sum(int(event["qty"]) for event in shipped_since)
+    booked_qty = sum(int(event["qty"]) for event in booked_events)
+    firm_inventory = BASELINE_INVENTORY - shipped_qty - booked_qty
     warnings = []
     odd_ids = [shop["id"] for shop in po_shops if not NEWCO_RE.match(shop["id"])]
     if odd_ids:
@@ -455,15 +463,18 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
             "safety_buffer": SAFETY_BUFFER,
             "order_threshold": ORDER_THRESHOLD,
             "target_item": TARGET_ITEM,
+            "scope": SCOPE,
         },
         "thresholds": list(THRESHOLDS),
         "chart": {"x_min": BASELINE_DATE.isoformat(), "x_max": CHART_END.isoformat(), "y_min": 0, "y_max": 6000},
         "summary": {
             "baseline_inventory": BASELINE_INVENTORY,
             "as_of": projection["firm_end_date"].isoformat(),
-            "firm_inventory": round(projection["firm_end_inventory"], 2),
-            "shipped_shops": len(shipped_since),
-            "booked_shops": len([event for event in events if event["source"] == "booked"]),
+            "firm_inventory": firm_inventory,
+            "shipped_shops": len({event["id"] for event in shipped_since}),
+            "shipped_qty": shipped_qty,
+            "booked_shops": len({event["id"] for event in booked_events}),
+            "booked_qty": booked_qty,
             "po_pipeline_shops": len(po_shops),
             "pending_shops": len(pending),
             "pending_units": pending_units,
@@ -474,7 +485,7 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         "crossings": crossings_for(projection["projected"]),
         "gap": {
             "date": projection["firm_end_date"].isoformat(),
-            "inventory": round(projection["firm_end_inventory"], 2),
+            "inventory": firm_inventory,
             "shops": len(pending),
             "units": pending_units,
             "label": (

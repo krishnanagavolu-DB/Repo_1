@@ -2,6 +2,10 @@
 
 The **Payment Devices** tab projects remaining Verifone e285 handhelds from a **5,700-unit contract baseline on 1 Feb 2026**.
 
+Live firm balance is always:
+
+`5,700 − shipped qty since Feb 2026 − booked qty` from the orders workbook (item `M087-500-14-WWA` only). Vendor email totals are never used to override that.
+
 ## Refresh
 
 1. Put the newest files in `data/raw/payment-devices/`:
@@ -16,7 +20,7 @@ DASHBOARD_PASSWORD='…' python3 scripts/encrypt_site_data.py
 
 Parsed JSON with the same names is also accepted. The importer always uses the newest matching filenames.
 
-## Reconciliation
+- Scope: total ecosystem hardware depletion (company-owned and franchise/Boersma) against the 5,700-unit master contract. Do not filter by billing entity.
 
 - Only item **M087-500-14-WWA** counts. Accessories/kits are ignored.
 - `NewCo ID` and `End Customer Name` are an exact 1:1 match on the 6-character shop id.

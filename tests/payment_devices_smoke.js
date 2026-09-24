@@ -35,13 +35,14 @@ const api = sandbox.window.__paymentDevices;
 
 const labels = api.uniqueDates({
   series: {
-    pipeline: [{ date: "2026-09-16", inventory: 3770 }],
-    runRate: [{ date: "2026-12-01", inventory: 3700 }],
+    firm: [{ date: "2026-02-01", inventory: 5700 }],
+    projected: [{ date: "2026-12-01", inventory: 5000 }],
   },
   crossings: [{ date: "2026-10-15", threshold: 3000 }],
+  gap: { date: "2026-04-01" },
 });
-check("unique dates include pipeline, run-rate, and crossings", labels.join(","), "2026-09-16,2026-10-15,2026-12-01");
-check("fmtInt groups thousands", api.fmtInt(3770), "3,770");
+check("unique dates include firm, projected, crossings, and gap", labels.join(","), "2026-02-01,2026-04-01,2026-10-15,2026-12-01");
+check("fmtInt groups thousands", api.fmtInt(5700), "5,700");
 
 const mapped = api.seriesOnLabels(
   [

@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Build the Verifone e285 burndown from dropped-in source files.
+"""Build the Verifone e285 lifecycle burndown from dropped-in source files.
 
-Drop the latest vendor text, PO extract, and orders report into
-`data/raw/payment-devices/` and rerun. The importer always picks the newest
-matching files, so a new drop updates the published JSON.
+Drop the latest PO extract and orders report into `data/raw/payment-devices/`
+and rerun. The importer always picks the newest matching files.
 
 Usage:
     python3 scripts/import_payment_devices.py
-    python3 scripts/import_payment_devices.py --raw data/raw/payment-devices
+    python3 scripts/import_payment_devices.py --raw data/raw/payment-devices --as-of 2026-04-01
 """
 
 from __future__ import annotations
@@ -25,19 +24,21 @@ ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw" / "payment-devices"
 PROCESSED = ROOT / "data" / "processed" / "payment_devices.json"
 
+TARGET_ITEM = "M087-500-14-WWA"
+BASELINE_INVENTORY = 5700
+BASELINE_DATE = date(2026, 2, 1)
 DEVICES_PER_SHOP = 10
 SHOPS_PER_WEEK = 5.5
 DEVICES_PER_WEEK = DEVICES_PER_SHOP * SHOPS_PER_WEEK
 DEVICES_PER_DAY = DEVICES_PER_WEEK / 7
+STAGING_LEAD_DAYS = 14
 THRESHOLDS = (3000, 2500, 2000, 1500, 1000)
 SAFETY_BUFFER = 1000
 ORDER_THRESHOLD = 2500
+CHART_END = date(2028, 6, 30)
 
-PO_NAME = re.compile(r"PO_Extract_.*\.xlsx$", re.I)
-ORDERS_NAME = re.compile(r"Daily Dutch Bros Booked Shipped Orders Report.*\.xlsx$", re.I)
-VENDOR_NAME = re.compile(r"(vendor|kimlie|inventory).*\.txt$", re.I)
-BALANCE_RE = re.compile(r"remaining\s+balance[^0-9]*([0-9][0-9,]*)", re.I)
-DATE_RE = re.compile(r"(?:date|as of)[^0-9]*(\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{2,4})", re.I)
+PO_NAME = re.compile(r"PO_Extract_.*\.(xlsx|json)$", re.I)
+ORDERS_NAME = re.compile(r"Daily Dutch Bros Booked Shipped Orders Report.*\.(xlsx|json)$", re.I)
 ISO_IN_NAME = re.compile(r"(20\d{2})[-_]?(\d{2})[-_]?(\d{2})")
 NEWCO_RE = re.compile(r"^[A-Za-z]{2}\d{4}$")
 
@@ -48,7 +49,12 @@ PO_DATE_HEADERS = (
     "opening date",
     "open date",
 )
-CUSTOMER_HEADERS = ("end customer name", "end_customer_name", "end customer")
+CUSTOMER_HEADERS = ("end customer name", "end_customer_name", "end customer", "shop id")
+ITEM_HEADERS = ("item number", "item", "item no", "item #", "item_number")
+ORDERED_QTY_HEADERS = ("ordered qty", "order qty", "qty ordered", "ordered_qty", "qty")
+SHIPPED_QTY_HEADERS = ("shipped qty", "qty shipped", "ship qty", "shipped_qty", "qty")
+REQUESTED_HEADERS = ("requested date", "approx. ship date", "approx ship date", "requested_date")
+SHIPPING_HEADERS = ("shipping date", "ship date", "shipped date", "shipping_date")
 
 
 def json_ready(value):
@@ -79,6 +85,15 @@ def parse_date(value) -> date | None:
     return None
 
 
+def parse_qty(value) -> int:
+    if value is None or value == "":
+        return 0
+    try:
+        return int(round(float(str(value).replace(",", ""))))
+    except ValueError:
+        return 0
+
+
 def cell_text(value) -> str:
     if value is None:
         return ""
@@ -88,8 +103,11 @@ def cell_text(value) -> str:
 
 
 def normalize_shop_id(value) -> str:
-    """Exact 1:1 match on the 6-character store id, after trimming Excel padding."""
     return cell_text(value)
+
+
+def is_target_item(value) -> bool:
+    return cell_text(value).upper() == TARGET_ITEM
 
 
 def latest_file(directory: Path, pattern: re.Pattern[str]) -> Path | None:
@@ -105,20 +123,6 @@ def latest_file(directory: Path, pattern: re.Pattern[str]) -> Path | None:
         return (stamp, path.stat().st_mtime)
 
     return max(matches, key=sort_key)
-
-
-def parse_vendor_text(text: str) -> tuple[int, date]:
-    balance_match = BALANCE_RE.search(text or "")
-    date_match = DATE_RE.search(text or "")
-    if not balance_match:
-        raise ValueError("vendor text has no Remaining balance")
-    if not date_match:
-        raise ValueError("vendor text has no Date")
-    balance = int(balance_match.group(1).replace(",", ""))
-    as_of = parse_date(date_match.group(1))
-    if as_of is None:
-        raise ValueError(f"vendor date is not parseable: {date_match.group(1)}")
-    return balance, as_of
 
 
 def _header_index(row: list[str], aliases: tuple[str, ...]) -> int | None:
@@ -156,6 +160,18 @@ def read_sheet_rows(path: Path, sheet=None, sheet_index: int | None = None) -> l
 
 
 def parse_po_extract(path: Path) -> list[dict]:
+    if path.suffix.lower() == ".json":
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        rows = payload.get("shops") or payload.get("rows") or payload
+        shops = []
+        seen = set()
+        for row in rows:
+            shop_id = normalize_shop_id(row.get("NewCo ID") or row.get("id") or row.get("shop_id"))
+            if not shop_id or shop_id in seen:
+                continue
+            seen.add(shop_id)
+            shops.append({"id": shop_id, "opening_date": parse_date(row.get("Projected Opening Date") or row.get("opening_date"))})
+        return shops
     rows = read_sheet_rows(path)
     header_i, id_i = _detect_header_row(rows, PO_ID_HEADERS)
     date_i = _header_index([cell_text(value) for value in rows[header_i]], PO_DATE_HEADERS)
@@ -165,36 +181,97 @@ def parse_po_extract(path: Path) -> list[dict]:
     seen = set()
     for row in rows[header_i + 1 :]:
         shop_id = normalize_shop_id(row[id_i] if id_i < len(row) else None)
-        if not shop_id:
-            continue
-        if shop_id in seen:
-            continue
-        seen.add(shop_id)
-        opening = parse_date(row[date_i] if date_i < len(row) else None)
-        shops.append({"id": shop_id, "opening_date": opening})
-    return shops
-
-
-def parse_customer_ids(path: Path, sheet: str, sheet_index: int) -> list[str]:
-    try:
-        rows = read_sheet_rows(path, sheet=sheet)
-    except ValueError:
-        rows = read_sheet_rows(path, sheet_index=sheet_index)
-    header_i, col_i = _detect_header_row(rows, CUSTOMER_HEADERS)
-    ids = []
-    seen = set()
-    for row in rows[header_i + 1 :]:
-        shop_id = normalize_shop_id(row[col_i] if col_i < len(row) else None)
         if not shop_id or shop_id in seen:
             continue
         seen.add(shop_id)
-        ids.append(shop_id)
-    return ids
+        shops.append({"id": shop_id, "opening_date": parse_date(row[date_i] if date_i < len(row) else None)})
+    return shops
 
 
-def unfulfilled_shops(po_shops: list[dict], shipped_ids: set[str]) -> list[dict]:
-    """Keep PO shops whose NewCo ID is not in the shipped End Customer Name set."""
-    return [shop for shop in po_shops if shop["id"] not in shipped_ids]
+def _parse_order_rows(rows: list[tuple], qty_headers: tuple[str, ...], preferred_date: tuple[str, ...]) -> list[dict]:
+    header_i, id_i = _detect_header_row(rows, CUSTOMER_HEADERS)
+    header = [cell_text(value) for value in rows[header_i]]
+    item_i = _header_index(header, ITEM_HEADERS)
+    qty_i = _header_index(header, qty_headers)
+    requested_i = _header_index(header, REQUESTED_HEADERS)
+    shipping_i = _header_index(header, SHIPPING_HEADERS)
+    parsed = []
+    for row in rows[header_i + 1 :]:
+        shop_id = normalize_shop_id(row[id_i] if id_i < len(row) else None)
+        if not shop_id:
+            continue
+        item = cell_text(row[item_i] if item_i is not None and item_i < len(row) else None)
+        qty = parse_qty(row[qty_i] if qty_i is not None and qty_i < len(row) else None)
+        requested = parse_date(row[requested_i] if requested_i is not None and requested_i < len(row) else None)
+        shipping = parse_date(row[shipping_i] if shipping_i is not None and shipping_i < len(row) else None)
+        parsed.append(
+            {
+                "id": shop_id,
+                "item": item,
+                "qty": qty,
+                "requested_date": requested,
+                "shipping_date": shipping,
+            }
+        )
+    return parsed
+
+
+def parse_orders_report(path: Path) -> tuple[list[dict], list[dict]]:
+    if path.suffix.lower() == ".json":
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return payload.get("booked") or [], payload.get("shipped") or []
+    try:
+        booked_rows = read_sheet_rows(path, sheet="Booked Orders")
+    except ValueError:
+        booked_rows = read_sheet_rows(path, sheet_index=0)
+    try:
+        shipped_rows = read_sheet_rows(path, sheet="Shipped Orders")
+    except ValueError:
+        shipped_rows = read_sheet_rows(path, sheet_index=1)
+    booked = _parse_order_rows(booked_rows, ORDERED_QTY_HEADERS, REQUESTED_HEADERS)
+    shipped = _parse_order_rows(shipped_rows, SHIPPED_QTY_HEADERS, SHIPPING_HEADERS)
+    return booked, shipped
+
+
+def _collapse(rows: list[dict], source: str) -> dict[str, dict]:
+    grouped: dict[str, dict] = {}
+    for row in rows:
+        if not is_target_item(row.get("item")):
+            continue
+        shop_id = normalize_shop_id(row.get("id"))
+        if not shop_id:
+            continue
+        when = row.get("shipping_date") if source == "shipped" else row.get("requested_date")
+        if source == "shipped" and when is None:
+            when = row.get("requested_date")
+        qty = int(row.get("qty") or 0)
+        current = grouped.get(shop_id)
+        if current is None:
+            grouped[shop_id] = {"id": shop_id, "qty": qty, "date": when, "source": source}
+            continue
+        current["qty"] += qty
+        if when and (current["date"] is None or when > current["date"]):
+            current["date"] = when
+    return grouped
+
+
+def reconcile_order_lifecycle(booked: list[dict], shipped: list[dict]) -> list[dict]:
+    """Shipped shops win. Booked-only shops use ordered qty on requested date."""
+    shipped_map = _collapse(shipped, "shipped")
+    booked_map = _collapse(booked, "booked")
+    events = list(shipped_map.values())
+    for shop_id, row in booked_map.items():
+        if shop_id not in shipped_map:
+            events.append(row)
+    return sorted(
+        [event for event in events if event["qty"] > 0 and event["date"] is not None],
+        key=lambda event: (event["date"], event["id"]),
+    )
+
+
+def pending_shops(po_shops: list[dict], ordered_ids: set[str]) -> list[dict]:
+    """Keep PO shops that have not been booked or shipped — they are still awaiting MIDs."""
+    return [shop for shop in po_shops if shop["id"] not in ordered_ids]
 
 
 def _add_point(points: list[dict], when: date, inventory: float, series: str) -> None:
@@ -205,59 +282,66 @@ def _add_point(points: list[dict], when: date, inventory: float, series: str) ->
     points.append({"date": when.isoformat(), "inventory": round(inventory, 4), "series": series})
 
 
-def project_burndown(
-    start_inventory: int,
-    start_date: date,
-    unfulfilled: list[dict],
+def project_lifecycle(
+    events: list[dict],
+    pending: list[dict],
     po_shops: list[dict],
+    today: date | None = None,
 ) -> dict:
-    inventory = float(start_inventory)
-    pipeline: list[dict] = []
-    _add_point(pipeline, start_date, inventory, "pipeline")
+    today = today or date.today()
+    event_dates = [event["date"] for event in events if event.get("date") and event["date"] >= BASELINE_DATE]
+    firm_end = max([today, *event_dates], default=today)
 
-    past_due = [shop for shop in unfulfilled if shop["opening_date"] is None or shop["opening_date"] <= start_date]
-    future = [shop for shop in unfulfilled if shop["opening_date"] is not None and shop["opening_date"] > start_date]
-
-    if past_due:
-        inventory -= len(past_due) * DEVICES_PER_SHOP
-        _add_point(pipeline, start_date, inventory, "pipeline")
+    inventory = float(BASELINE_INVENTORY)
+    firm: list[dict] = []
+    _add_point(firm, BASELINE_DATE, inventory, "firm")
 
     by_date: dict[date, int] = defaultdict(int)
-    for shop in future:
-        by_date[shop["opening_date"]] += 1
+    for event in events:
+        when = event.get("date")
+        if when is None or when < BASELINE_DATE or when > firm_end:
+            continue
+        by_date[when] += int(event["qty"])
     for when in sorted(by_date):
-        inventory -= by_date[when] * DEVICES_PER_SHOP
-        _add_point(pipeline, when, inventory, "pipeline")
+        inventory -= by_date[when]
+        _add_point(firm, when, inventory, "firm")
+    if firm[-1]["date"] != firm_end.isoformat():
+        _add_point(firm, firm_end, inventory, "firm")
 
-    opening_dates = [shop["opening_date"] for shop in po_shops if shop["opening_date"]]
-    pipeline_end_date = max([start_date, *opening_dates], default=start_date)
-    if pipeline[-1]["date"] != pipeline_end_date.isoformat():
-        _add_point(pipeline, pipeline_end_date, inventory, "pipeline")
-
-    run_rate: list[dict] = []
-    _add_point(run_rate, pipeline_end_date, inventory, "runRate")
-    cursor = pipeline_end_date
+    projected: list[dict] = []
     remaining = inventory
+    _add_point(projected, firm_end, remaining, "projected")
+
+    pending_by_date: dict[date, int] = defaultdict(int)
+    for shop in pending:
+        opening = shop.get("opening_date")
+        staged = firm_end if opening is None else opening - timedelta(days=STAGING_LEAD_DAYS)
+        pending_by_date[max(staged, firm_end)] += DEVICES_PER_SHOP
+    for when in sorted(pending_by_date):
+        remaining -= pending_by_date[when]
+        _add_point(projected, when, remaining, "projected")
+
+    opening_dates = [shop["opening_date"] for shop in po_shops if shop.get("opening_date")]
+    pipeline_end = max([firm_end, *opening_dates], default=firm_end)
+    if projected[-1]["date"] != pipeline_end.isoformat():
+        _add_point(projected, pipeline_end, remaining, "projected")
+
+    cursor = pipeline_end
     while remaining > 0:
         cursor += timedelta(days=1)
         remaining = max(0.0, remaining - DEVICES_PER_DAY)
         if remaining < 1e-9:
             remaining = 0.0
-        # Keep weekly samples plus the zero crossing to avoid a 500-point blob
-        # while still drawing a smooth dashed line.
-        if remaining == 0 or (cursor - pipeline_end_date).days % 7 == 0:
-            _add_point(run_rate, cursor, remaining, "runRate")
-    if remaining == 0 and run_rate[-1]["inventory"] != 0:
-        _add_point(run_rate, cursor, 0, "runRate")
+        if remaining == 0 or (cursor - pipeline_end).days % 7 == 0:
+            _add_point(projected, cursor, remaining, "projected")
 
-    depletion_end = parse_date(run_rate[-1]["date"]) if run_rate else pipeline_end_date
     return {
-        "pipeline": pipeline,
-        "runRate": run_rate,
-        "pipeline_end_date": pipeline_end_date,
-        "pipeline_end_inventory": max(0.0, inventory),
-        "zero_date": depletion_end,
-        "past_due_shops": len(past_due),
+        "firm": firm,
+        "projected": projected,
+        "firm_end_date": firm_end,
+        "firm_end_inventory": max(0.0, float(inventory)),
+        "zero_date": parse_date(projected[-1]["date"]) if projected else firm_end,
+        "pipeline_end_date": pipeline_end,
     }
 
 
@@ -266,7 +350,6 @@ def _points_as_pairs(series: list[dict]) -> list[tuple[date, float]]:
 
 
 def crossing_date(series: list[dict], threshold: int) -> date | None:
-    """First date the remaining inventory is at or below the threshold."""
     pairs = _points_as_pairs(series)
     if not pairs:
         return None
@@ -283,20 +366,13 @@ def crossing_date(series: list[dict], threshold: int) -> date | None:
     return None
 
 
-def crossings_for(pipeline: list[dict], run_rate: list[dict]) -> list[dict]:
-    combined = pipeline + [point for point in run_rate if point["date"] != pipeline[-1]["date"]]
+def crossings_for(projected: list[dict]) -> list[dict]:
     rows = []
     for threshold in THRESHOLDS:
-        when = crossing_date(combined, threshold)
+        when = crossing_date(projected, threshold)
         if when is None:
             continue
-        rows.append(
-            {
-                "threshold": threshold,
-                "date": when.isoformat(),
-                "label": when.strftime("%b %Y"),
-            }
-        )
+        rows.append({"threshold": threshold, "date": when.isoformat(), "label": when.strftime("%b %Y")})
     return rows
 
 
@@ -306,31 +382,33 @@ def awaiting_payload(warnings: list[str] | None = None) -> dict:
         "status": "awaiting_sources",
         "certified": False,
         "assumptions": {
+            "baseline_inventory": BASELINE_INVENTORY,
+            "baseline_date": BASELINE_DATE.isoformat(),
             "devices_per_shop": DEVICES_PER_SHOP,
             "shops_per_week": SHOPS_PER_WEEK,
             "devices_per_week": DEVICES_PER_WEEK,
+            "staging_lead_days": STAGING_LEAD_DAYS,
             "safety_buffer": SAFETY_BUFFER,
             "order_threshold": ORDER_THRESHOLD,
+            "target_item": TARGET_ITEM,
         },
         "thresholds": list(THRESHOLDS),
         "summary": None,
-        "series": {"pipeline": [], "runRate": []},
+        "series": {"firm": [], "projected": []},
         "crossings": [],
+        "gap": None,
         "sources": {},
         "warnings": warnings
         or [
-            "Drop the vendor inventory text, PO_Extract_*.xlsx, and Daily Dutch Bros Booked Shipped Orders Report*.xlsx into data/raw/payment-devices/ and rerun scripts/import_payment_devices.py."
+            "Drop PO_Extract_*.xlsx and Daily Dutch Bros Booked Shipped Orders Report*.xlsx into data/raw/payment-devices/ and rerun scripts/import_payment_devices.py."
         ],
     }
 
 
-def build_payload(raw_dir: Path) -> dict:
-    vendor_path = latest_file(raw_dir, VENDOR_NAME) or next(iter(sorted(raw_dir.glob("*.txt"))), None)
+def build_payload(raw_dir: Path, today: date | None = None) -> dict:
     po_path = latest_file(raw_dir, PO_NAME)
     orders_path = latest_file(raw_dir, ORDERS_NAME)
     missing = []
-    if vendor_path is None:
-        missing.append("vendor inventory text")
     if po_path is None:
         missing.append("PO_Extract_*.xlsx")
     if orders_path is None:
@@ -338,18 +416,23 @@ def build_payload(raw_dir: Path) -> dict:
     if missing:
         payload = awaiting_payload([f"Missing {', '.join(missing)}."])
         payload["sources"] = {
-            "vendor": vendor_path.name if vendor_path else None,
             "po_extract": po_path.name if po_path else None,
             "orders_report": orders_path.name if orders_path else None,
         }
         return payload
 
-    start_inventory, start_date = parse_vendor_text(vendor_path.read_text(encoding="utf-8"))
+    today = today or date.today()
     po_shops = parse_po_extract(po_path)
-    shipped_ids = set(parse_customer_ids(orders_path, "Shipped Orders", 1))
-    booked_ids = set(parse_customer_ids(orders_path, "Booked Orders", 0))
-    remaining = unfulfilled_shops(po_shops, shipped_ids)
-    projection = project_burndown(start_inventory, start_date, remaining, po_shops)
+    booked, shipped = parse_orders_report(orders_path)
+    events = reconcile_order_lifecycle(booked, shipped)
+    ordered_ids = {event["id"] for event in events}
+    pending = pending_shops(po_shops, ordered_ids)
+    projection = project_lifecycle(events, pending, po_shops, today=today)
+    shipped_since = [
+        event
+        for event in events
+        if event["source"] == "shipped" and event["date"] and event["date"] >= BASELINE_DATE
+    ]
     warnings = []
     odd_ids = [shop["id"] for shop in po_shops if not NEWCO_RE.match(shop["id"])]
     if odd_ids:
@@ -357,40 +440,49 @@ def build_payload(raw_dir: Path) -> dict:
             f"{len(odd_ids)} PO NewCo ID(s) are not the expected 2-letter + 4-digit form; matching is still exact."
         )
 
+    pending_units = len(pending) * DEVICES_PER_SHOP
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "status": "certified",
         "certified": True,
         "assumptions": {
+            "baseline_inventory": BASELINE_INVENTORY,
+            "baseline_date": BASELINE_DATE.isoformat(),
             "devices_per_shop": DEVICES_PER_SHOP,
             "shops_per_week": SHOPS_PER_WEEK,
             "devices_per_week": DEVICES_PER_WEEK,
+            "staging_lead_days": STAGING_LEAD_DAYS,
             "safety_buffer": SAFETY_BUFFER,
             "order_threshold": ORDER_THRESHOLD,
+            "target_item": TARGET_ITEM,
         },
         "thresholds": list(THRESHOLDS),
+        "chart": {"x_min": BASELINE_DATE.isoformat(), "x_max": CHART_END.isoformat(), "y_min": 0, "y_max": 6000},
         "summary": {
-            "starting_inventory": start_inventory,
-            "as_of": start_date.isoformat(),
+            "baseline_inventory": BASELINE_INVENTORY,
+            "as_of": projection["firm_end_date"].isoformat(),
+            "firm_inventory": round(projection["firm_end_inventory"], 2),
+            "shipped_shops": len(shipped_since),
+            "booked_shops": len([event for event in events if event["source"] == "booked"]),
             "po_pipeline_shops": len(po_shops),
-            "shipped_shops": len(shipped_ids),
-            "booked_shops": len(booked_ids),
-            "unfulfilled_shops": len(remaining),
-            "past_due_unfulfilled": projection["past_due_shops"],
+            "pending_shops": len(pending),
+            "pending_units": pending_units,
             "pipeline_end_date": projection["pipeline_end_date"].isoformat(),
-            "pipeline_end_inventory": round(projection["pipeline_end_inventory"], 2),
             "zero_date": projection["zero_date"].isoformat() if projection["zero_date"] else None,
         },
-        "series": {
-            "pipeline": projection["pipeline"],
-            "runRate": projection["runRate"],
+        "series": {"firm": projection["firm"], "projected": projection["projected"]},
+        "crossings": crossings_for(projection["projected"]),
+        "gap": {
+            "date": projection["firm_end_date"].isoformat(),
+            "inventory": round(projection["firm_end_inventory"], 2),
+            "shops": len(pending),
+            "units": pending_units,
+            "label": (
+                f"Pending Orders Gap: {len(pending)} Shops "
+                f"({pending_units} units) in PO Pipeline awaiting MIDs/Booking."
+            ),
         },
-        "crossings": crossings_for(projection["pipeline"], projection["runRate"]),
-        "sources": {
-            "vendor": vendor_path.name,
-            "po_extract": po_path.name,
-            "orders_report": orders_path.name,
-        },
+        "sources": {"po_extract": po_path.name, "orders_report": orders_path.name},
         "warnings": warnings,
     }
 
@@ -399,19 +491,21 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--raw", type=Path, default=RAW_DIR)
     parser.add_argument("--out", type=Path, default=PROCESSED)
+    parser.add_argument("--as-of", dest="as_of", default=None, help="Firm-line cutoff date (YYYY-MM-DD). Defaults to today.")
     args = parser.parse_args(argv)
 
     args.raw.mkdir(parents=True, exist_ok=True)
-    payload = build_payload(args.raw)
+    today = parse_date(args.as_of) if args.as_of else date.today()
+    payload = build_payload(args.raw, today=today)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(json_ready(payload), indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {args.out}")
     if payload["certified"]:
         summary = payload["summary"]
         print(
-            f"Starting {summary['starting_inventory']} on {summary['as_of']}; "
-            f"{summary['unfulfilled_shops']} unfulfilled of {summary['po_pipeline_shops']} PO shops; "
-            f"pipeline ends {summary['pipeline_end_date']} at {summary['pipeline_end_inventory']:.0f} devices."
+            f"Firm inventory {summary['firm_inventory']:.0f} as of {summary['as_of']}; "
+            f"{summary['pending_shops']} pending shops ({summary['pending_units']} units); "
+            f"{summary['shipped_shops']} shipped since Feb 2026."
         )
     else:
         print(payload["warnings"][0])

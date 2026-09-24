@@ -30,7 +30,7 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["payment devices", "verifone", "e285", "burndown"],
     title: "Payment Devices",
-    body: "Projected remaining Verifone e285 handhelds. Starting inventory comes from the vendor remaining-balance note. Each unfulfilled PO shop (NewCo ID not in shipped End Customer Name) consumes 10 units on its projected opening date. After the latest PO opening date, remaining units burn at 5.5 shops per week.",
+    body: "Projected remaining Verifone e285 handhelds from a 5,700-unit Feb 2026 baseline. The solid line burns actual booked/shipped qty for item M087-500-14-WWA (shipped shops win over booked). The dashed line continues with pending PO shops at opening minus 14 days, then 5.5 shops per week.",
   },
   {
     terms: ["auth rate", "authorization rate", "approval rate"],
@@ -847,41 +847,38 @@ function wantsDevices(q) {
 
 function answerDevicesQuestion(q) {
   const payload = window.__paymentDevicesState;
-  if (/\bmatch|newco|shipped shops|end customer\b/.test(q)) {
+  if (/\bmatch|newco|shipped shops|end customer|booked\b/.test(q)) {
     return (
-      "**Exact match.** `NewCo ID` and `End Customer Name` are the same 6-character shop id " +
-      "(2-letter state + 4 digits), for example AL0107. Shipped shops are removed from the PO " +
-      "pipeline with a standard string match — no fuzzy matching."
+      "**Exact match, lifecycle rules.** `NewCo ID` and `End Customer Name` are the same 6-character shop id. " +
+      "If the shop is on **Shipped Orders** for item **M087-500-14-WWA**, use Shipped Qty on the Shipping Date and ignore booked rows. " +
+      "If it is booked only, use Ordered Qty on the Requested Date."
     );
   }
-  if (/\b5\.5|run-?rate|after the last|projected opening\b/.test(q)) {
+  if (/\b5\.5|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {
     return (
-      "After the latest Projected Opening Date in the PO extract, remaining inventory burns at " +
-      "**5.5 shops per week** (10 Verifone e285 units per shop → **55 devices per week**)."
+      "Pending PO shops (not yet booked) burn **10 units** on projected opening **minus 14 days** (Stratix staging). " +
+      "After the latest PO extract date, remaining inventory burns at **5.5 shops per week** (**55 devices per week**)."
     );
   }
-  if (/\b2,?500|order threshold|order more hardware|safety buffer\b/.test(q)) {
+  if (/\b2,?500|order threshold|order more hardware|safety buffer|e235\b/.test(q)) {
     return (
-      "The **2,500-unit** line is the target threshold to place a new hardware order. " +
-      "The **1,000-unit** line is the safety buffer. Those two numbers are standing assumptions, " +
-      "not values from the vendor files."
+      "The **2,500-unit** line is when to start ordering e235 hardware. " +
+      "The **1,000-unit** line is the field-service safety buffer. Those two numbers are standing assumptions."
     );
   }
   if (!payload?.certified || !payload.summary) {
     return (
-      "Payment Devices is waiting on the vendor inventory text, PO extract, and booked/shipped " +
-      "orders report. Drop those files into data/raw/payment-devices/ and rerun the importer — " +
-      "no inventory number is invented until those files land."
+      "Payment Devices is waiting on the PO extract and booked/shipped orders report. " +
+      "Drop those files into data/raw/payment-devices/ and rerun the importer — " +
+      "the 5,700-unit Feb 2026 baseline is not published as a live balance until those files land."
     );
   }
   const summary = payload.summary;
   return (
-    `Starting inventory is **${Number(summary.starting_inventory).toLocaleString("en-US")}** ` +
-    `Verifone e285 units as of **${summary.as_of}**. ` +
-    `**${summary.unfulfilled_shops}** of **${summary.po_pipeline_shops}** PO shops are still unfulfilled ` +
-    `(**${summary.shipped_shops}** already shipped). ` +
-    `The PO pipeline is expected to leave **${Number(summary.pipeline_end_inventory).toLocaleString("en-US")}** ` +
-    `units on **${summary.pipeline_end_date}**.`
+    `Current **firm inventory** is **${Number(summary.firm_inventory).toLocaleString("en-US")}** ` +
+    `Verifone e285 units as of **${summary.as_of}** from the **5,700** Feb 2026 baseline. ` +
+    `**${summary.shipped_shops}** shops have shipped since Feb 2026. ` +
+    `**${summary.pending_shops}** PO shops are still awaiting MIDs/booking (**${summary.pending_units}** units).`
   );
 }
 
@@ -1815,10 +1812,10 @@ const TAB_PROMPTS = {
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
   devices: [
-    { question: "How many Verifone e285 units do we still have?", label: "What’s the starting inventory?" },
-    { question: "How are shipped shops matched to the PO pipeline?", label: "How do we match shipped shops?" },
+    { question: "How many Verifone e285 units do we still have?", label: "What’s the firm inventory?" },
+    { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
     { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
-    { question: "When should we order more hardware?", label: "What’s the 2,500-unit order threshold?" },
+    { question: "When should we order more hardware?", label: "What’s the 2,500-unit e235 threshold?" },
   ],
 };
 

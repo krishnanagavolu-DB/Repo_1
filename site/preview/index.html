@@ -8,7 +8,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=37992e1de5" />
+    <link rel="stylesheet" href="css/dashboard.css?v=1942a39e8c" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -18,9 +18,9 @@
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
     <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
-    <script src="js/payment-devices.js?v=7baea9e97b" defer></script>
+    <script src="js/payment-devices.js?v=643a9cad9c" defer></script>
     <script src="js/tabs.js?v=835b13ae94" defer></script>
-    <script src="js/chatbot.js?v=7eb376fd09" defer></script>
+    <script src="js/chatbot.js?v=b5bd67eb5e" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -403,17 +403,18 @@
 
         <section id="panel-devices" class="tab-panel" data-panel="devices" hidden>
           <div id="devices-empty" class="pos-empty" hidden></div>
-          <div id="devices-content" class="slide devices-slide" aria-label="Verifone e285 inventory burndown" hidden>
+          <div id="devices-content" class="slide devices-slide" aria-label="Verifone e285 lifecycle burndown" hidden>
             <header class="slide-band">
               <div>
                 <h2>Payment Devices</h2>
-                <span>Verifone e285 inventory &middot; company-owned shop pipeline</span>
+                <span>Verifone e285 lifecycle &middot; firm booked/shipped vs pending PO demand</span>
               </div>
             </header>
             <article class="panel devices-chart-panel">
-              <h3>Verifone e285 Inventory Burndown</h3>
+              <h3>Verifone e285 Lifecycle Burndown</h3>
               <div class="chart-wrap devices-chart-wrap">
                 <canvas id="chart-devices-burndown" aria-label="Projected e285 inventory remaining"></canvas>
+                <aside id="devices-gap-callout" class="devices-gap-callout" hidden></aside>
               </div>
               <p id="devices-source-note" class="devices-source-note"></p>
             </article>

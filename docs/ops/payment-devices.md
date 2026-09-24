@@ -1,25 +1,31 @@
 # Payment Devices (preview)
 
-The **Payment Devices** tab projects remaining Verifone e285 handhelds from three drop-in files.
+The **Payment Devices** tab projects remaining Verifone e285 handhelds from a **5,700-unit contract baseline on 1 Feb 2026**.
 
 ## Refresh
 
 1. Put the newest files in `data/raw/payment-devices/`:
-   - Vendor inventory text with `Remaining balance` and `Date`
-   - `PO_Extract_[date].xlsx`
-   - `Daily Dutch Bros Booked Shipped Orders Report[date].xlsx`
+   - `PO_Extract_[date].xlsx` (`NewCo ID`, `Projected Opening Date`)
+   - `Daily Dutch Bros Booked Shipped Orders Report[date].xlsx` (`End Customer Name`, `Item Number`, `Ordered Qty` / `Shipped Qty`, `Requested Date`, `Shipping Date`)
 2. Run:
 
 ```
 python3 scripts/import_payment_devices.py
-python3 scripts/encrypt_site_data.py
+DASHBOARD_PASSWORD='…' python3 scripts/encrypt_site_data.py
 ```
 
-The importer always picks the newest matching filenames. `NewCo ID` and `End Customer Name` are an exact 1:1 match on the 6-character shop id.
+Parsed JSON with the same names is also accepted. The importer always uses the newest matching filenames.
 
-## What the chart is doing
+## Reconciliation
 
-- Unfulfilled demand = PO shops whose `NewCo ID` is not in shipped `End Customer Name`
-- Each unfulfilled shop consumes 10 units on its projected opening date
-- After the latest projected opening date in the PO extract, remaining units burn at 5.5 shops/week
-- Horizontal lines mark 3000 / 2500 / 2000 / 1500 / 1000; 2500 is the hardware-order threshold and 1000 is the safety buffer
+- Only item **M087-500-14-WWA** counts. Accessories/kits are ignored.
+- `NewCo ID` and `End Customer Name` are an exact 1:1 match on the 6-character shop id.
+- If a shop is on **Shipped Orders**, use `Shipped Qty` on `Shipping Date` and ignore booked rows for that shop.
+- If a shop is **booked only**, use `Ordered Qty` on `Requested Date`.
+- Pending demand is PO shops that are in neither booked nor shipped.
+
+## Chart
+
+- Solid black: firm booked/shipped burn from 5,700, stopping at today or the last formally booked order.
+- Dashed red: starts at that firm ending balance, burns 10 units per pending shop on projected opening minus 14 days, then 5.5 shops/week after the latest PO date.
+- Thresholds at 3000 / 2500 / 2000 / 1500 / 1000; 2500 is the e235 order trigger and 1000 is the safety buffer.

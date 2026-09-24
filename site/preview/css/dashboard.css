@@ -1884,6 +1884,22 @@ body[data-active-tab="devices"] .period {
 
 .devices-chart-wrap {
   height: 420px;
+  position: relative;
+}
+
+.devices-gap-callout {
+  position: absolute;
+  z-index: 2;
+  max-width: 280px;
+  padding: 10px 12px;
+  border: 1px solid var(--red, #d9272d);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 8px 20px rgba(21, 65, 103, 0.12);
 }
 
 .devices-source-note {

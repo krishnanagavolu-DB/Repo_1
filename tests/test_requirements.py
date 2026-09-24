@@ -22,6 +22,9 @@ SOURCE_DIRS = ("scripts", "src", "tests")
 # install small; listing them here documents the choice.
 LOCAL_ONLY_IMPORTS = {"playwright"}
 
+# Import name differs from the distribution name on PyPI.
+IMPORT_TO_PACKAGE = {"yaml": "pyyaml"}
+
 
 def declared_packages() -> set[str]:
     names = set()
@@ -74,8 +77,11 @@ def test_requirements_declares_every_third_party_import():
         - local_module_names()
         - LOCAL_ONLY_IMPORTS
     )
+    declared = declared_packages()
     missing = sorted(
-        name for name in third_party if name.lower().replace("_", "-") not in declared_packages()
+        name
+        for name in third_party
+        if IMPORT_TO_PACKAGE.get(name.lower(), name.lower().replace("_", "-")) not in declared
     )
     assert not missing, (
         "These packages are imported but missing from requirements.txt, so the "

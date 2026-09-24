@@ -34,7 +34,9 @@ pages:
     - bash scripts/run_ci_checks.sh
     - mkdir -p public
     - cp -a site/. public/
-    - echo "GitLab Pages URL: ${CI_PAGES_URL}"
+    # Quoted as one scalar: an unquoted ": " here makes YAML read the line as a
+    # mapping, and GitLab rejects the pipeline before it creates any job.
+    - 'echo "GitLab Pages URL: ${CI_PAGES_URL}"'
   artifacts:
     paths:
       - public

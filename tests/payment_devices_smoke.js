@@ -33,16 +33,27 @@ vm.createContext(sandbox);
 vm.runInContext(source, sandbox);
 const api = sandbox.window.__paymentDevices;
 
-const labels = api.uniqueDates({
-  series: {
-    firm: [{ date: "2026-02-01", inventory: 5700 }],
-    projected: [{ date: "2026-12-01", inventory: 5000 }],
-  },
-  crossings: [{ date: "2026-10-15", threshold: 3000 }],
-  gap: { date: "2026-04-01" },
-});
-check("unique dates include firm, projected, crossings, and gap", labels.join(","), "2026-02-01,2026-04-01,2026-10-15,2026-12-01");
 check("fmtInt groups thousands", api.fmtInt(5700), "5,700");
+
+// A category axis spaces points evenly by index, which distorts a 29-month
+// timeline built from daily history plus weekly projection. Points carry
+// real timestamps so the x axis stays proportional to elapsed time.
+const points = api.pointsFor([
+  { date: "2026-02-01", inventory: 5700 },
+  { date: "2026-09-24", inventory: 3760 },
+]);
+check("points carry numeric timestamps", typeof points[0].x, "number");
+check("points keep inventory on y", points[1].y, 3760);
+check(
+  "timestamps are proportional to elapsed days",
+  Math.round((points[1].x - points[0].x) / 86400000),
+  235
+);
+check("toMs parses an ISO day", api.toMs("2026-02-01"), new Date(2026, 1, 1).getTime());
+
+const ticks = api.monthTicks(new Date(2026, 1, 1).getTime(), new Date(2026, 7, 1).getTime(), 3);
+check("month ticks step by quarter", ticks.length, 3);
+check("first tick is the baseline month", api.monthLabel(ticks[0]), "Feb 2026");
 check(
   "scope assumption is rendered from payload text",
   fs.readFileSync("site/preview/js/payment-devices.js", "utf8").includes(
@@ -51,15 +62,11 @@ check(
   true
 );
 
-const mapped = api.seriesOnLabels(
-  [
-    { date: "2026-09-16", inventory: 3770 },
-    { date: "2026-12-01", inventory: 3700 },
-  ],
-  ["2026-09-16", "2026-10-15", "2026-12-01"]
+check(
+  "crossing labels are drawn clear of the x-axis ticks",
+  source.includes("rotate(-Math.PI / 2)"),
+  true
 );
-check("series carries forward between dated points", mapped[1], 3770);
-check("series updates on the dated point", mapped[2], 3700);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

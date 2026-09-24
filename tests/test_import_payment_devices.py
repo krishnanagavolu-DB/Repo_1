@@ -235,6 +235,16 @@ def test_pending_demand_starts_at_firm_end_and_burns_14_days_before_opening():
     assert staged["inventory"] == 5680
 
 
+def test_overdue_pending_shop_does_not_lower_the_dashed_start_point():
+    """The dashed line must begin at the exact firm balance, then step down."""
+    events = [{"id": "AL0107", "qty": 10, "date": date(2026, 3, 1), "source": "shipped"}]
+    pending = [{"id": "IL0802", "opening_date": date(2026, 4, 5)}]
+    result = devices.project_lifecycle(events, pending, pending, today=date(2026, 4, 1))
+    assert result["firm_end_inventory"] == 5690
+    assert result["projected"][0] == {"date": "2026-04-01", "inventory": 5690, "series": "projected"}
+    assert result["projected"][1]["inventory"] == 5680
+
+
 def test_run_rate_starts_after_latest_po_date():
     result = devices.project_lifecycle(
         events=[],

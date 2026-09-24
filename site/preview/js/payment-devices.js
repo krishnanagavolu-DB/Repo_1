@@ -23,31 +23,40 @@ function fmtDate(iso) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function monthLabel(iso) {
-  const [year, month] = String(iso).slice(0, 10).split("-").map(Number);
-  if (!year || !month) return iso;
+function monthLabel(value) {
+  const date = typeof value === "number" ? new Date(value) : null;
+  if (date) {
+    return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  }
+  const [year, month] = String(value).slice(0, 10).split("-").map(Number);
+  if (!year || !month) return value;
   return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
     month: "short",
     year: "numeric",
   });
 }
 
-function uniqueDates(payload) {
-  const dates = new Set();
-  for (const point of payload.series?.firm || []) dates.add(point.date);
-  for (const point of payload.series?.projected || []) dates.add(point.date);
-  for (const crossing of payload.crossings || []) dates.add(String(crossing.date).slice(0, 10));
-  if (payload.gap?.date) dates.add(String(payload.gap.date).slice(0, 10));
-  return [...dates].sort();
+function toMs(iso) {
+  const [year, month, day] = String(iso).slice(0, 10).split("-").map(Number);
+  if (!year || !month) return NaN;
+  return new Date(year, month - 1, day || 1).getTime();
 }
 
-function seriesOnLabels(points, labels) {
-  const byDate = new Map((points || []).map((point) => [point.date, point.inventory]));
-  let last = null;
-  return labels.map((label) => {
-    if (byDate.has(label)) last = byDate.get(label);
-    return last;
-  });
+/* Real timestamps, not category indexes: the firm line is daily history and the
+   projection is weekly, so an index axis would stretch 2026 and squash 2028. */
+function pointsFor(series) {
+  return (series || []).map((point) => ({ x: toMs(point.date), y: point.inventory }));
+}
+
+function monthTicks(minMs, maxMs, stepMonths) {
+  const start = new Date(minMs);
+  let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const ticks = [];
+  while (cursor.getTime() <= maxMs) {
+    if (cursor.getTime() >= minMs) ticks.push(cursor.getTime());
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + stepMonths, 1);
+  }
+  return ticks;
 }
 
 function showEmpty(options) {
@@ -81,7 +90,6 @@ const thresholdPlugin = {
 
     ctx.save();
     ctx.font = "600 11px futura-pt, Arial, sans-serif";
-    ctx.fillStyle = MUTED;
     ctx.strokeStyle = MUTED;
     ctx.lineWidth = 1;
 
@@ -94,20 +102,15 @@ const thresholdPlugin = {
       ctx.lineTo(chartArea.right, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillText(fmtInt(threshold), chartArea.left + 6, y - 6);
-    }
-
-    const labels = chart.data.labels || [];
-    function xForDate(iso) {
-      const day = String(iso).slice(0, 10);
-      let index = labels.indexOf(day);
-      if (index < 0) index = labels.findIndex((label) => label >= day);
-      return index < 0 ? null : xScale.getPixelForValue(index);
+      // Right edge keeps these clear of the y-axis tick labels.
+      ctx.textAlign = "right";
+      ctx.fillStyle = MUTED;
+      ctx.fillText(fmtInt(threshold), chartArea.right - 6, y - 5);
     }
 
     for (const crossing of crossings) {
-      const x = xForDate(crossing.date);
-      if (x == null) continue;
+      const x = xScale.getPixelForValue(toMs(crossing.date));
+      if (!Number.isFinite(x) || x < chartArea.left || x > chartArea.right) continue;
       const y = yScale.getPixelForValue(crossing.threshold);
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
@@ -115,14 +118,24 @@ const thresholdPlugin = {
       ctx.lineTo(x, chartArea.bottom);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.textAlign = "center";
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = RED;
+      ctx.fill();
+      // Vertical labels sit inside the plot, so they never collide with the
+      // month ticks on the axis below.
+      ctx.save();
+      ctx.translate(x - 4, chartArea.bottom - 8);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "left";
       ctx.fillStyle = NAVY;
-      ctx.fillText(crossing.label || monthLabel(crossing.date), x, Math.min(chartArea.bottom + 14, chart.height - 4));
+      ctx.fillText(crossing.label || monthLabel(crossing.date), 0, 0);
+      ctx.restore();
     }
 
     if (gap?.date) {
-      const x = xForDate(gap.date);
-      if (x != null) {
+      const x = xScale.getPixelForValue(toMs(gap.date));
+      if (Number.isFinite(x)) {
         ctx.strokeStyle = RED;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -132,56 +145,55 @@ const thresholdPlugin = {
       }
     }
     ctx.restore();
+    // Positioned here rather than after new Chart(): only once a draw has run
+    // are the scales and chartArea final, and this also survives a resize.
+    positionCallout(chart, gap);
   },
 };
 
 if (typeof Chart !== "undefined" && Chart.register) Chart.register(thresholdPlugin);
 
-function placeCallout(payload, chart) {
+function setCalloutText(payload) {
   const box = document.getElementById("devices-gap-callout");
   if (!box) return;
-  const gap = payload.gap;
-  if (!gap) {
+  if (!payload.gap) {
     box.hidden = true;
     return;
   }
   box.hidden = false;
-  box.textContent = `⚠️ ${gap.label}`;
+  box.textContent = `⚠️ ${payload.gap.label}`;
+}
+
+function positionCallout(chart, gap) {
+  const box = document.getElementById("devices-gap-callout");
   const wrap = document.querySelector(".devices-chart-wrap");
-  if (!wrap || !chart?.chartArea) return;
-  const labels = chart.data.labels || [];
-  const iso = String(gap.date).slice(0, 10);
-  let index = labels.indexOf(iso);
-  if (index < 0) index = labels.findIndex((label) => label >= iso);
-  if (index < 0) return;
-  const x = chart.scales.x.getPixelForValue(index);
+  if (!box || !wrap || !gap?.date || box.hidden) return;
+  const { chartArea } = chart;
+  const x = chart.scales.x.getPixelForValue(toMs(gap.date));
   const y = chart.scales.y.getPixelForValue(gap.inventory);
-  box.style.left = `${Math.min(Math.max(x - 40, 12), wrap.clientWidth - 280)}px`;
-  box.style.top = `${Math.max(y - 72, 12)}px`;
+  if (!chartArea || !Number.isFinite(x) || !Number.isFinite(y)) return;
+  const width = box.offsetWidth || 260;
+  const height = box.offsetHeight || 56;
+  const maxLeft = Math.max(8, wrap.clientWidth - width - 8);
+  // Above the divergence point, but never over the legend sitting above chartArea.
+  const top = Math.max(y - height - 12, chartArea.top + 6);
+  box.style.left = `${Math.min(Math.max(x + 12, 8), maxLeft)}px`;
+  box.style.top = `${Math.min(top, Math.max(8, wrap.clientHeight - height - 8))}px`;
 }
 
 function renderChart(payload) {
   const canvas = document.getElementById("chart-devices-burndown");
   if (!canvas || typeof Chart === "undefined") return;
-  const labels = uniqueDates(payload);
-  const firmPoints = payload.series?.firm || [];
-  const projectedPoints = payload.series?.projected || [];
-  const firmEnd = firmPoints.at(-1)?.date;
-  const firmData = seriesOnLabels(firmPoints, labels).map((value, index) => {
-    if (!firmEnd) return value;
-    return labels[index] > firmEnd ? null : value;
-  });
-  const projectedData = seriesOnLabels(projectedPoints, labels).map((value, index) => {
-    if (!firmEnd) return value;
-    return labels[index] < firmEnd ? null : value;
-  });
+  const firmData = pointsFor(payload.series?.firm);
+  const projectedData = pointsFor(payload.series?.projected);
   const yMax = Number(payload.chart?.y_max) || 6000;
+  const xMin = toMs(payload.chart?.x_min || payload.series?.firm?.[0]?.date);
+  const xMax = toMs(payload.chart?.x_max || payload.series?.projected?.at(-1)?.date);
 
   if (burndownChart) burndownChart.destroy();
   burndownChart = new Chart(canvas, {
     type: "line",
     data: {
-      labels,
       datasets: [
         {
           label: "Actual/Booked Inventory (Verifone Firm Balance)",
@@ -191,7 +203,6 @@ function renderChart(payload) {
           borderWidth: 2.5,
           pointRadius: 0,
           tension: 0,
-          spanGaps: false,
         },
         {
           label: "Projected Demand (Pending Orders + 5.5 Shops/Wk)",
@@ -201,8 +212,7 @@ function renderChart(payload) {
           borderWidth: 2,
           borderDash: [7, 5],
           pointRadius: 0,
-          tension: 0.15,
-          spanGaps: false,
+          tension: 0,
         },
       ],
     },
@@ -224,13 +234,16 @@ function renderChart(payload) {
       },
       scales: {
         x: {
+          type: "linear",
+          min: xMin,
+          max: xMax,
+          afterBuildTicks(axis) {
+            axis.ticks = monthTicks(axis.min, axis.max, 3).map((value) => ({ value }));
+          },
           ticks: {
             maxRotation: 0,
-            autoSkip: true,
-            maxTicksLimit: 10,
-            callback(value) {
-              return monthLabel(this.getLabelForValue(value));
-            },
+            autoSkip: false,
+            callback: (value) => monthLabel(value),
           },
           grid: { display: false },
         },
@@ -243,7 +256,6 @@ function renderChart(payload) {
       },
     },
   });
-  placeCallout(payload, burndownChart);
 }
 
 function renderSummary(payload) {
@@ -295,6 +307,7 @@ function renderDevices(payload) {
   }
   showContent();
   renderSummary(payload);
+  setCalloutText(payload);
   renderChart(payload);
   registerSnapshot(payload);
   const note = document.getElementById("devices-source-note");
@@ -329,8 +342,10 @@ function startWhenUnlocked() {
 
 window.__paymentDevices = {
   fmtInt,
-  uniqueDates,
-  seriesOnLabels,
+  toMs,
+  pointsFor,
+  monthTicks,
+  monthLabel,
   renderDevices,
   renderChart,
   loadDevices,

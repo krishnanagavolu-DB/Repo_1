@@ -69,7 +69,11 @@ def main() -> int:
             page.goto(base, wait_until="networkidle")
             page.wait_for_timeout(900)
 
-            for tab, name in (("pos", "all-payments"), ("worldpay", "card-present")):
+            for tab, name in (
+                ("pos", "all-payments"),
+                ("worldpay", "card-present"),
+                ("devices", "payment-devices"),
+            ):
                 page.evaluate(f"window.__dashboardTabs.activate({tab!r})")
                 page.wait_for_timeout(700)
                 page.screenshot(path=str(args.out / f"{name}-top.png"))

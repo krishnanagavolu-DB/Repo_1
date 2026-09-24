@@ -333,11 +333,14 @@ def project_lifecycle(
     remaining = inventory
     _add_point(projected, firm_end, remaining, "projected")
 
+    # Anchor the dashed line on the firm balance, so a shop whose staging date
+    # has already passed steps down the day after rather than moving the start.
+    earliest_burn = firm_end + timedelta(days=1)
     pending_by_date: dict[date, int] = defaultdict(int)
     for shop in pending:
         opening = shop.get("opening_date")
-        staged = firm_end if opening is None else opening - timedelta(days=STAGING_LEAD_DAYS)
-        pending_by_date[max(staged, firm_end)] += DEVICES_PER_SHOP
+        staged = earliest_burn if opening is None else opening - timedelta(days=STAGING_LEAD_DAYS)
+        pending_by_date[max(staged, earliest_burn)] += DEVICES_PER_SHOP
     for when in sorted(pending_by_date):
         remaining -= pending_by_date[when]
         _add_point(projected, when, remaining, "projected")

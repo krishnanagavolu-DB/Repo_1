@@ -420,12 +420,13 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
 
   legend.innerHTML = list
     .map((item, idx) => {
+      const digits = item.detail?.length ? (item.pct < 0.001 ? 3 : 2) : 1;
       return `
       <tr>
         <td><span style="color:${colors[idx]}">●</span> ${mixLabel(item.label)}${
           item.detail?.length ? ` <span class="mix-hint">(${item.detail.length})</span>` : ""
         }</td>
-        <td>${mixPct(item.pct)}</td>
+        <td>${item.detail?.length ? pct(item.pct, digits) : mixPct(item.pct)}</td>
       </tr>`;
     })
     .join("");
@@ -465,7 +466,7 @@ function renderMix(canvasId, legendId, items, chartKey, options = {}) {
               if (item.detail?.length) {
                 return [
                   `Combined ${mixPct(item.pct)}`,
-                  ...item.detail.map((d) => `${mixLabel(d.label)}: ${pct(d.pct, 3)}`),
+                  ...item.detail.map((d) => `${mixLabel(d.label)}: ${pct(d.pct, d.pct < 0.001 ? 3 : 2)}`),
                 ];
               }
               return mixPct(item.pct);

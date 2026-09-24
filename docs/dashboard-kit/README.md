@@ -8,7 +8,11 @@ They should **not** copy payments datasets. The starter page uses invented numbe
 |---|---|
 | This playbook | `docs/dashboard-kit/README.md` |
 | Working demo | `docs/dashboard-kit/starter/` |
-| Cursor skill | `.cursor/skills/building-dutch-bros-dashboard/SKILL.md` |
+| Cursor skill (theme + tabs) | `.cursor/skills/building-dutch-bros-dashboard/SKILL.md` |
+| Cursor skill (GitLab Pages) | `.cursor/skills/hosting-gitlab-pages/SKILL.md` |
+| Skills inside this kit | `docs/dashboard-kit/skills/` |
+| GitLab Pages guide | `docs/dashboard-kit/GITLAB.md` |
+| GitLab CI template | `docs/dashboard-kit/gitlab-ci.yml` |
 | Design note | `docs/superpowers/specs/2026-09-24-dashboard-kit-design.md` |
 
 ## Open the demo
@@ -20,6 +24,8 @@ python3 -m http.server 8080
 ```
 
 Then open `http://localhost:8080/docs/dashboard-kit/starter/`. Or copy the `starter/` folder into another repo and serve that folder.
+
+To put the same page on **GitLab Pages**, follow [`GITLAB.md`](GITLAB.md) and drop `.cursor/skills/hosting-gitlab-pages/` into the other team's Cursor skills.
 
 Futura PT loads from Adobe Typekit (same kits as the payments preview). If typekit is blocked, the CSS falls back to Trebuchet / Segoe.
 

@@ -1,0 +1,24 @@
+# GitLab Pages job for the dashboard kit
+#
+# Copy this file to the repository root as `.gitlab-ci.yml`.
+# Change the `cp` source if index.html is not in docs/dashboard-kit/starter/.
+# The job name `pages` is required. GitLab publishes the `public/` artifact.
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  image: alpine:3.20
+  environment:
+    name: pages
+    url: $CI_PAGES_URL
+  script:
+    - mkdir -p public
+    - cp -a docs/dashboard-kit/starter/. public/
+    - echo "GitLab Pages URL: ${CI_PAGES_URL}"
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

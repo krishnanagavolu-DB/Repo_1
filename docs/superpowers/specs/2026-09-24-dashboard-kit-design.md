@@ -11,7 +11,7 @@ Give another team two files they can hand around:
 1. A **Markdown playbook** (`docs/dashboard-kit/README.md`) that explains the shell, tabs, KPI cards, pies, bars, and line charts.
 2. A **Cursor skill** (`.cursor/skills/building-dutch-bros-dashboard/SKILL.md`) that tells an agent to copy that shell and theme, then swap in the team’s own metrics.
 
-A working **starter page** with invented numbers lives next to the playbook so they can see tabs and charts before they have a feed.
+A working **starter page** with invented numbers lives next to the playbook so they can see tabs and charts before they have a feed. GitLab Pages hosting is a separate skill (`hosting-gitlab-pages`) plus `docs/dashboard-kit/GITLAB.md`.
 
 ## Locked decisions
 

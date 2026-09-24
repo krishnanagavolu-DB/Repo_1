@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "docs" / "dashboard-kit"
 SKILL = ROOT / ".cursor" / "skills" / "building-dutch-bros-dashboard" / "SKILL.md"
+GITLAB_SKILL = ROOT / ".cursor" / "skills" / "hosting-gitlab-pages" / "SKILL.md"
 SPEC = ROOT / "docs" / "superpowers" / "specs" / "2026-09-24-dashboard-kit-design.md"
 
 FORBIDDEN_PATH_FRAGMENTS = (
@@ -44,7 +45,12 @@ def test_kit_files_exist():
     assert (KIT / "starter" / "css" / "dashboard.css").is_file()
     assert (KIT / "starter" / "assets" / "dutchbros-logo.svg").is_file()
     assert SKILL.is_file()
+    assert GITLAB_SKILL.is_file()
     assert SPEC.is_file()
+    assert (KIT / "gitlab-ci.yml").is_file()
+    assert (KIT / "GITLAB.md").is_file()
+    assert (KIT / "skills" / "building-dutch-bros-dashboard" / "SKILL.md").is_file()
+    assert (KIT / "skills" / "hosting-gitlab-pages" / "SKILL.md").is_file()
 
 
 def test_sample_json_is_labeled_fiction():
@@ -62,7 +68,7 @@ def test_kit_does_not_ship_production_payloads_or_secrets():
     joined = "\n".join(names)
     for fragment in FORBIDDEN_PATH_FRAGMENTS:
         assert fragment not in joined
-    text = _kit_text() + SKILL.read_text()
+    text = _kit_text() + SKILL.read_text() + GITLAB_SKILL.read_text()
     for secret in FORBIDDEN_SECRETS:
         assert secret not in text
 
@@ -89,3 +95,18 @@ def test_starter_registers_tabs_and_uses_chart_js():
     assert "chart-labels.js" in html
     assert "registerPeriods" in js or "__dashboardTabs" in js
     assert "inlineValueLabels" in js
+
+
+def test_gitlab_pages_skill_and_job_are_portable():
+    skill = GITLAB_SKILL.read_text()
+    ci = (KIT / "gitlab-ci.yml").read_text()
+    guide = (KIT / "GITLAB.md").read_text()
+    assert skill.startswith("---")
+    assert "Use when" in skill
+    assert "pages:" in ci
+    assert "public" in ci
+    assert "CI_PAGES_URL" in ci
+    assert "data/raw" not in ci
+    assert "gitlab.io" in guide.lower()
+    assert "Everyone" in guide
+    assert "do not guess" in skill.lower() or "Do not guess" in skill

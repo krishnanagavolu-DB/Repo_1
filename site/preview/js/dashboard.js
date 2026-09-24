@@ -263,30 +263,18 @@ function periodTotal(period, field) {
   return Number.isFinite(value) ? value : null;
 }
 
-function populatePeriodSelect(data) {
-  const select = document.getElementById("period-select");
-  select.innerHTML = "";
-  for (const week of data.periods.weeks) {
-    const opt = document.createElement("option");
-    opt.value = week.id;
-    opt.textContent = week.label;
-    select.appendChild(opt);
+function registerDashboardPeriods(data) {
+  const periods = (data?.periods?.weeks || []).map((week) => ({
+    id: week.id,
+    label: week.label,
+  }));
+  if (window.__dashboardTabs?.registerPeriods) {
+    window.__dashboardTabs.registerPeriods("worldpay", periods);
+    return;
   }
-  const ytd = document.createElement("option");
-  ytd.value = "ytd";
-  ytd.textContent = "YTD";
-  select.appendChild(ytd);
-  select.value = data.periods.weeks[data.periods.weeks.length - 1].id;
-  select.addEventListener("change", () => {
-    window.__dashboardState.periodId = select.value;
-    renderPeriod(data, select.value);
-    announcePeriod(select.value);
-  });
-}
-
-/** Every channel follows this one control, so broadcast the selection. */
-function announcePeriod(periodId) {
-  window.dispatchEvent(new CustomEvent("dashboard:period", { detail: { periodId } }));
+  window.dispatchEvent(
+    new CustomEvent("dashboard:periods", { detail: { tabId: "worldpay", periods } })
+  );
 }
 
 /** Card present reaches back further than the POS feed, so report its own start. */
@@ -302,7 +290,7 @@ function registerYtdCoverage(data) {
 }
 
 function getPeriod(data, id) {
-  if (id === "ytd") return data.periods.ytd;
+  if (id === "history" || id === "ytd") return data.periods.ytd;
   return data.periods.weeks.find((w) => w.id === id);
 }
 
@@ -627,9 +615,7 @@ async function loadBenchmarkRefs() {
   try {
     let data = window.__benchmarkData;
     if (!data) {
-      const res = await fetch("data/benchmarks.json", { cache: "no-store" });
-      if (!res.ok) return;
-      data = await res.json();
+      data = await window.__dashboardAuth.loadJson("data/benchmarks.json");
       window.__benchmarkData = data;
     }
     benchmarkRefs = (data.payment_benchmarks || [])
@@ -978,7 +964,10 @@ function renderPeriod(data, periodId) {
   if (!period) return;
   window.__dashboardState = { data, periodId };
   const slideLabel = document.getElementById("slide-period");
-  if (slideLabel) slideLabel.textContent = period.label || "";
+  if (slideLabel) {
+    slideLabel.textContent =
+      periodId === "history" || periodId === "ytd" ? "Available history" : period.label || "";
+  }
   renderKpis(period);
   renderTrendCategories(data);
   renderAuthTrend(data);
@@ -993,7 +982,7 @@ function renderPeriod(data, periodId) {
   resizeChartsSoon();
 }
 
-/** YTD ships without a totals block, so sum the weekly totals for denominators. */
+/** Available history ships without totals, so sum weekly totals for denominators. */
 function withDerivedTotals(data) {
   const ytd = data?.periods?.ytd;
   if (ytd && !ytd.totals) {
@@ -1009,18 +998,18 @@ function withDerivedTotals(data) {
 
 async function loadDashboard() {
   try {
-    const res = await fetch("data/dashboard.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load dashboard.json (${res.status})`);
-    dashboardData = withDerivedTotals(await res.json());
+    dashboardData = withDerivedTotals(await window.__dashboardAuth.loadJson("data/dashboard.json"));
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
-    populatePeriodSelect(dashboardData);
+    registerDashboardPeriods(dashboardData);
     registerYtdCoverage(dashboardData);
     await loadBenchmarkRefs();
-    const periodId = document.getElementById("period-select").value;
+    const selectedId = window.__dashboardState?.periodId;
+    const periodId = getPeriod(dashboardData, selectedId)
+      ? selectedId
+      : dashboardData.periods.weeks.at(-1)?.id || "history";
     window.__dashboardState = { data: dashboardData, periodId };
     renderPeriod(dashboardData, periodId);
-    announcePeriod(periodId);
   } catch (err) {
     const page = document.querySelector(".page");
     const box = document.createElement("div");
@@ -1040,6 +1029,23 @@ async function loadDashboard() {
     page.prepend(box);
   }
 }
+
+window.addEventListener?.("dashboard:period", (event) => {
+  const tabId = event.detail?.tabId;
+  const periodId = event.detail?.periodId;
+  if (!periodId) return;
+
+  /* Ask Data is shared across tabs, so its selected Worldpay period follows
+     the global period control even while the Card Health panel is hidden.
+     Only Card Health events render the Worldpay visuals below. */
+  window.__dashboardState = {
+    data: window.__dashboardState?.data || dashboardData,
+    periodId,
+  };
+  if (tabId && tabId !== "worldpay") return;
+  if (!dashboardData) return;
+  renderPeriod(dashboardData, periodId);
+});
 
 function startDashboardWhenUnlocked() {
   if (document.body.classList.contains("auth-unlocked")) {

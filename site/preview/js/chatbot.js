@@ -4,6 +4,35 @@
 (function () {
 const PAYMENT_DEFINITIONS = [
   {
+    terms: [
+      "in-shop sales",
+      "in shop sales",
+      "all payments",
+      "pos sales",
+      "in shop pos",
+      "tender mix",
+      "tender",
+      "xenial",
+    ],
+    title: "In-Shop Sales",
+    body: "Company-owned POS sales from Gold Semantic Sales (Xenial-sourced) include every tender: Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM). The curated shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday, and the published Card + Cash + Gift Card / Dutch Pass mix totals 100%. Sales and average ticket exclude tips and change. Card present (Worldpay) is the separate view of card authorizations.",
+  },
+  {
+    terms: ["card health"],
+    title: "Card Health",
+    body: "Worldpay card-present processing health: authorization rate, declines, entry method, wallets, interchange rate, and fees. These card dollars include tip and overlap POS card sales.",
+  },
+  {
+    terms: ["order ahead", "order-ahead"],
+    title: "Order Ahead",
+    body: "Olo Pay order-ahead transactions processed by Stripe at company-owned shops. Published sales and average ticket exclude tip.",
+  },
+  {
+    terms: ["payment devices", "verifone", "e285", "burndown"],
+    title: "Payment Devices",
+    body: "Projected remaining Verifone e285 handhelds from a 5,700-unit Feb 2026 baseline. The solid line burns actual booked/shipped qty for item M087-500-14-WWA (shipped shops win over booked). The dashed line continues with pending PO shops at opening minus 14 days, then 5.5 shops per week.",
+  },
+  {
     terms: ["auth rate", "authorization rate", "approval rate"],
     title: "Auth rate",
     body: "Approved authorization requests (response code 00) divided by all authorization requests.",
@@ -91,13 +120,8 @@ const PAYMENT_DEFINITIONS = [
   },
   {
     terms: ["ytd", "year to date"],
-    title: "YTD",
-    body: "All loaded weeks in the current calendar year.",
-  },
-  {
-    terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender", "xenial"],
-    title: "In Shop · All payments",
-    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Gold Semantic Sales (Xenial-sourced). Shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
+    title: "Available history",
+    body: "All loaded weeks certified and available for the selected channel.",
   },
   {
     terms: ["gift card", "dutch pass", "custom"],
@@ -182,7 +206,7 @@ function getState() {
 function currentPeriod() {
   const state = getState();
   if (!state?.data) return null;
-  if (state.periodId === "ytd") return state.data.periods.ytd;
+  if (state.periodId === "history" || state.periodId === "ytd") return state.data.periods.ytd;
   return state.data.periods.weeks.find((w) => w.id === state.periodId) || state.data.periods.weeks.at(-1);
 }
 
@@ -747,18 +771,27 @@ function answerDerived(q) {
 }
 
 function answerScope() {
+  if (chatContext.activeTab === "devices" || window.__paymentDevicesState) {
+    const devicesTab = chatContext.activeTab === "devices";
+    if (devicesTab) {
+      return (
+        "Payment Devices tracks **physical e285 units for the whole network** — company-owned and " +
+        "franchise/Boersma shops combined — against the **5,700-unit Verifone master contract**. " +
+        "It is not the company-owned sales footprint used on the other tabs."
+      );
+    }
+  }
   const state = getState();
   const scope = state?.data?.meta?.scope || "Company owned shops only";
   const channel = state?.data?.meta?.channel || "In Shop · Worldpay";
-  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. Every tab uses the same company-owned footprint.`;
+  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks in Available history**. Every tab uses the same company-owned footprint.`;
 }
 
 async function loadBenchmarks() {
   if (benchmarkData) return benchmarkData;
   try {
-    const response = await fetch("data/benchmarks.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`benchmark file ${response.status}`);
-    benchmarkData = await response.json();
+    const response = await window.__dashboardAuth.loadJson("data/benchmarks.json");
+    benchmarkData = response;
     window.__benchmarkData = benchmarkData;
   } catch (error) {
     console.warn("Benchmark research is unavailable", error);
@@ -816,6 +849,50 @@ function answerDataQuality() {
   return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitHub Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
 }
 
+function wantsDevices(q) {
+  return /\b(payment devices?|verifone|e285|po pipeline|po extract|newco|unfulfilled|run-?rate|5\.5 shops|hardware order|starting inventory|shipped shops)\b/.test(
+    q
+  );
+}
+
+function answerDevicesQuestion(q) {
+  const payload = window.__paymentDevicesState;
+  if (/\bmatch|newco|shipped shops|end customer|booked\b/.test(q)) {
+    return (
+      "**Exact match, lifecycle rules.** `NewCo ID` and `End Customer Name` are the same 6-character shop id. " +
+      "If the shop is on **Shipped Orders** for item **M087-500-14-WWA** with a shipping date on or after **1 Feb 2026**, use Shipped Qty and ignore booked rows. " +
+      "A 2025 shipment does not fulfill a current-contract PO. " +
+      "If it is booked only, those units come off the firm line on the report extract date."
+    );
+  }
+  if (/\b5\.5|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {
+    return (
+      "Pending PO shops (not yet booked) burn **10 units** on projected opening **minus 14 days** (Stratix staging). " +
+      "After the latest PO extract date, remaining inventory burns at **5.5 shops per week** (**55 devices per week**)."
+    );
+  }
+  if (/\b2,?500|order threshold|order more hardware|safety buffer|e235\b/.test(q)) {
+    return (
+      "The **2,500-unit** line is when to start ordering e235 hardware. " +
+      "The **1,000-unit** line is the field-service safety buffer. Those two numbers are standing assumptions."
+    );
+  }
+  if (!payload?.certified || !payload.summary) {
+    return (
+      "Payment Devices is waiting on the PO extract and booked/shipped orders report. " +
+      "Drop those files into data/raw/payment-devices/ and rerun the importer — " +
+      "the 5,700-unit Feb 2026 baseline is not published as a live balance until those files land."
+    );
+  }
+  const summary = payload.summary;
+  return (
+    `Current **firm inventory** is **${Number(summary.firm_inventory).toLocaleString("en-US")}** ` +
+    `Verifone e285 units as of **${summary.as_of}** from the **5,700** Feb 2026 baseline. ` +
+    `**${summary.shipped_shops}** shops have shipped since Feb 2026. ` +
+    `**${summary.pending_shops}** PO shops are still awaiting MIDs/booking (**${summary.pending_units}** units).`
+  );
+}
+
 function latestPosWeek() {
   return (
     window.__posSales?.getSelectedWeek?.() ||
@@ -846,13 +923,13 @@ function answerOloUnavailable(kind) {
   chatContext.topic = "olo";
   if (kind === "wallet") {
     return (
-      "**Olo Pay · Phase 1:** wallet mix (Apple Pay, Google Pay, and similar) is **not available**. " +
+      "**Olo Pay · Coming next:** wallet mix (Apple Pay, Google Pay, and similar) is **not available** in this extract yet. " +
       "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is the card brand, not the wallet. " +
       "I won’t invent wallet shares."
     );
   }
   return (
-    "**Olo Pay · Phase 1:** decline reasons / decline codes are **not available** in the published extract. " +
+    "**Olo Pay · Coming next:** decline reasons / response codes are **not available** in this extract yet. " +
     "Authorization rate is published as Approved ÷ (Approved + Declined + Failure) Sale attempts, without a reason breakdown. " +
     "I won’t invent decline reasons."
   );
@@ -863,7 +940,7 @@ function answerOloSource() {
   return (
     "**Olo Pay** comes from **Olo billing transactions** processed by **Stripe** (`PROCESSOR = Stripe`). " +
     "Scope is **company-owned** shops only. " +
-    "**SALES_VOLUME** is approved Stripe Sale amount, including the billing total Olo stored (tips are not subtracted). " +
+    "**SALES_VOLUME** is approved Stripe Sale amount less `TIP_PORTION`; published sales exclude tip. " +
     "Auth rate uses Approved ÷ (Approved + Declined + Failure) Sale attempts. **AVG_TICKET** is sales ÷ order count."
   );
 }
@@ -886,7 +963,7 @@ function answerOloSales() {
   const sales = fmt.usd ? fmt.usd(week.sales) : money(week.sales, 2);
   return (
     `For **${week.label}**, Olo Pay **SALES_VOLUME** is **${sales}** — approved Stripe Sale dollars on company-owned shops, ` +
-    `including the billing total Olo stored (tips are not subtracted).`
+    `excluding tip (\`TIP_PORTION\`).`
   );
 }
 
@@ -928,7 +1005,7 @@ function answerOloAvgTicket() {
   const ticket = fmt.ticket ? fmt.ticket(week.avgTicket) : `$${Number(week.avgTicket).toFixed(2)}`;
   return (
     `For **${week.label}**, Olo Pay **AVG_TICKET** is **${ticket}** — SALES_VOLUME ÷ ORDER_COUNT ` +
-    `(approved Stripe Sale dollars ÷ approved orders). Tips are not subtracted from the billing total.`
+    `(approved Stripe Sale dollars excluding tip ÷ approved orders).`
   );
 }
 
@@ -1286,7 +1363,7 @@ const CHANNEL_CHOICES = {
       "Three lanes, three different answers here — which one do you want?\n\n" +
       "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ guest checks, with tips and change left out.\n" +
       "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n" +
-      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved sales ÷ orders (tips not subtracted).\n\n" +
+      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved ex-tip sales ÷ orders.\n\n" +
       "Say **All payments**, **Card present**, or **Olo Pay** and I’ll pull it.",
   },
   sales: {
@@ -1294,7 +1371,7 @@ const CHANNEL_CHOICES = {
       "Happy to pull that — which set of sales?\n\n" +
       "• **All payments (Xenial)** — net tender dollars taken at company-owned shops.\n" +
       "• **Card present (Worldpay)** — card sales the network settled, tips included.\n" +
-      "• **Olo Pay** — approved Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
+      "• **Olo Pay** — approved ex-tip Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
       "Say **All payments**, **Card present**, or **Olo Pay**.",
   },
   count: {
@@ -1420,7 +1497,18 @@ function answerQuestion(raw) {
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); Phase 1 has no wallet mix or decline reasons\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); wallet mix and decline reasons are Coming next\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+  }
+
+  const namesPosAndWorldpay =
+    /\b(pos|in-shop sales|in shop sales)\b/.test(q) &&
+    /\b(worldpay|card health)\b/.test(q);
+  if (namesPosAndWorldpay && /\b(add|sum|combine|total|overlap|reconcile)\b/.test(q)) {
+    return (
+      "POS and Worldpay sales overlap, so do not add them. Worldpay is the processor " +
+      "view of the card portion of POS sales and includes tip. Olo Pay is a separate " +
+      "order-ahead channel."
+    );
   }
 
   // Anyone about to share these numbers should be able to ask what was left out.
@@ -1457,6 +1545,8 @@ function answerQuestion(raw) {
   // ticket, auth, or order wording — and before the channel clarifier.
   const oloAnswer = answerOloQuestion(q, raw);
   if (oloAnswer) return oloAnswer;
+
+  if (wantsDevices(q)) return answerDevicesQuestion(q);
 
   const ambiguous = ambiguousChannelMetric(q, raw);
   if (ambiguous) {
@@ -1710,6 +1800,13 @@ function submitQuestion(text, input) {
 }
 
 const TAB_PROMPTS = {
+  overview: [
+    { question: "What is In-Shop Sales?", label: "What does In-Shop Sales include?" },
+    { question: "What is Card Health?", label: "What does Card Health measure?" },
+    { question: "What is Order Ahead?", label: "What does Order Ahead include?" },
+    { question: "Can I add POS and Worldpay sales?", label: "How do the channels overlap?" },
+    { question: "Which metrics need attention?", label: "What needs executive attention?" },
+  ],
   pos: [
     { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
     { question: "What is AVG_TICKET on All payments?", label: "What does AVG_TICKET mean?" },
@@ -1725,7 +1822,26 @@ const TAB_PROMPTS = {
     { question: "What competitor research is available for Starbucks, Dunkin, and 7 Brew?", label: "What can our competitors teach us?" },
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
+  devices: [
+    { question: "How many Verifone e285 units do we still have?", label: "What’s the firm inventory?" },
+    { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
+    { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
+    { question: "When should we order more hardware?", label: "What’s the 2,500-unit e235 threshold?" },
+  ],
 };
+
+function tabBlurb(tabId) {
+  if (tabId === "overview") {
+    return "Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention";
+  }
+  if (tabId === "pos") {
+    return "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab";
+  }
+  if (tabId === "devices") {
+    return "Payment Devices: ask about Verifone e285 inventory, the PO pipeline, shipped shops, and the 5.5 shops/week run-rate";
+  }
+  return "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
+}
 
 function refreshTabPrompts(tabId) {
   const wrap = document.querySelector(".ask-data-prompts");
@@ -1743,10 +1859,7 @@ function refreshTabPrompts(tabId) {
     wrap.appendChild(button);
   }
   if (blurb) {
-    blurb.textContent =
-      tabId === "pos"
-        ? "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab"
-        : "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
+    blurb.textContent = tabBlurb(tabId);
   }
 }
 
@@ -1789,6 +1902,13 @@ function startChatbotWhenUnlocked() {
   window.addEventListener("dashboard:unlocked", () => initChatbot(), { once: true });
 }
 
-window.__paymentsChat = { answerQuestion, normalize, chatContext, suggestedFollowUps };
+window.__paymentsChat = {
+  answerQuestion,
+  normalize,
+  chatContext,
+  suggestedFollowUps,
+  tabPrompts: TAB_PROMPTS,
+  tabBlurb,
+};
 document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);
 })();

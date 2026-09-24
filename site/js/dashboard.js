@@ -644,9 +644,7 @@ function withDerivedTotals(data) {
 
 async function loadDashboard() {
   try {
-    const res = await fetch("data/dashboard.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load dashboard.json (${res.status})`);
-    dashboardData = withDerivedTotals(await res.json());
+    dashboardData = withDerivedTotals(await window.__dashboardAuth.loadJson("data/dashboard.json"));
     document.getElementById("scope-line").textContent =
       dashboardData.meta?.scope || "Company owned shops only";
     populatePeriodSelect(dashboardData);

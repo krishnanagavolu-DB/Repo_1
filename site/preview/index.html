@@ -3,20 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=9b7c6e84d8" />
+    <link rel="stylesheet" href="css/dashboard.css?v=1942a39e8c" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
+    <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
-    <script src="js/ytd-banner.js?v=9a8d72ee87" defer></script>
+    <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
     <script src="js/chart-labels.js?v=cd7105563a" defer></script>
-    <script src="js/dashboard.js?v=9dd11c36a1" defer></script>
-    <script src="js/pos-sales.js?v=9dcca5c9c5" defer></script>
-    <script src="js/olo-pay.js?v=b3e0ceb31c" defer></script>
-    <script src="js/tabs.js?v=5d677809bc" defer></script>
-    <script src="js/chatbot.js?v=347f081e17" defer></script>
+    <script src="js/dashboard.js?v=1eb27efbf0" defer></script>
+    <script src="js/pos-sales.js?v=99245bb74b" defer></script>
+    <script src="js/olo-pay.js?v=6d699caec1" defer></script>
+    <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
+    <script src="js/payment-devices.js?v=ac102ca116" defer></script>
+    <script src="js/tabs.js?v=835b13ae94" defer></script>
+    <script src="js/chatbot.js?v=d8302ab850" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -69,14 +73,16 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
+          <button type="button" class="tab active" data-tab="overview" aria-current="page">Executive Overview</button>
           <div class="tab-group" role="group" aria-label="In Shop">
             <span class="tab-group-label">In Shop</span>
             <div class="tab-group-items">
-              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
-              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+              <button type="button" class="tab" data-tab="pos">In-Shop Sales</button>
+              <button type="button" class="tab" data-tab="worldpay">Card Health</button>
             </div>
           </div>
-          <button type="button" class="tab" data-tab="olo">Olo Pay</button>
+          <button type="button" class="tab" data-tab="olo">Order Ahead</button>
+          <button type="button" class="tab" data-tab="devices">Payment Devices</button>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Gift Cards
             <span class="tab-badge">
@@ -103,16 +109,55 @@
       </header>
 
       <main>
-        <!-- Shown on every tab when the period is YTD; each channel reports its own start. -->
+        <!-- Shown for Available history; each channel reports its own certified start. -->
         <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
 
-        <section id="panel-pos" class="tab-panel" data-panel="pos">
+        <section id="panel-overview" class="tab-panel" data-panel="overview">
+          <div id="overview-empty" class="pos-empty" hidden></div>
+          <section id="overview-content" class="slide executive-slide" aria-label="Payments Executive Overview">
+            <header class="slide-band">
+              <div>
+                <h2>Payments Executive Overview</h2>
+                <span>Company-owned shops &middot; completed weeks</span>
+              </div>
+              <p id="overview-period-label">Most recent common week</p>
+            </header>
+            <div class="executive-board">
+              <div class="executive-kpis" id="overview-kpis" aria-live="polite"></div>
+              <section class="channel-band" id="overview-channel-band" aria-live="polite" aria-label="Sales by order channel"></section>
+              <article class="slide-panel executive-sales-panel">
+                <div class="panel-band">Sales trend</div>
+                <div class="panel-body">
+                  <div class="chart-wrap"><canvas id="chart-overview-sales" role="img" aria-label="Weekly Total sales and Order-ahead card sales trend"></canvas></div>
+                </div>
+              </article>
+              <article class="slide-panel executive-mix-panel">
+                <div class="panel-band">How guests paid</div>
+                <div class="panel-body">
+                  <div class="chart-wrap"><canvas id="chart-overview-tender" role="img" aria-label="In-Shop Sales tender mix by Card, Cash, and Gift Card / Dutch Pass"></canvas></div>
+                  <table id="legend-overview-tender" class="mix-legend compact-legend"></table>
+                </div>
+              </article>
+              <article class="slide-panel executive-watch-panel">
+                <div class="panel-band">Leadership watchlist</div>
+                <ol id="overview-watchlist" class="executive-watchlist" aria-live="polite"></ol>
+              </article>
+            </div>
+            <p id="overview-reconciliation" class="executive-reconciliation">
+              Total sales are POS ex-tip and cover every channel, order ahead included.
+              Worldpay card dollars include tip and overlap POS card sales. Olo Pay is the
+              processor for order-ahead card payments, not the order-ahead channel total.
+            </p>
+          </section>
+        </section>
+
+        <section id="panel-pos" class="tab-panel" data-panel="pos" hidden>
           <div id="pos-empty" class="pos-empty" hidden></div>
 
           <div id="pos-content" hidden>
-            <section class="slide" aria-label="All payments sales and tender mix">
+            <section class="slide" aria-label="In-Shop Sales tender mix">
               <header class="slide-band">
-                <h2>All payments · Sales &amp; tender mix</h2>
+                <h2>In-Shop Sales · Tender mix</h2>
                 <p id="pos-period-label">Most recent week</p>
               </header>
 
@@ -180,9 +225,9 @@
 
         <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
         <!-- Slide-shaped board: one screen, headline numbers first, detail folded below. -->
-        <section class="slide" aria-label="Card present approval and cost">
+        <section class="slide" aria-label="Card Health approval and cost">
           <header class="slide-band">
-            <h2>Card present · Approval &amp; cost</h2>
+            <h2>Card Health · Approval &amp; cost</h2>
             <p id="slide-period">Most recent week</p>
           </header>
 
@@ -293,9 +338,9 @@
           <div id="olo-empty" class="pos-empty" hidden></div>
 
           <div id="olo-content" hidden>
-            <section class="slide" aria-label="Olo Pay digital approval and sales">
+            <section class="slide" aria-label="Order Ahead Olo Pay and Stripe">
               <header class="slide-band">
-                <h2>OLO PAY · DIGITAL APPROVAL &amp; SALES</h2>
+                <h2>Order Ahead · Olo Pay &amp; Stripe</h2>
                 <p id="olo-period-label">Most recent week</p>
               </header>
 
@@ -333,6 +378,17 @@
               </div>
             </section>
 
+            <section class="coming olo-coming" aria-label="Upcoming Order Ahead detail">
+              <div class="coming-card">
+                <strong>Coming next</strong>
+                Wallet mix — Apple Pay, Google Pay, and similar once Olo publishes BILLING_SCHEME_NM.
+              </div>
+              <div class="coming-card">
+                <strong>Coming next</strong>
+                Decline reasons — network decline codes once they land in the Olo extract.
+              </div>
+            </section>
+
             <details class="slide-detail">
               <summary>More detail — brand values, approvals, refunds &amp; voids</summary>
               <section class="charts-2 olo-charts">
@@ -345,17 +401,47 @@
           </div>
         </section>
 
+        <section id="panel-devices" class="tab-panel" data-panel="devices" hidden>
+          <div id="devices-empty" class="pos-empty" hidden></div>
+          <div id="devices-content" class="slide devices-slide" aria-label="Verifone e285 lifecycle burndown" hidden>
+            <header class="slide-band">
+              <div>
+                <h2>Payment Devices</h2>
+                <span>Verifone e285 lifecycle &middot; 5,700-unit contract, workbook is the source of truth</span>
+              </div>
+            </header>
+            <article class="panel devices-chart-panel">
+              <h3>Verifone e285 Lifecycle Burndown</h3>
+              <div class="chart-wrap devices-chart-wrap">
+                <canvas id="chart-devices-burndown" aria-label="Projected e285 inventory remaining"></canvas>
+                <aside id="devices-gap-callout" class="devices-gap-callout" hidden></aside>
+              </div>
+              <p id="devices-source-note" class="devices-source-note"></p>
+            </article>
+            <section class="devices-context" aria-label="Burndown context and assumptions">
+              <div>
+                <h3>What the files currently say</h3>
+                <ul id="devices-live"></ul>
+              </div>
+              <div>
+                <h3>Assumptions that stay fixed</h3>
+                <ul id="devices-assumptions"></ul>
+              </div>
+            </section>
+          </div>
+        </section>
+
         <!-- Shared across every channel tab: definitions, KPIs, POS mix, benchmarks, competitors -->
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p id="ask-data-blurb">Explore trends, definitions, POS tender mix, industry benchmarks, and competitor research</p>
+            <p id="ask-data-blurb">Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention</p>
             <div class="ask-data-prompts" aria-label="Suggested questions">
-              <button type="button" data-question="Which metrics need attention?">What’s brewing in this week’s metrics?</button>
-              <button type="button" data-question="Show the POS tender mix">How did guests pay at the POS?</button>
-              <button type="button" data-question="How does our auth rate compare with industry benchmarks?">How does our auth rate stack up?</button>
-              <button type="button" data-question="What competitor research is available for Starbucks, Dunkin, and 7 Brew?">What can our competitors teach us?</button>
-              <button type="button" data-question="Is this data certified?">Has this data passed its quality checks?</button>
+              <button type="button" data-question="What is In-Shop Sales?">What does In-Shop Sales include?</button>
+              <button type="button" data-question="What is Card Health?">What does Card Health measure?</button>
+              <button type="button" data-question="What is Order Ahead?">What does Order Ahead include?</button>
+              <button type="button" data-question="Can I add POS and Worldpay sales?">How do the channels overlap?</button>
+              <button type="button" data-question="Which metrics need attention?">What needs executive attention?</button>
             </div>
           </div>
           <div id="chat-log" class="ask-data-log" aria-live="polite"></div>

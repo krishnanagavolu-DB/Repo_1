@@ -8,10 +8,18 @@ function check(name, actual, expected) {
 }
 
 const html = fs.readFileSync("site/preview/index.html", "utf8");
-check("All payments uses slide", html.includes('aria-label="All payments sales and tender mix"'), true);
+check("In-Shop Sales slide aria label", html.includes('aria-label="In-Shop Sales tender mix"'), true);
+check("Card Health slide aria label", html.includes('aria-label="Card Health approval and cost"'), true);
+check("Order Ahead slide aria label", html.includes('aria-label="Order Ahead Olo Pay and Stripe"'), true);
 check("All payments sales trend canvas", html.includes('id="chart-pos-sales-trend"'), true);
 check("All payments payments trend canvas", html.includes('id="chart-pos-payments-trend"'), true);
 check("actionable decline heading", html.includes("Actionable decline reasons"), true);
+check("In-Shop Sales nav", html.includes(">In-Shop Sales</button>"), true);
+check("Card Health nav", html.includes(">Card Health</button>"), true);
+check("Order Ahead nav", html.includes(">Order Ahead</button>"), true);
+check("Payment Devices nav", html.includes(">Payment Devices</button>"), true);
+check("Payment Devices slide aria label", html.includes('aria-label="Verifone e285 lifecycle burndown"'), true);
+check("lifecycle callout exists", html.includes('id="devices-gap-callout"'), true);
 
 const labelsRef = html.indexOf('src="js/chart-labels.js');
 const dashboardRef = html.indexOf('src="js/dashboard.js');

@@ -5,11 +5,12 @@
 const fs = require("fs");
 const vm = require("vm");
 
-const dashboard = JSON.parse(fs.readFileSync("site/preview/data/dashboard.json", "utf8"));
-const benchmarks = JSON.parse(fs.readFileSync("site/preview/data/benchmarks.json", "utf8"));
-const posRaw = JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"));
+const dashboard = JSON.parse(fs.readFileSync("data/processed/dashboard.json", "utf8"));
+const benchmarks = JSON.parse(fs.readFileSync("data/processed/benchmarks.json", "utf8"));
+const posRaw = JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"));
 
 function buildBot(activeTab) {
+  const eventListeners = {};
   const sandbox = {
     console,
     Intl,
@@ -21,7 +22,21 @@ function buildBot(activeTab) {
     RegExp,
     Date,
     setTimeout: (callback) => callback(),
-    window: { __benchmarkData: benchmarks, addEventListener() {}, dispatchEvent() {} },
+    CustomEvent: class CustomEvent {
+      constructor(type, init) {
+        this.type = type;
+        this.detail = init?.detail;
+      }
+    },
+    window: {
+      __benchmarkData: benchmarks,
+      addEventListener(type, handler) {
+        (eventListeners[type] = eventListeners[type] || []).push(handler);
+      },
+      dispatchEvent(event) {
+        for (const handler of eventListeners[event.type] || []) handler(event);
+      },
+    },
     document: {
       addEventListener() {},
       querySelectorAll: () => [],
@@ -43,6 +58,10 @@ function buildBot(activeTab) {
   vm.runInContext(fs.readFileSync("site/preview/js/chatbot.js", "utf8"), sandbox);
   const chat = sandbox.window.__paymentsChat;
   chat.chatContext.activeTab = activeTab;
+  chat.emitPeriod = (detail) => {
+    sandbox.window.dispatchEvent(new sandbox.CustomEvent("dashboard:period", { detail }));
+  };
+  chat.selectedPeriodId = () => sandbox.window.__dashboardState?.periodId;
   return chat;
 }
 
@@ -74,6 +93,65 @@ function expect(name, answer, pattern) {
     failures.push({ name, expected: String(pattern), answer });
   }
 }
+
+function checkAnswer(question, pattern) {
+  expect(question, sameOnBothTabs(question), pattern);
+}
+
+const inShopDefinition = sameOnBothTabs("What is In-Shop Sales?");
+expect("In-Shop Sales definition names source", inShopDefinition, /POS.*Gold Semantic Sales/i);
+expect("In-Shop Sales definition names scope", inShopDefinition, /company-owned/i);
+expect("In-Shop Sales definition names weekly grain", inShopDefinition, /completed Monday.?Sunday/i);
+expect("In-Shop Sales definition names all tenders", inShopDefinition, /Card.*Cash.*Gift Card.*Dutch Pass/i);
+expect("In-Shop Sales definition names exclusions", inShopDefinition, /exclude.*tips.*change/i);
+expect(
+  "In-Shop Sales definition preserves curated company-owned ownership",
+  inShopDefinition,
+  /VW_DIM_STORE_CURATED\.OWNERSHIP\s*=\s*Company Owned/i
+);
+expect("In-Shop Sales definition states published tender mix is 100%", inShopDefinition, /mix.*100%/i);
+expect(
+  "In-Shop Sales definition cross-references separate Worldpay card authorizations",
+  inShopDefinition,
+  /Worldpay.*card authorizations/i
+);
+
+const legacyPosDefinition = sameOnBothTabs("What is All payments?");
+if (legacyPosDefinition !== inShopDefinition) {
+  failures.push({
+    name: "legacy All payments query uses canonical In-Shop Sales definition",
+    expected: inShopDefinition,
+    answer: legacyPosDefinition,
+  });
+}
+checkAnswer("What is Card Health?", /Worldpay.*authoriz.*decline.*interchange/i);
+const nonAdditivity = sameOnBothTabs("Can I add POS and Worldpay sales?");
+expect("POS and Worldpay non-additivity names overlap", nonAdditivity, /overlap/i);
+const doNotAddCount = (nonAdditivity.match(/do not add/gi) || []).length;
+if (doNotAddCount !== 1) {
+  failures.push({
+    name: "POS and Worldpay non-additivity says do not add exactly once",
+    expected: 1,
+    actual: doNotAddCount,
+    answer: nonAdditivity,
+  });
+}
+checkAnswer("What does YTD mean?", /Available history.*loaded weeks/i);
+
+const overviewPrompts = onPos.tabPrompts?.overview || [];
+if (overviewPrompts.length === 0) {
+  failures.push({ name: "Executive Overview has its own Ask Data prompts" });
+}
+expect(
+  "Executive Overview Ask Data prompts are executive-specific",
+  overviewPrompts.map((prompt) => `${prompt.label} ${prompt.question}`).join(" "),
+  /channel|overlap|executive|attention/i
+);
+expect(
+  "Executive Overview has its own Ask Data blurb",
+  onPos.tabBlurb?.("overview") || "",
+  /Executive Overview.*In-Shop Sales.*Card Health.*Order Ahead/i
+);
 
 // The reported question: asked from the All payments tab, it was refused.
 const androidTrend = sameOnBothTabs("what is the trend of Android pay payments over the last 4 weeks?");
@@ -119,6 +197,43 @@ const explicitPos = sameOnBothTabs("What is the average ticket on All payments?"
 expect("explicit All payments answers directly", explicitPos, /\$10\.03|payment lines|guest checks/);
 const explicitWp = sameOnBothTabs("What was AOV last week?");
 expect("explicit AOV answers directly", explicitWp, /AOV/);
+
+const overviewWeek = dashboard.periods.weeks.at(-2);
+onPos.emitPeriod({ tabId: "overview", periodId: overviewWeek.id, reason: "selection" });
+if (onPos.selectedPeriodId() !== overviewWeek.id) {
+  failures.push({
+    name: "Overview period events update shared dashboard state",
+    expected: overviewWeek.id,
+    actual: onPos.selectedPeriodId(),
+  });
+}
+reset(onPos);
+const overviewWeekAuth = onPos.answerQuestion("What was the Card present auth rate?");
+expect("Overview Ask Data auth answer uses the selected week label", overviewWeekAuth, new RegExp(overviewWeek.label));
+expect(
+  "Overview Ask Data auth answer uses the selected week's value",
+  overviewWeekAuth,
+  new RegExp(`${(overviewWeek.kpis.auth_rate.value * 100).toFixed(2)}%`)
+);
+
+onPos.emitPeriod({ tabId: "overview", periodId: "history", reason: "selection" });
+reset(onPos);
+const overviewHistoryAuth = onPos.answerQuestion("What was the Card present auth rate?");
+expect(
+  "Overview Ask Data auth answer uses Available history when selected",
+  overviewHistoryAuth,
+  new RegExp(dashboard.periods.ytd.label)
+);
+
+const posWeek = dashboard.periods.weeks.at(-3);
+onPos.emitPeriod({ tabId: "pos", periodId: posWeek.id, reason: "selection" });
+if (onPos.selectedPeriodId() !== posWeek.id) {
+  failures.push({
+    name: "non-Worldpay tab periods also update shared dashboard state",
+    expected: posWeek.id,
+    actual: onPos.selectedPeriodId(),
+  });
+}
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

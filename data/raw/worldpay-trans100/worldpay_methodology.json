@@ -1,0 +1,43 @@
+{
+  "title": "Worldpay \u2014 data notes",
+  "dashboard_tab": "Worldpay",
+  "audience": "Dashboard Builder Chat. Card-present processor auths. Not Genius POS sales. Not Olo Pay / Stripe. Not settlement / 11th Column.",
+  "source": {
+    "system": "Worldpay TRANS_100 (authorization log)",
+    "snowflake_table": "SILVER_CLEANSED.WORLDPAY_BULK.WORLDPAY_TRANS_100",
+    "joins": [
+      "GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED on NEWCOID = DB_NEWCOID AND OWNERSHIP = 'Company Owned'. Inner join \u2014 Franchised and unmapped shops are excluded."
+    ],
+    "shop_list": "GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Same Gold dim as Genius/Olo. No Excel mapping. Chain 0OS957 vs CO was previously unconfirmed; this table\u2019s DB_NEWCOID rows in recent weeks all resolve to Company Owned.",
+    "txn_filter": "TRANS_TYPE = IP (purchase auth). IX and IS rows are excluded."
+  },
+  "time": {
+    "grain": "Completed Monday\u2013Sunday weeks.",
+    "date_field": "TRANS_DATE (cast to DATE). Processor trans date, not Genius business date."
+  },
+  "files": {
+    "weekly_data": "worldpay_data_YYYYMMDD.json \u2014 YYYYMMDD is the Monday week start. One week per file.",
+    "methodology": "worldpay_methodology.json \u2014 rewrite only when definitions change (--write-methodology)."
+  },
+  "kpi_definitions": {
+    "SALES_VOLUME": "Approved IP auth dollars (AUTH_AMOUNT / 100) at Company Owned shops. Includes tip. What Worldpay authorized, not Genius drink sales.",
+    "TRANSACTION_COUNT": "Count of those approved IP rows after SYS_HASH dedupe.",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 TRANSACTION_COUNT. Per auth, not per Genius order.",
+    "AUTHORIZATION_RATE": "Approved IP (AUTH_REQUEST_RESP_CODE = AA) \u00f7 all IP attempts \u00d7 100.",
+    "CARD_BRAND_MIX": "CARD_TYPE on approved IPs: Visa, Mastercard (MCRD), Amex, Discover (DISC)."
+  },
+  "not_in_this_extract": [
+    "Genius / Xenial POS",
+    "Olo Pay Stripe",
+    "Tip split (Worldpay auth is billed total)",
+    "Refunds / voids as a separate volume (not on IP)",
+    "Keyed vs tap/dip (POS_ENTRY_MODE) \u2014 Phase 2",
+    "Worldpay IQ chargebacks",
+    "Settlement / Blackline 11th Column"
+  ],
+  "do_not": [
+    "Add Worldpay SALES_VOLUME to Genius Card \u2014 overlapping window cards, different grain (auth+tip vs POS ex-tip).",
+    "Add Worldpay to Olo Pay \u2014 different processor and channel.",
+    "Treat AVG_TICKET as Genius average ticket."
+  ]
+}

@@ -1,0 +1,4 @@
+# Internal Dutch Bros payments reporting. Shared by link, not meant to be
+# findable. robots.txt at the domain root covers /preview/ as well.
+User-agent: *
+Disallow: /

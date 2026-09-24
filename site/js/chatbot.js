@@ -756,9 +756,8 @@ function answerScope() {
 async function loadBenchmarks() {
   if (benchmarkData) return benchmarkData;
   try {
-    const response = await fetch("data/benchmarks.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`benchmark file ${response.status}`);
-    benchmarkData = await response.json();
+    const response = await window.__dashboardAuth.loadJson("data/benchmarks.json");
+    benchmarkData = response;
     window.__benchmarkData = benchmarkData;
   } catch (error) {
     console.warn("Benchmark research is unavailable", error);

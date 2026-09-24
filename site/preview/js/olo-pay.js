@@ -309,8 +309,8 @@ function normalizeOloData(raw) {
 function aggregateWeeks(weeks) {
   if (!weeks?.length) {
     return {
-      label: "YTD",
-      sortKey: "ytd",
+      label: "Available history",
+      sortKey: "history",
       weekCount: 0,
       sales: 0,
       transactions: 0,
@@ -369,8 +369,8 @@ function aggregateWeeks(weeks) {
   const singleBasis = bases.size === 1 ? [...bases][0] : null;
 
   return {
-    label: `YTD · ${first} – ${last}`,
-    sortKey: "ytd",
+    label: `Available history · ${first} – ${last}`,
+    sortKey: "history",
     weekCount: weeks.length,
     sales,
     transactions,
@@ -410,14 +410,21 @@ function getDataStart(weeks) {
   };
 }
 
+function isHistoryPeriod(periodId) {
+  return periodId === "history" || periodId === "ytd";
+}
+
 function findWeekForPeriod(weeks, periodId) {
-  if (!periodId || periodId === "ytd") return null;
+  if (!periodId || isHistoryPeriod(periodId)) return null;
   return weeks.find((week) => week.sortKey === periodId) || null;
 }
 
 function deltaHtml(wow) {
-  if (!wow) return "";
-  return `<div class="kpi-delta ${wow.tone}">${wow.text}</div>`;
+  if (!wow) return `<div class="kpi-delta flat">—</div>`;
+  /* Slide cells are narrow; keep the comparison short and put the full
+     "vs prior week" wording in the title for hover/screen readers. */
+  const short = String(wow.text || "").replace(/\s+vs prior week$/i, "");
+  return `<div class="kpi-delta ${wow.tone}" title="${wow.text}">${short}</div>`;
 }
 
 function renderSummary(week) {
@@ -437,7 +444,7 @@ function renderSummary(week) {
       delta: wowPtsLabel(week.wow?.authRatePp),
     },
     {
-      label: "Approved orders",
+      label: "Order-ahead orders",
       value: week.orders != null ? compactCount(week.orders) : "—",
       detail: week.orders != null ? count(week.orders) : null,
       delta: wowLabel(week.wow?.ordersPct),
@@ -453,9 +460,9 @@ function renderSummary(week) {
     .map(
       (card) => `
       <div class="pos-slide-stat">
+        <div class="hero-label">${card.label}</div>
         <div class="hero-value">${card.value}</div>
         ${deltaHtml(card.delta)}
-        <div class="hero-label">${card.label}</div>
         ${card.detail ? `<div class="hero-sub">${card.detail}</div>` : ""}
       </div>`
     )
@@ -474,7 +481,7 @@ function renderSupport(week) {
       <span class="olo-support-label">Voids</span>
       <span class="olo-support-value">${usd(week.voids)}</span>
     </div>
-    <p class="panel-note">Approved captures match approved orders on Olo. Wallet mix and decline reasons are not in Phase 1.</p>
+    <p class="panel-note">Approved captures match approved orders on Olo.</p>
   `;
 }
 
@@ -702,7 +709,7 @@ function selectPeriod(periodId) {
   if (!weeks.length) return;
   selectedPeriodId = periodId;
 
-  if (periodId === "ytd") {
+  if (isHistoryPeriod(periodId)) {
     renderWeek(aggregateWeeks(weeks));
     return;
   }
@@ -711,7 +718,7 @@ function selectPeriod(periodId) {
   if (!match) {
     const available = weeks.map((week) => week.label).join(", ");
     showNotice({
-      title: "Olo Pay isn't published for this week yet",
+      title: "Order Ahead (Olo Pay) isn't published for this week yet",
       message: `Pick another week — digital approval metrics are available for ${available}.`,
       technical: `No Olo week matches period id "${periodId}" in ${OLO_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -725,7 +732,7 @@ function renderOlo(weeks) {
   if (!weeks.length) {
     window.__oloPayState = { weeks: [], latest: null, methodology: null };
     showNotice({
-      title: "Olo Pay for this preview isn't published yet",
+      title: "Order Ahead (Olo Pay) for this preview isn't published yet",
       message: "Once the certified weekly Olo files are loaded, digital approval metrics will appear here.",
       technical: `No usable weeks found in ${OLO_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -735,12 +742,16 @@ function renderOlo(weeks) {
   const latest = weeks[weeks.length - 1];
   window.__oloPayState = { weeks, latest, methodology: cachedMethodology };
   if (window.__oloPay) window.__oloPay.methodology = cachedMethodology;
+  window.__dashboardTabs?.registerPeriods(
+    "olo",
+    weeks.map((week) => ({ id: week.sortKey, label: week.label }))
+  );
   window.__ytdBanner?.register("olo", getDataStart(weeks));
   const requested = findWeekForPeriod(weeks, selectedPeriodId);
-  if (selectedPeriodId && selectedPeriodId !== "ytd" && !requested) {
+  if (selectedPeriodId && !isHistoryPeriod(selectedPeriodId) && !requested) {
     selectPeriod(selectedPeriodId);
-  } else if (selectedPeriodId === "ytd") {
-    selectPeriod("ytd");
+  } else if (isHistoryPeriod(selectedPeriodId)) {
+    selectPeriod(selectedPeriodId);
   } else {
     renderWeek(requested || latest);
   }
@@ -752,20 +763,20 @@ function renderOlo(weeks) {
 
 async function loadOloPay() {
   try {
-    const res = await fetch(OLO_DATA_URL, { cache: "no-store" });
-    if (!res.ok) {
+    const payload = await window.__dashboardAuth.loadJson(OLO_DATA_URL);
+    renderOlo(normalizeOloData(payload));
+  } catch (err) {
+    if (err?.status) {
       showNotice({
-        title: "Olo Pay couldn't be loaded right now",
+        title: "Order Ahead (Olo Pay) couldn't be loaded right now",
         message: "Try refreshing in a moment. If it keeps happening, share the technical details with the data team.",
-        technical: `Request for ${OLO_DATA_URL} returned HTTP ${res.status}.`,
+        technical: `Request for ${OLO_DATA_URL} returned HTTP ${err.status}.`,
         fix: IMPORT_STEPS,
       });
       return;
     }
-    renderOlo(normalizeOloData(await res.json()));
-  } catch (err) {
     showNotice({
-      title: "Olo Pay couldn't be displayed right now",
+      title: "Order Ahead (Olo Pay) couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),
@@ -779,6 +790,7 @@ window.__oloPay = {
   aggregateWeeks,
   trendSeries,
   getDataStart,
+  isHistoryPeriod,
   findWeekForPeriod,
   usd,
   compactUsd,
@@ -797,7 +809,7 @@ window.__oloPay = {
   },
   getSelectedWeek() {
     const weeks = window.__oloPayState?.weeks || [];
-    if (selectedPeriodId === "ytd") return aggregateWeeks(weeks);
+    if (isHistoryPeriod(selectedPeriodId)) return aggregateWeeks(weeks);
     return findWeekForPeriod(weeks, selectedPeriodId) || window.__oloPayState?.latest || null;
   },
   getWeeks() {
@@ -814,8 +826,14 @@ function startOloWhenUnlocked() {
 }
 
 window.addEventListener("dashboard:period", (event) => {
+  const tabId = event.detail?.tabId;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
+  if (tabId === "overview") {
+    selectedPeriodId = periodId;
+    return;
+  }
+  if (tabId && tabId !== "olo") return;
   if (!window.__oloPayState?.weeks?.length) {
     selectedPeriodId = periodId;
     return;

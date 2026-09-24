@@ -230,7 +230,7 @@ function normalizeGiftSplit(tenders) {
   return { parentLabel: giftRow.label, parentAmount: giftRow.amount, parts, total };
 }
 
-/** YTD is every published week rolled up — there is no prior period to compare. */
+/** Available history rolls up every published week with no prior comparison. */
 function aggregateWeeks(weeks) {
   if (!weeks?.length) return null;
 
@@ -318,8 +318,8 @@ function aggregateWeeks(weeks) {
   }
 
   return {
-    label: `YTD · ${first} – ${last}`,
-    sortKey: "ytd",
+    label: `Available history · ${first} – ${last}`,
+    sortKey: "history",
     weekCount: weeks.length,
     tenders,
     tenderTotal,
@@ -425,7 +425,7 @@ function trendSeries(weeks, metric) {
   return points.length > 1 ? points : [];
 }
 
-/** Earliest published week, used by the YTD banner. */
+/** Earliest published week, used by the available-history banner. */
 function getDataStart(weeks) {
   if (!weeks?.length) return null;
   return {
@@ -440,8 +440,9 @@ function renderBanner() {
 }
 
 function deltaHtml(wow) {
-  if (!wow) return "";
-  return `<div class="kpi-delta ${wow.tone}">${wow.text}</div>`;
+  if (!wow) return `<div class="kpi-delta flat">—</div>`;
+  const short = String(wow.text || "").replace(/\s+vs prior week$/i, "");
+  return `<div class="kpi-delta ${wow.tone}" title="${wow.text}">${short}</div>`;
 }
 
 function renderSummary(week) {
@@ -479,9 +480,9 @@ function renderSummary(week) {
     .map((card) => {
       return `
       <div class="pos-slide-stat">
+        <div class="hero-label">${card.label}</div>
         <div class="hero-value">${card.value}</div>
         ${deltaHtml(card.delta)}
-        <div class="hero-label">${card.label}</div>
         ${card.detail ? `<div class="hero-sub">${card.detail}</div>` : ""}
       </div>`;
     })
@@ -503,7 +504,7 @@ function renderTrend(metric, series, activeWeek) {
   const prev = values.length > 1 ? values[values.length - 2] : last;
   const endColor = last < prev ? "#D9272D" : "#006098";
   const average = values.reduce((sum, value) => sum + value, 0) / values.length;
-  // On YTD every week feeds the aggregate, so no single point is highlighted.
+  // In available history every week feeds the aggregate, so no point is highlighted.
   const currentIndex = series.findIndex((point) => point.label === activeWeek?.label);
   const format = (value) =>
     metric === "sales" ? usd(value) : Number(value).toLocaleString("en-US");
@@ -739,16 +740,20 @@ function showReady() {
 
 function notPublishedNotice(technical) {
   showNotice({
-    title: "All payments for this week aren't published yet",
+    title: "In-Shop Sales for this week aren't published yet",
     message: "Once the weekly POS export is loaded, tender mix will appear here.",
     technical,
     fix: IMPORT_STEPS,
   });
 }
 
-/** Worldpay period ids are week-start dates, which match the POS sort keys. */
+function isHistoryPeriod(periodId) {
+  return periodId === "history" || periodId === "ytd";
+}
+
+/** Shared period ids are week-start dates, which match the POS sort keys. */
 function findWeekForPeriod(weeks, periodId) {
-  if (!periodId || periodId === "ytd") return null;
+  if (!periodId || isHistoryPeriod(periodId)) return null;
   return weeks.find((week) => week.sortKey === periodId) || null;
 }
 
@@ -768,7 +773,7 @@ function selectPeriod(periodId) {
   if (!weeks.length) return;
   selectedPeriodId = periodId;
 
-  if (periodId === "ytd") {
+  if (isHistoryPeriod(periodId)) {
     renderWeek(aggregateWeeks(weeks));
     return;
   }
@@ -777,7 +782,7 @@ function selectPeriod(periodId) {
   if (!match) {
     const available = weeks.map((week) => week.label).join(", ");
     showNotice({
-      title: "All payments isn't published for this week yet",
+      title: "In-Shop Sales isn't published for this week yet",
       message: `Pick another week — tender mix is available for ${available}.`,
       technical: `No POS week matches period id "${periodId}" in ${POS_DATA_URL}.`,
       fix: IMPORT_STEPS,
@@ -797,25 +802,28 @@ function renderPos(weeks) {
   }
   const latest = weeks[weeks.length - 1];
   window.__posSalesState = { weeks, latest };
+  window.__dashboardTabs?.registerPeriods(
+    "pos",
+    weeks.map((week) => ({ id: week.sortKey, label: week.label }))
+  );
   window.__ytdBanner?.register("pos", getDataStart(weeks));
-  const requested = findWeekForPeriod(weeks, selectedPeriodId);
-  if (selectedPeriodId && !requested) selectPeriod(selectedPeriodId);
-  else renderWeek(requested || latest);
+  if (selectedPeriodId) selectPeriod(selectedPeriodId);
+  else renderWeek(latest);
   window.dispatchEvent(new CustomEvent("dashboard:pos-loaded", { detail: { weekCount: weeks.length } }));
   return latest;
 }
 
 async function loadPosSales() {
   try {
-    const res = await fetch(POS_DATA_URL, { cache: "no-store" });
-    if (!res.ok) {
-      notPublishedNotice(`Request for ${POS_DATA_URL} returned HTTP ${res.status}.`);
+    const payload = await window.__dashboardAuth.loadJson(POS_DATA_URL);
+    renderPos(normalizePosData(payload));
+  } catch (err) {
+    if (err?.status) {
+      notPublishedNotice(`Request for ${POS_DATA_URL} returned HTTP ${err.status}.`);
       return;
     }
-    renderPos(normalizePosData(await res.json()));
-  } catch (err) {
     showNotice({
-      title: "All payments couldn't be displayed right now",
+      title: "In-Shop Sales couldn't be displayed right now",
       message:
         "Try refreshing in a moment. If it keeps happening, share the technical details below with the data team.",
       technical: String(err?.message || err),
@@ -831,6 +839,7 @@ window.__posSales = {
   aggregateWeeks,
   trendSeries,
   getDataStart,
+  isHistoryPeriod,
   findWeekForPeriod,
   usd,
   compactUsd,
@@ -845,7 +854,7 @@ window.__posSales = {
   },
   getSelectedWeek() {
     const weeks = window.__posSalesState?.weeks || [];
-    if (selectedPeriodId === "ytd") return aggregateWeeks(weeks);
+    if (isHistoryPeriod(selectedPeriodId)) return aggregateWeeks(weeks);
     return findWeekForPeriod(weeks, selectedPeriodId) || window.__posSalesState?.latest || null;
   },
   getWeeks() {
@@ -862,8 +871,14 @@ function startPosWhenUnlocked() {
 }
 
 window.addEventListener("dashboard:period", (event) => {
+  const tabId = event.detail?.tabId;
   const periodId = event.detail?.periodId;
   if (!periodId) return;
+  if (tabId === "overview") {
+    selectedPeriodId = periodId;
+    return;
+  }
+  if (tabId && tabId !== "pos") return;
   if (!window.__posSalesState?.weeks?.length) {
     selectedPeriodId = periodId;
     return;

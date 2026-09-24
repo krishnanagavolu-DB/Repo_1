@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-"""Validate an In Shop POS sales export and copy it into the published site data.
+"""Validate In Shop POS sales exports and publish their combined weeks.
+
+Each Snowflake export holds a rolling window, so publishing one alone would
+drop older weeks from the trend. Pass every kept extract.
 
 Usage:
-    python3 scripts/import_pos_sales.py ~/Downloads/reports/kpi_tracking/snowflake/in_shop_sales_data.json
+    python3 scripts/import_pos_sales.py data/raw/pos-sales/in_shop_sales_data_*.json
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
+from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +21,18 @@ TARGETS = [
     ROOT / "site" / "preview" / "data" / "in_shop_sales_data.json",
     ROOT / "site" / "data" / "in_shop_sales_data.json",
 ]
+
+# Shell fields that must agree, or the weeks are measuring different things.
+# Shop counts live under `filter`/`shop_coverage` and legitimately move as
+# shops open, so those are not compared.
+SHARED_METADATA_KEYS = (
+    "definitions",
+    "methodology",
+    "tender_order",
+    "week_cadence",
+    "environment",
+)
+START_KEYS = ("week_start_date", "week_start", "week", "period_start", "start_date")
 
 AMOUNT_KEYS = (
     "amount",
@@ -66,6 +81,77 @@ def tender_rows(week: dict) -> list[dict]:
                 rows.append({"label": key, "amount": value})
         return rows
     return []
+
+
+def week_start(week: dict) -> str | None:
+    for key in START_KEYS:
+        value = week.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _missing_mondays(starts: list[str]) -> list[str]:
+    """Mondays with no published week between the first and last loaded week."""
+    try:
+        parsed = sorted(date.fromisoformat(value) for value in starts)
+    except ValueError:
+        return []
+    present = set(parsed)
+    gaps = []
+    cursor = parsed[0]
+    while cursor < parsed[-1]:
+        cursor += timedelta(days=7)
+        if cursor not in present and cursor != parsed[-1]:
+            gaps.append(cursor.isoformat())
+    return gaps
+
+
+def combine_extracts(paths) -> tuple[dict, list[str]]:
+    """Merge rolling weekly extracts into one payload, newest extract winning."""
+    loaded = []
+    for path in paths:
+        path = Path(path)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError(f"{path.name}: expected a JSON object")
+        loaded.append((str(payload.get("generated_at") or ""), path, payload))
+    if not loaded:
+        raise ValueError("no POS extracts given")
+
+    loaded.sort(key=lambda item: (item[0], item[1].name))
+
+    _base_stamp, base_path, base_payload = loaded[0]
+    for _stamp, path, payload in loaded[1:]:
+        for key in SHARED_METADATA_KEYS:
+            if payload.get(key) != base_payload.get(key):
+                raise ValueError(
+                    f"divergent {key} metadata between {base_path.name} and {path.name}"
+                )
+
+    warnings: list[str] = []
+    weeks: dict[str, dict] = {}
+    sources: dict[str, Path] = {}
+    for _stamp, path, payload in loaded:
+        for week in extract_weeks(payload):
+            if not isinstance(week, dict):
+                continue
+            start = week_start(week)
+            if start is None:
+                raise ValueError(f"{path.name}: a week is missing {START_KEYS[0]}")
+            if start in weeks and weeks[start] != week:
+                warnings.append(
+                    f"week {start} restated by {path.name} (was {sources[start].name})"
+                )
+            weeks[start] = week
+            sources[start] = path
+
+    ordered = [weeks[start] for start in sorted(weeks)]
+    for gap in _missing_mondays(sorted(weeks)):
+        warnings.append(f"no published week for {gap}; the trend will skip it")
+
+    combined = {**loaded[-1][2], "weeks": ordered}
+    return combined, warnings
 
 
 def validate(payload) -> tuple[list[str], list[str]]:
@@ -136,7 +222,12 @@ def validate(payload) -> tuple[list[str], list[str]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("source", type=Path, help="Path to the exported in_shop_sales_data.json")
+    parser.add_argument(
+        "source",
+        type=Path,
+        nargs="+",
+        help="Exported in_shop_sales_data_YYYYMMDD.json files (pass every kept extract)",
+    )
     parser.add_argument(
         "--preview-only",
         action="store_true",
@@ -144,19 +235,24 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    source = args.source.expanduser()
-    if not source.is_file():
-        print(f"ERROR: file not found: {source}")
-        return 1
+    sources = [path.expanduser() for path in args.source]
+    for source in sources:
+        if not source.is_file():
+            print(f"ERROR: file not found: {source}")
+            return 1
 
     try:
-        payload = json.loads(source.read_text())
+        payload, merge_warnings = combine_extracts(sources)
     except json.JSONDecodeError as err:
-        print(f"ERROR: {source} is not valid JSON: {err}")
+        print(f"ERROR: an extract is not valid JSON: {err}")
+        return 1
+    except ValueError as err:
+        print(f"ERROR   {err}")
+        print("\nNot copied. Fix the export and rerun.")
         return 1
 
     errors, warnings = validate(payload)
-    for warning in warnings:
+    for warning in merge_warnings + warnings:
         print(f"WARNING {warning}")
     if errors:
         for error in errors:
@@ -165,13 +261,17 @@ def main() -> int:
         return 1
 
     targets = TARGETS[:1] if args.preview_only else TARGETS
+    rendered = json.dumps(payload, indent=2) + "\n"
     for target in targets:
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
-        print(f"Copied to {target.relative_to(ROOT)}")
+        target.write_text(rendered, encoding="utf-8")
+        print(f"Wrote {target.relative_to(ROOT)}")
 
     weeks = extract_weeks(payload)
-    print(f"\nValidated {len(weeks)} week(s). {len(warnings)} warning(s).")
+    print(
+        f"\nValidated {len(weeks)} week(s) from {len(sources)} extract(s). "
+        f"{len(merge_warnings) + len(warnings)} warning(s)."
+    )
     return 0
 
 

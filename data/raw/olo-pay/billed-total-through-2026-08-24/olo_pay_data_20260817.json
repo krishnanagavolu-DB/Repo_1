@@ -1,0 +1,118 @@
+{
+  "generated_at": "2026-08-31T15:15:25-07:00",
+  "week_cadence": "Monday-Sunday",
+  "dashboard_tab": "Olo Pay",
+  "environment": "prod",
+  "definitions": {
+    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops. Tips sit in TIP_PORTION on the source row and are not subtracted here; amount is the billing total Olo stored.",
+    "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
+    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales. Wallet service is Phase 2."
+  },
+  "methodology_file": "olo_pay_methodology.json",
+  "filter": {
+    "layer": "OLO_DATA_SHARE.RPT_EXT.BILLING_TRANSACTION_FCT_V",
+    "processor": "Stripe",
+    "txn_types": [
+      "Sale",
+      "RefundSale",
+      "VoidSale"
+    ],
+    "sales_status": "Approved",
+    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded."
+  },
+  "brand_order": [
+    "Visa",
+    "Mastercard",
+    "Amex",
+    "Discover"
+  ],
+  "weeks": [
+    {
+      "week_start_date": "2026-08-17",
+      "week_end_date": "2026-08-23",
+      "totals": {
+        "SALES_VOLUME": 6133767.46,
+        "TRANSACTION_COUNT": 542924,
+        "ORDER_COUNT": 542924,
+        "AVG_TICKET": 11.3,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "REFUND_VOLUME": 1639.4,
+        "VOID_VOLUME": 981.5
+      },
+      "authorization": {
+        "approved": 542924,
+        "declined": 17893,
+        "failed": 0,
+        "auth_rate_pct": 96.81,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 4469152.64,
+          "pct_of_digital_sales": 72.9,
+          "TRANSACTION_COUNT": 394260
+        },
+        "Mastercard": {
+          "amount": 1315959.2,
+          "pct_of_digital_sales": 21.5,
+          "TRANSACTION_COUNT": 117649
+        },
+        "Amex": {
+          "amount": 112419.34,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 9661
+        },
+        "Discover": {
+          "amount": 236236.28,
+          "pct_of_digital_sales": 3.8,
+          "TRANSACTION_COUNT": 21354
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 6133767.46,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 12.8,
+        "TRANSACTION_COUNT_PCT": 11.3,
+        "AUTH_RATE_PP": 0.05
+      }
+    }
+  ],
+  "shop_coverage": {
+    "gold_store_ownership_counts": {
+      "Company Owned": 1016,
+      "Franchised": 310
+    }
+  },
+  "artifacts": {
+    "json": "olo_pay_data_20260817.json",
+    "methodology": "olo_pay_methodology.json"
+  },
+  "error_log": [
+    {
+      "code": "source_olo_billing_transactions",
+      "note": "OLO_DATA_SHARE.RPT_EXT.BILLING_TRANSACTION_FCT_V. PROCESSOR = Stripe (Olo Pay). Paytronix Dutch Pass excluded."
+    },
+    {
+      "code": "company_owned_only",
+      "note": "GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Franchised and unmapped excluded from all KPIs."
+    },
+    {
+      "code": "amount_uses_coalesce_final_then_initial",
+      "note": "FINAL_AMOUNT is currently null on this feed; INITIAL_AMOUNT is used."
+    },
+    {
+      "code": "phase_2_excluded",
+      "note": "Apple Pay / Google Pay not split (BILLING_SCHEME_NM). Decline reason codes not extracted."
+    },
+    {
+      "code": "dedupe_billing_transaction_id",
+      "source_rows_after_dedupe": 5671507,
+      "distinct_id": 5671507,
+      "null_amount": 0
+    }
+  ]
+}

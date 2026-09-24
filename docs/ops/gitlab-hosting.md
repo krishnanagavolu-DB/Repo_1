@@ -32,17 +32,42 @@ GitHub backup (still live):
 - https://krishnanagavolu-db.github.io/Repo_1/
 - https://krishnanagavolu-db.github.io/Repo_1/preview/
 
-## Two clicks so leadership can open the link
+## Sharing the link with someone else
 
-The GitLab project is private, so Pages may ask for a GitLab login until you
-change this:
+The GitLab project is private and Pages access control is on, so anyone who is
+not a project member is bounced to GitLab and sees a **404** (GitLab shows 404,
+not 403, for resources you cannot see). The Pages URL answers `302` to
+`projects.gitlab.io/auth` for signed-out visitors — that redirect is the tell.
+
+### Make Pages public (current setup, for feedback and buy-in)
 
 1. **Settings → General → Visibility, project features, permissions**
 2. **Pages** access: **Everyone**
 3. Save
 
-The published site is still only the aggregates in `site/`. Raw Excels are not
-copied to Pages.
+The repository stays private; only the published `site/` output becomes
+reachable. Raw Excels are never copied to Pages. Anyone in the org can then open
+the link with no GitLab account, and the password gate is what they hit first.
+
+The alternative, if you ever want the link locked to named people again, is
+**Manage → Members → Invite members** (role **Guest** is enough) with Pages
+access back on **Only project members**.
+
+### What "public" actually exposes
+
+The password gate is still client-side, but published `site/**/data/*.json`
+files are AES-GCM envelopes. Fetching them without the key yields ciphertext,
+not weekly sales. The same password opens the gate and the numbers (see
+`docs/ops/password-gate.md`).
+
+Two extra guards keep the public URL from being findable
+(`tests/test_public_exposure.py` and `tests/test_payload_crypto.py`):
+
+- `site/robots.txt` disallows every crawler for the whole domain, `/preview/`
+  included
+- both pages carry `noindex, nofollow, noarchive` and `referrer: no-referrer`
+- CI fails if a published JSON file is still plaintext or its hash drifts from
+  `data/processed/`
 
 ## Optional: a cleaner URL later
 
@@ -77,3 +102,4 @@ we can retarget `origin` to GitLab.
 - Do not publish `data/raw/`.
 - Do not overwrite leadership `site/index.html` from preview unless you say **promote**.
 - Do not send people `https://krishna.nagavolu.gitlab.io/…` — browsers will reject the certificate.
+- Do not treat an unencrypted `site/**/data/*.json` as safe to publish. Run `python3 scripts/encrypt_site_data.py --check`.

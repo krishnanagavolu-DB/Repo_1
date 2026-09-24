@@ -860,8 +860,9 @@ function answerDevicesQuestion(q) {
   if (/\bmatch|newco|shipped shops|end customer|booked\b/.test(q)) {
     return (
       "**Exact match, lifecycle rules.** `NewCo ID` and `End Customer Name` are the same 6-character shop id. " +
-      "If the shop is on **Shipped Orders** for item **M087-500-14-WWA**, use Shipped Qty on the Shipping Date and ignore booked rows. " +
-      "If it is booked only, use Ordered Qty on the Requested Date."
+      "If the shop is on **Shipped Orders** for item **M087-500-14-WWA** with a shipping date on or after **1 Feb 2026**, use Shipped Qty and ignore booked rows. " +
+      "A 2025 shipment does not fulfill a current-contract PO. " +
+      "If it is booked only, those units come off the firm line on the report extract date."
     );
   }
   if (/\b5\.5|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {

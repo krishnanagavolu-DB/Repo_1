@@ -135,6 +135,13 @@ def latest_file(directory: Path, pattern: re.Pattern[str]) -> Path | None:
     return max(matches, key=sort_key)
 
 
+def report_extract_date(path: Path) -> date | None:
+    found = ISO_IN_NAME.search(path.name)
+    if not found:
+        return None
+    return date(int(found.group(1)), int(found.group(2)), int(found.group(3)))
+
+
 def _header_index(row: list[str], aliases: tuple[str, ...]) -> int | None:
     lowered = [cell_text(value).lower() for value in row]
     for alias in aliases:
@@ -243,7 +250,11 @@ def parse_orders_report(path: Path) -> tuple[list[dict], list[dict]]:
     return booked, shipped
 
 
-def _order_events(rows: list[dict], source: str) -> list[dict]:
+def _order_events(
+    rows: list[dict],
+    source: str,
+    booked_date: date | None = None,
+) -> list[dict]:
     events = []
     for row in rows:
         if not is_target_item(row.get("item")):
@@ -251,29 +262,36 @@ def _order_events(rows: list[dict], source: str) -> list[dict]:
         shop_id = normalize_shop_id(row.get("id"))
         if not shop_id:
             continue
-        when = row.get("shipping_date") if source == "shipped" else row.get("requested_date")
+        when = row.get("shipping_date") if source == "shipped" else booked_date or row.get("requested_date")
         if source == "shipped" and when is None:
             when = row.get("requested_date")
         qty = int(row.get("qty") or 0)
-        if qty > 0 and when is not None:
-            events.append({"id": shop_id, "qty": qty, "date": when, "source": source})
+        if qty <= 0 or when is None:
+            continue
+        if source == "shipped" and when < BASELINE_DATE:
+            continue
+        events.append({"id": shop_id, "qty": qty, "date": when, "source": source})
     return events
 
 
-def reconcile_order_lifecycle(booked: list[dict], shipped: list[dict]) -> list[dict]:
-    """Shipped shops win. Booked-only shops use ordered qty on requested date."""
+def reconcile_order_lifecycle(
+    booked: list[dict],
+    shipped: list[dict],
+    booked_date: date | None = None,
+) -> list[dict]:
+    """Shipped shops win; booked-only shops commit on the report extract date."""
     shipped_events = _order_events(shipped, "shipped")
     shipped_ids = {event["id"] for event in shipped_events}
     booked_events = [
         event
-        for event in _order_events(booked, "booked")
+        for event in _order_events(booked, "booked", booked_date=booked_date)
         if event["id"] not in shipped_ids
     ]
     return sorted(shipped_events + booked_events, key=lambda event: (event["date"], event["id"]))
 
 
 def pending_shops(po_shops: list[dict], ordered_ids: set[str]) -> list[dict]:
-    """Keep PO shops that have not been booked or shipped — they are still awaiting MIDs."""
+    """Keep PO shops that are not booked and have no current-contract shipment."""
     return [shop for shop in po_shops if shop["id"] not in ordered_ids]
 
 
@@ -428,7 +446,8 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
     today = today or date.today()
     po_shops = parse_po_extract(po_path)
     booked, shipped = parse_orders_report(orders_path)
-    events = reconcile_order_lifecycle(booked, shipped)
+    extract_date = report_extract_date(orders_path) or today
+    events = reconcile_order_lifecycle(booked, shipped, booked_date=extract_date)
     ordered_ids = {event["id"] for event in events}
     pending = pending_shops(po_shops, ordered_ids)
     projection = project_lifecycle(events, pending, po_shops, today=today)
@@ -470,6 +489,7 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         "summary": {
             "baseline_inventory": BASELINE_INVENTORY,
             "as_of": projection["firm_end_date"].isoformat(),
+            "extract_date": extract_date.isoformat(),
             "firm_inventory": firm_inventory,
             "shipped_shops": len({event["id"] for event in shipped_since}),
             "shipped_qty": shipped_qty,
@@ -493,7 +513,11 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
                 f"({pending_units} units) in PO Pipeline awaiting MIDs/Booking."
             ),
         },
-        "sources": {"po_extract": po_path.name, "orders_report": orders_path.name},
+        "sources": {
+            "po_extract": po_path.name,
+            "orders_report": orders_path.name,
+            "orders_extract_date": extract_date.isoformat(),
+        },
         "warnings": warnings,
     }
 

@@ -24,9 +24,8 @@ Parsed JSON with the same names is also accepted. The importer always uses the n
 
 - Only item **M087-500-14-WWA** counts. Accessories/kits are ignored.
 - `NewCo ID` and `End Customer Name` are an exact 1:1 match on the 6-character shop id.
-- If a shop is on **Shipped Orders**, use `Shipped Qty` on `Shipping Date` and ignore booked rows for that shop.
-- If a shop is **booked only**, use `Ordered Qty` on `Requested Date`.
-- Pending demand is PO shops that are in neither booked nor shipped.
+- If a shop is on **Shipped Orders** with `Shipping Date` on or after 1 Feb 2026, use `Shipped Qty` and ignore booked rows. Pre-February 2026 shipments are prior-contract and do not fulfill a current PO. If a shop is **booked only**, commit `Ordered Qty` on the orders-report extract date.
+- Pending demand is PO shops with no booked e285 order and no shipment on or after 1 Feb 2026. A 2025 shipment does not fulfill a current-contract PO.
 
 ## Chart
 

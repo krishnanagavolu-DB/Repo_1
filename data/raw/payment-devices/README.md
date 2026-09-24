@@ -12,4 +12,4 @@ Newest matching names win:
 - `PO_Extract_[date].xlsx` — `NewCo ID`, `Projected Opening Date`
 - `Daily Dutch Bros Booked Shipped Orders Report[date].xlsx` — Booked + Shipped sheets
 
-Only item `M087-500-14-WWA` counts. If a shop is shipped, ignore its booked row. Shop ids match exactly (`AL0107`).
+Only item `M087-500-14-WWA` counts. A shop is fulfilled only by a booked order or a shipment on/after 1 Feb 2026. Shop ids match exactly (`AL0107`).

@@ -102,14 +102,34 @@ def test_firm_burn_excludes_pre_feb_shipment_for_repeat_shop():
         ],
     )
     assert [(event["qty"], event["date"]) for event in events] == [
-        (10, date(2025, 2, 3)),
         (4, date(2026, 3, 2)),
     ]
     result = devices.project_lifecycle(events, pending=[], po_shops=[], today=date(2026, 4, 1))
     assert result["firm_end_inventory"] == 5696
 
 
-def test_booked_only_shop_uses_ordered_qty_and_requested_date():
+def test_pre_contract_shipment_does_not_fulfill_a_future_po():
+    events = devices.reconcile_order_lifecycle(
+        booked=[],
+        shipped=[
+            {
+                "id": "AZ0703",
+                "item": TARGET,
+                "qty": 10,
+                "requested_date": date(2025, 10, 24),
+                "shipping_date": date(2025, 10, 24),
+            }
+        ],
+    )
+    pending = devices.pending_shops(
+        [{"id": "AZ0703", "opening_date": date(2026, 10, 23)}],
+        {event["id"] for event in events},
+    )
+    assert events == []
+    assert [shop["id"] for shop in pending] == ["AZ0703"]
+
+
+def test_booked_only_shop_uses_ordered_qty_on_extract_date():
     events = devices.reconcile_order_lifecycle(
         booked=[
             {
@@ -121,10 +141,16 @@ def test_booked_only_shop_uses_ordered_qty_and_requested_date():
             }
         ],
         shipped=[],
+        booked_date=date(2026, 4, 10),
     )
     assert events[0]["source"] == "booked"
     assert events[0]["qty"] == 10
-    assert events[0]["date"] == date(2026, 4, 15)
+    assert events[0]["date"] == date(2026, 4, 10)
+
+
+def test_report_extract_date_comes_from_filename():
+    path = Path("Daily Dutch Bros Booked Shipped Orders Report2026-09-22-06-33-51.xlsx")
+    assert devices.report_extract_date(path) == date(2026, 9, 22)
 
 
 def test_accessory_item_numbers_are_ignored():
@@ -227,9 +253,9 @@ def test_cli_builds_lifecycle_payload(tmp_path: Path):
     _write_po(
         raw / "PO_Extract_20260916.xlsx",
         [
-            ("AL0107", date(2026, 6, 1)),
-            ("CA2909", date(2026, 7, 15)),
-            ("KS0406", date(2026, 8, 1)),
+            ("AL0107", date(2026, 10, 1)),
+            ("CA2909", date(2026, 10, 15)),
+            ("KS0406", date(2026, 10, 20)),
         ],
     )
     _write_orders(
@@ -265,3 +291,14 @@ def test_missing_sources_do_not_invent_numbers(tmp_path: Path):
     assert payload["certified"] is False
     assert payload["summary"] is None
     assert payload["series"]["firm"] == []
+
+
+def test_current_workbooks_count_pre_contract_po_matches_as_pending():
+    payload = devices.build_payload(devices.RAW_DIR, today=date(2026, 9, 24))
+    if not payload["certified"]:
+        return
+    assert payload["summary"]["firm_inventory"] == 3760
+    assert payload["summary"]["pending_shops"] == 37
+    assert payload["summary"]["pending_units"] == 370
+    assert payload["gap"]["shops"] == 37
+    assert payload["gap"]["units"] == 370

@@ -4,8 +4,8 @@
 const fs = require("fs");
 const vm = require("vm");
 
-const dashboard = JSON.parse(fs.readFileSync("site/preview/data/dashboard.json", "utf8"));
-const benchmarks = JSON.parse(fs.readFileSync("site/preview/data/benchmarks.json", "utf8"));
+const dashboard = JSON.parse(fs.readFileSync("data/processed/dashboard.json", "utf8"));
+const benchmarks = JSON.parse(fs.readFileSync("data/processed/benchmarks.json", "utf8"));
 
 const sandbox = {
   console,

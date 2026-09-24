@@ -1,8 +1,8 @@
 const fs = require("fs");
 const vm = require("vm");
 
-const dashboard = JSON.parse(fs.readFileSync("site/preview/data/dashboard.json", "utf8"));
-const benchmarks = JSON.parse(fs.readFileSync("site/preview/data/benchmarks.json", "utf8"));
+const dashboard = JSON.parse(fs.readFileSync("data/processed/dashboard.json", "utf8"));
+const benchmarks = JSON.parse(fs.readFileSync("data/processed/benchmarks.json", "utf8"));
 
 const sandbox = {
   console,
@@ -39,16 +39,36 @@ const topDeclineCount = latest.decline_reasons.at(0).count;
 const formattedApplePayCount = new Intl.NumberFormat("en-US").format(applePayCount);
 const formattedTopDeclineCount = new Intl.NumberFormat("en-US").format(topDeclineCount);
 
+// Chat trends read the last six history points, so a weekly refresh moves these.
+const authTrendWindow = latest.kpis.auth_rate.history.slice(-6);
+const bestAuthRate = Math.max(...authTrendWindow.map(({ value }) => value));
+const formattedBestAuthRate = `${(bestAuthRate * 100).toFixed(2)}%`;
+const icFeePerTransaction = latest.kpis.ic_fee.value / latest.kpis.transaction_volume.value;
+const formattedIcFeePerTransaction = `$${icFeePerTransaction.toFixed(2)}`;
+
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// The tab coordinator emits "history"; chatbot answers must use the aggregate.
+sandbox.window.__dashboardState.periodId = "history";
+const historyAnswer = ask("Card present auth rate");
+sandbox.window.__dashboardState.periodId = "ytd";
+const legacyYtdAnswer = ask("Card present auth rate");
+sandbox.window.__dashboardState.periodId = latest.id;
+
 const checks = [
-  ["Explain the auth rate trend", /Best: \*\*98\.71%\*\*/],
+  [
+    "Explain the auth rate trend",
+    new RegExp(`Best: \\*\\*${escapeRegExp(formattedBestAuthRate)}\\*\\*`),
+  ],
   ["Show decline reasons as percentages", /% of declined requests/],
   [
     "How many Apple Pay transactions?",
     new RegExp(`${escapeRegExp(formattedApplePayCount)} transactions`),
   ],
-  ["What are IC fees per transaction?", /\$0\.24 per sales transaction/],
+  [
+    "What are IC fees per transaction?",
+    new RegExp(`${escapeRegExp(formattedIcFeePerTransaction)} per sales transaction`),
+  ],
   ["How does our auth rate compare with industry benchmarks?", /Directional authorization context/],
   ["Compare us with Starbucks, Dunkin, and 7 Brew", /Starbucks Card/],
   ["Is this data certified?", /Certified for publish: \*\*Yes\*\*/],
@@ -57,11 +77,25 @@ const checks = [
   ["Show wallet mix", /Physical Card/],
   ["Show that as a table", /table view/],
   ["Show the POS tender mix", /All payments data isn’t published yet|All payments tender mix/],
-  ["What is All payments?", /Every tender taken at company-owned shops/i],
+  ["What is All payments?", /In-Shop Sales.*Company-owned POS sales.*Gold Semantic Sales/i],
   ["help", /every channel tab/i],
 ];
 
 const failures = [];
+if (!historyAnswer.includes(dashboard.periods.ytd.label)) {
+  failures.push({
+    question: "Show auth rate with history selected",
+    expected: dashboard.periods.ytd.label,
+    answer: historyAnswer,
+  });
+}
+if (!legacyYtdAnswer.includes(dashboard.periods.ytd.label)) {
+  failures.push({
+    question: "Show auth rate with legacy ytd selected",
+    expected: dashboard.periods.ytd.label,
+    answer: legacyYtdAnswer,
+  });
+}
 for (const [question, expected] of checks) {
   const answer = ask(question);
   if (!expected.test(answer)) {

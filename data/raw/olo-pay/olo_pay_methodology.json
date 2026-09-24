@@ -28,7 +28,17 @@
     {
       "name": "SALES_VOLUME",
       "type": "number",
-      "definition": "Sum of COALESCE(FINAL_AMOUNT, INITIAL_AMOUNT) for Stripe TYPE=Sale AND STATUS=Approved on Company Owned shops only."
+      "definition": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION (drink/order total, not the card billed total)."
+    },
+    {
+      "name": "TIP_VOLUME",
+      "type": "number",
+      "definition": "Sum of TIP_PORTION on those approved Sales."
+    },
+    {
+      "name": "BILLED_VOLUME",
+      "type": "number",
+      "definition": "SALES_VOLUME + TIP_VOLUME (what Stripe captured)."
     },
     {
       "name": "TRANSACTION_COUNT",
@@ -43,7 +53,7 @@
     {
       "name": "AVG_TICKET",
       "type": "number",
-      "definition": "SALES_VOLUME \u00f7 ORDER_COUNT."
+      "definition": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip)."
     },
     {
       "name": "auth_rate_pct",
@@ -53,7 +63,7 @@
     {
       "name": "card_brand_mix",
       "type": "object",
-      "definition": "ACCOUNT_ISSUER on approved Sales: Visa, Mastercard, Amex, Discover. Not Apple Pay / Google Pay."
+      "definition": "ACCOUNT_ISSUER on approved Sales: Visa, Mastercard, Amex, Discover using ex-tip dollars. Not Apple Pay / Google Pay."
     },
     {
       "name": "transaction_id",
@@ -82,9 +92,12 @@
     }
   ],
   "kpi_definitions": {
-    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops. Tips sit in TIP_PORTION on the source row and are not subtracted here; amount is the billing total Olo stored.",
+    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION. Drink/order total, not the card billed total.",
+    "TIP_VOLUME": "Sum of TIP_PORTION on those approved Sales.",
+    "BILLED_VOLUME": "SALES_VOLUME + TIP_VOLUME (what Stripe captured).",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip).",
     "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
-    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales. Wallet service is Phase 2."
+    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales, using ex-tip dollars. Wallet service is Phase 2."
   },
   "data_quality": [
     "Deduped on BILLING_TRANSACTION_ID (keep latest LOAD_DTTM).",

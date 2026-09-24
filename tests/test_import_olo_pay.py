@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from datetime import date, timedelta
@@ -601,7 +602,10 @@ def test_temp_regen_matches_committed_processed_and_preview_bytes():
         )
         assert rc == 0
         assert out.read_bytes() == committed_out.read_bytes()
-        assert preview.read_bytes() == committed_preview.read_bytes()
+        assert preview.read_bytes() == committed_out.read_bytes()
+        envelope = json.loads(committed_preview.read_text(encoding="utf-8"))
+        assert envelope.get("enc") == "db-dash-v1"
+        assert envelope.get("sha256") == hashlib.sha256(committed_out.read_bytes()).hexdigest()
 
 def test_week_over_week_allows_one_decimal_rounding_edge(tmp_path: Path):
     """Stated one-decimal WoW within half-step of unrounded delta is accepted."""

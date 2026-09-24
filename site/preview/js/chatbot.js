@@ -4,6 +4,30 @@
 (function () {
 const PAYMENT_DEFINITIONS = [
   {
+    terms: [
+      "in-shop sales",
+      "in shop sales",
+      "all payments",
+      "pos sales",
+      "in shop pos",
+      "tender mix",
+      "tender",
+      "xenial",
+    ],
+    title: "In-Shop Sales",
+    body: "Company-owned POS sales from Gold Semantic Sales (Xenial-sourced) include every tender: Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM). The curated shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday, and the published Card + Cash + Gift Card / Dutch Pass mix totals 100%. Sales and average ticket exclude tips and change. Card present (Worldpay) is the separate view of card authorizations.",
+  },
+  {
+    terms: ["card health"],
+    title: "Card Health",
+    body: "Worldpay card-present processing health: authorization rate, declines, entry method, wallets, interchange rate, and fees. These card dollars include tip and overlap POS card sales.",
+  },
+  {
+    terms: ["order ahead", "order-ahead"],
+    title: "Order Ahead",
+    body: "Olo Pay order-ahead transactions processed by Stripe at company-owned shops. Published sales and average ticket exclude tip.",
+  },
+  {
     terms: ["auth rate", "authorization rate", "approval rate"],
     title: "Auth rate",
     body: "Approved authorization requests (response code 00) divided by all authorization requests.",
@@ -91,13 +115,8 @@ const PAYMENT_DEFINITIONS = [
   },
   {
     terms: ["ytd", "year to date"],
-    title: "YTD",
-    body: "All loaded weeks in the current calendar year.",
-  },
-  {
-    terms: ["all payments", "pos sales", "in shop pos", "tender mix", "tender", "xenial"],
-    title: "In Shop · All payments",
-    body: "Every tender taken at company-owned shops — Card (CREDIT), Cash (CASH), and Gift Card / Dutch Pass (GIFT + CUSTOM) — from Gold Semantic Sales (Xenial-sourced). Shop list is VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. Weeks are completed Monday–Sunday. Mix of those three = 100%. Card present is the separate Worldpay view of card authorizations.",
+    title: "Available history",
+    body: "All loaded weeks certified and available for the selected channel.",
   },
   {
     terms: ["gift card", "dutch pass", "custom"],
@@ -182,7 +201,7 @@ function getState() {
 function currentPeriod() {
   const state = getState();
   if (!state?.data) return null;
-  if (state.periodId === "ytd") return state.data.periods.ytd;
+  if (state.periodId === "history" || state.periodId === "ytd") return state.data.periods.ytd;
   return state.data.periods.weeks.find((w) => w.id === state.periodId) || state.data.periods.weeks.at(-1);
 }
 
@@ -750,15 +769,14 @@ function answerScope() {
   const state = getState();
   const scope = state?.data?.meta?.scope || "Company owned shops only";
   const channel = state?.data?.meta?.channel || "In Shop · Worldpay";
-  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks plus YTD**. Every tab uses the same company-owned footprint.`;
+  return `This is **${channel}** (${scope}), with **${allWeeks().length} loaded weeks in Available history**. Every tab uses the same company-owned footprint.`;
 }
 
 async function loadBenchmarks() {
   if (benchmarkData) return benchmarkData;
   try {
-    const response = await fetch("data/benchmarks.json", { cache: "no-store" });
-    if (!response.ok) throw new Error(`benchmark file ${response.status}`);
-    benchmarkData = await response.json();
+    const response = await window.__dashboardAuth.loadJson("data/benchmarks.json");
+    benchmarkData = response;
     window.__benchmarkData = benchmarkData;
   } catch (error) {
     console.warn("Benchmark research is unavailable", error);
@@ -846,13 +864,13 @@ function answerOloUnavailable(kind) {
   chatContext.topic = "olo";
   if (kind === "wallet") {
     return (
-      "**Olo Pay · Phase 1:** wallet mix (Apple Pay, Google Pay, and similar) is **not available**. " +
+      "**Olo Pay · Coming next:** wallet mix (Apple Pay, Google Pay, and similar) is **not available** in this extract yet. " +
       "Card brand mix uses **ACCOUNT_ISSUER** (Visa, Mastercard, Amex, Discover) — that is the card brand, not the wallet. " +
       "I won’t invent wallet shares."
     );
   }
   return (
-    "**Olo Pay · Phase 1:** decline reasons / decline codes are **not available** in the published extract. " +
+    "**Olo Pay · Coming next:** decline reasons / response codes are **not available** in this extract yet. " +
     "Authorization rate is published as Approved ÷ (Approved + Declined + Failure) Sale attempts, without a reason breakdown. " +
     "I won’t invent decline reasons."
   );
@@ -863,7 +881,7 @@ function answerOloSource() {
   return (
     "**Olo Pay** comes from **Olo billing transactions** processed by **Stripe** (`PROCESSOR = Stripe`). " +
     "Scope is **company-owned** shops only. " +
-    "**SALES_VOLUME** is approved Stripe Sale amount, including the billing total Olo stored (tips are not subtracted). " +
+    "**SALES_VOLUME** is approved Stripe Sale amount less `TIP_PORTION`; published sales exclude tip. " +
     "Auth rate uses Approved ÷ (Approved + Declined + Failure) Sale attempts. **AVG_TICKET** is sales ÷ order count."
   );
 }
@@ -886,7 +904,7 @@ function answerOloSales() {
   const sales = fmt.usd ? fmt.usd(week.sales) : money(week.sales, 2);
   return (
     `For **${week.label}**, Olo Pay **SALES_VOLUME** is **${sales}** — approved Stripe Sale dollars on company-owned shops, ` +
-    `including the billing total Olo stored (tips are not subtracted).`
+    `excluding tip (\`TIP_PORTION\`).`
   );
 }
 
@@ -928,7 +946,7 @@ function answerOloAvgTicket() {
   const ticket = fmt.ticket ? fmt.ticket(week.avgTicket) : `$${Number(week.avgTicket).toFixed(2)}`;
   return (
     `For **${week.label}**, Olo Pay **AVG_TICKET** is **${ticket}** — SALES_VOLUME ÷ ORDER_COUNT ` +
-    `(approved Stripe Sale dollars ÷ approved orders). Tips are not subtracted from the billing total.`
+    `(approved Stripe Sale dollars excluding tip ÷ approved orders).`
   );
 }
 
@@ -1286,7 +1304,7 @@ const CHANNEL_CHOICES = {
       "Three lanes, three different answers here — which one do you want?\n\n" +
       "• **All payments (Xenial)** — every tender at the window: card, cash, gift card / Dutch Pass. Ticket is sales ÷ guest checks, with tips and change left out.\n" +
       "• **Card present (Worldpay)** — card authorizations only, and the network counts **sale + tip**, so it always pours higher.\n" +
-      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved sales ÷ orders (tips not subtracted).\n\n" +
+      "• **Olo Pay** — digital Olo billing on Stripe; AVG_TICKET is approved ex-tip sales ÷ orders.\n\n" +
       "Say **All payments**, **Card present**, or **Olo Pay** and I’ll pull it.",
   },
   sales: {
@@ -1294,7 +1312,7 @@ const CHANNEL_CHOICES = {
       "Happy to pull that — which set of sales?\n\n" +
       "• **All payments (Xenial)** — net tender dollars taken at company-owned shops.\n" +
       "• **Card present (Worldpay)** — card sales the network settled, tips included.\n" +
-      "• **Olo Pay** — approved Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
+      "• **Olo Pay** — approved ex-tip Stripe Sale dollars on Olo billing transactions (company-owned only).\n\n" +
       "Say **All payments**, **Card present**, or **Olo Pay**.",
   },
   count: {
@@ -1420,7 +1438,18 @@ function answerQuestion(raw) {
   }
 
   if (/^(hi|hello|hey|good morning|good afternoon)\b/.test(q) || q === "help" || q.includes("what can you do")) {
-    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); Phase 1 has no wallet mix or decline reasons\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+    return `Good morning! I’m on **every channel tab** and can:\n• Explain **Card present (Worldpay)** trends and best/worst weeks\n• Answer **All payments** tender mix, AVG_TICKET (guest checks), and why Worldpay ticket differs\n• Answer **Olo Pay** digital Stripe billing metrics (company-owned); wallet mix and decline reasons are Coming next\n• List the **exclusions** (tips, change, UNKNOWN tenders, quarantine) and the **assumptions** behind them\n• **Compare** weeks and reformat answers as tables or bars\n• Explain payment **definitions**\n• Give cited **QSR / payment industry benchmarks**\n• Research public facts about **Starbucks, Dunkin, and 7 Brew**\n• Explain the dashboard's **data certification status**`;
+  }
+
+  const namesPosAndWorldpay =
+    /\b(pos|in-shop sales|in shop sales)\b/.test(q) &&
+    /\b(worldpay|card health)\b/.test(q);
+  if (namesPosAndWorldpay && /\b(add|sum|combine|total|overlap|reconcile)\b/.test(q)) {
+    return (
+      "POS and Worldpay sales overlap, so do not add them. Worldpay is the processor " +
+      "view of the card portion of POS sales and includes tip. Olo Pay is a separate " +
+      "order-ahead channel."
+    );
   }
 
   // Anyone about to share these numbers should be able to ask what was left out.
@@ -1710,6 +1739,13 @@ function submitQuestion(text, input) {
 }
 
 const TAB_PROMPTS = {
+  overview: [
+    { question: "What is In-Shop Sales?", label: "What does In-Shop Sales include?" },
+    { question: "What is Card Health?", label: "What does Card Health measure?" },
+    { question: "What is Order Ahead?", label: "What does Order Ahead include?" },
+    { question: "Can I add POS and Worldpay sales?", label: "How do the channels overlap?" },
+    { question: "Which metrics need attention?", label: "What needs executive attention?" },
+  ],
   pos: [
     { question: "Show the POS tender mix", label: "How did guests pay in shop?" },
     { question: "What is AVG_TICKET on All payments?", label: "What does AVG_TICKET mean?" },
@@ -1727,6 +1763,16 @@ const TAB_PROMPTS = {
   ],
 };
 
+function tabBlurb(tabId) {
+  if (tabId === "overview") {
+    return "Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention";
+  }
+  if (tabId === "pos") {
+    return "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab";
+  }
+  return "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
+}
+
 function refreshTabPrompts(tabId) {
   const wrap = document.querySelector(".ask-data-prompts");
   const blurb = document.getElementById("ask-data-blurb");
@@ -1743,10 +1789,7 @@ function refreshTabPrompts(tabId) {
     wrap.appendChild(button);
   }
   if (blurb) {
-    blurb.textContent =
-      tabId === "pos"
-        ? "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab"
-        : "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
+    blurb.textContent = tabBlurb(tabId);
   }
 }
 
@@ -1789,6 +1832,13 @@ function startChatbotWhenUnlocked() {
   window.addEventListener("dashboard:unlocked", () => initChatbot(), { once: true });
 }
 
-window.__paymentsChat = { answerQuestion, normalize, chatContext, suggestedFollowUps };
+window.__paymentsChat = {
+  answerQuestion,
+  normalize,
+  chatContext,
+  suggestedFollowUps,
+  tabPrompts: TAB_PROMPTS,
+  tabBlurb,
+};
 document.addEventListener("DOMContentLoaded", startChatbotWhenUnlocked);
 })();

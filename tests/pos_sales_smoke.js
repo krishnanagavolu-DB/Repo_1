@@ -1,6 +1,7 @@
 const fs = require("fs");
 const vm = require("vm");
 
+const windowListeners = {};
 const sandbox = {
   console,
   Intl,
@@ -11,7 +12,18 @@ const sandbox = {
   Array,
   RegExp,
   Date,
-  window: { addEventListener() {}, dispatchEvent() {} },
+  CustomEvent: class CustomEvent {
+    constructor(type, init) {
+      this.type = type;
+      this.detail = init?.detail;
+    }
+  },
+  window: {
+    addEventListener(type, handler) {
+      windowListeners[type] = handler;
+    },
+    dispatchEvent() {},
+  },
   document: {
     addEventListener() {},
     getElementById() {
@@ -96,10 +108,10 @@ check("compact thousands", pos.compactUsd(7358837.24), "$7.4M");
 check("missing WoW stays blank", pos.wowLabel(null), null);
 
 const live = pos.normalizePosData(
-  JSON.parse(fs.readFileSync("site/preview/data/in_shop_sales_data.json", "utf8"))
+  JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"))
 );
 const liveLatest = live[live.length - 1];
-check("live wow sales", liveLatest.wow.salesPct, -2.5);
+check("live wow sales", liveLatest.wow.salesPct, -4.7);
 check("gift split parts", liveLatest.giftSplit.parts.length, 2);
 check("gift split gift label", liveLatest.giftSplit.parts[0].label, "Gift Card");
 check("dutch pass label", liveLatest.giftSplit.parts[1].label, "Dutch Pass");
@@ -108,21 +120,24 @@ if (Math.abs(giftShare - 1) > 0.000001) {
   failures.push({ name: "gift split sums to 1", expected: 1, actual: giftShare });
 }
 
-// YTD means the aggregate of every week held by All payments.
+// Available history means the aggregate of every week held by All payments.
 const liveYtd = pos.aggregateWeeks(live);
-check("YTD label", liveYtd.label, "YTD · Jul 27 – Aug 30, 2026");
-check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), 230174340.22);
-check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), 230174340.22);
-check("YTD transactions", liveYtd.transactions, 21747123);
-check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "10.76");
-check("YTD card dollars", liveYtd.tenders[0].amount, 159092364.1);
-check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.1%");
-check("YTD cash dollars", liveYtd.tenders[1].amount, 36590169.54);
-check("YTD gift/Dutch Pass dollars", Number(liveYtd.tenders[2].amount.toFixed(2)), 34491806.58);
-check("YTD Gift Card dollars", liveYtd.giftSplit.parts[0].amount, 22807806.18);
-check("YTD Dutch Pass dollars", liveYtd.giftSplit.parts[1].amount, 11684000.4);
+check("history label", liveYtd.label, "Available history · Jun 29 – Sep 20, 2026");
+check("history sort key", liveYtd.sortKey, "history");
+check("history id accepted", pos.isHistoryPeriod("history"), true);
+check("legacy ytd id accepted", pos.isHistoryPeriod("ytd"), true);
+check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), 552386112.87);
+check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), 552386112.87);
+check("YTD transactions", liveYtd.transactions, 51837171);
+check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "10.84");
+check("YTD card dollars", Number(liveYtd.tenders[0].amount.toFixed(2)), 381135573.81);
+check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.0%");
+check("YTD cash dollars", Number(liveYtd.tenders[1].amount.toFixed(2)), 88326702.6);
+check("YTD gift/Dutch Pass dollars", Number(liveYtd.tenders[2].amount.toFixed(2)), 82923836.46);
+check("YTD Gift Card dollars", Number(liveYtd.giftSplit.parts[0].amount.toFixed(2)), 54947983.63);
+check("YTD Dutch Pass dollars", Number(liveYtd.giftSplit.parts[1].amount.toFixed(2)), 27975852.83);
 check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
-check("live orderCount on rebuilt week", liveLatest.orderCount, 4281394);
+check("live orderCount on rebuilt week", liveLatest.orderCount, 4197913);
 check("live avgTicketBasis on rebuilt week", liveLatest.avgTicketBasis, "distinct_ORDER_ID");
 check("order-basis YTD uses distinct ORDER_ID", liveYtd.avgTicketBasis, "distinct_ORDER_ID");
 
@@ -185,23 +200,98 @@ check("mixed YTD does not claim a single ticket basis", mixedBasis.avgTicketBasi
 
 // Sparkline series for the summary cards, oldest week first.
 const salesTrend = pos.trendSeries(live, "sales");
-check("sales trend length", salesTrend.length, 5);
-check("sales trend starts oldest", salesTrend[0].value, 45719683.39);
-check("sales trend ends newest", salesTrend[4].value, 45596453.93);
-check("sales trend label", salesTrend[0].label, "Jul 27 – Aug 2, 2026");
+check("sales trend length", salesTrend.length, 12);
+check("sales trend starts oldest", salesTrend[0].value, 47563011.32);
+check("sales trend ends newest", salesTrend[11].value, 44151389.8);
+check("sales trend label", salesTrend[0].label, "Jun 29 – Jul 5, 2026");
 
 const paymentsTrend = pos.trendSeries(live, "payments");
-check("payments trend length", paymentsTrend.length, 5);
-check("payments trend first", paymentsTrend[0].value, 4263298);
-check("payments trend last", paymentsTrend[4].value, 4353434);
+check("payments trend length", paymentsTrend.length, 12);
+check("payments trend first", paymentsTrend[0].value, 4291073);
+check("payments trend last", paymentsTrend[11].value, 4266914);
 
 // One week cannot form a line, so no series is offered.
 check("single week has no trend", pos.trendSeries([live[0]], "sales").length, 0);
 check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
 
 // The data start feeds the YTD banner.
-check("pos data start", pos.getDataStart(live).startLabel, "Jul 27, 2026");
-check("pos data week count", pos.getDataStart(live).weekCount, 5);
+check("pos data start", pos.getDataStart(live).startLabel, "Jun 29, 2026");
+check("pos data week count", pos.getDataStart(live).weekCount, 12);
+
+const renderElements = {
+  "pos-period-label": { textContent: "" },
+  "pos-summary-grid": { innerHTML: "" },
+  "pos-kpi-grid": { innerHTML: "" },
+  "pos-empty": { hidden: true },
+  "pos-content": { hidden: true },
+};
+sandbox.document.getElementById = (id) => renderElements[id] || null;
+sandbox.window.__posSalesState = { weeks: [], latest: null };
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: "history" },
+});
+pos.renderPos(live);
+check(
+  "pre-load history selection renders the aggregate through renderPos",
+  renderElements["pos-period-label"].textContent,
+  liveYtd.label
+);
+check(
+  "pre-load history selection renders aggregate sales rather than latest sales",
+  renderElements["pos-summary-grid"].innerHTML.includes(pos.compactUsd(liveYtd.reportedTotal)),
+  true
+);
+
+sandbox.window.__posSalesState = { weeks: [], latest: null };
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: "ytd" },
+});
+pos.renderPos(live);
+check("legacy ytd selection still renders available history", renderElements["pos-period-label"].textContent, liveYtd.label);
+
+const olderOverviewWeek = live.at(-2);
+sandbox.window.__posSalesState = { weeks: live, latest: liveLatest };
+renderElements["pos-period-label"].textContent = "hidden POS panel sentinel";
+renderElements["pos-summary-grid"].innerHTML = "hidden POS summary sentinel";
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: olderOverviewWeek.sortKey },
+});
+check(
+  "Overview week selection updates the POS chatbot getter",
+  pos.getSelectedWeek()?.sortKey,
+  olderOverviewWeek.sortKey
+);
+check(
+  "Overview week selection does not render the hidden POS period",
+  renderElements["pos-period-label"].textContent,
+  "hidden POS panel sentinel"
+);
+check(
+  "Overview week selection does not rebuild the hidden POS summary",
+  renderElements["pos-summary-grid"].innerHTML,
+  "hidden POS summary sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "overview", periodId: "history" },
+});
+check("Overview history selection updates the POS getter to its aggregate", pos.getSelectedWeek()?.sortKey, "history");
+check(
+  "Overview history selection still does not render the hidden POS panel",
+  renderElements["pos-period-label"].textContent,
+  "hidden POS panel sentinel"
+);
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "worldpay", periodId: liveLatest.sortKey },
+});
+check("unrelated tab period remains ignored by POS", pos.getSelectedWeek()?.sortKey, "history");
+
+windowListeners["dashboard:period"]?.({
+  detail: { tabId: "pos", periodId: olderOverviewWeek.sortKey },
+});
+check("POS tab period still updates its getter", pos.getSelectedWeek()?.sortKey, olderOverviewWeek.sortKey);
+check("POS tab period still renders normally", renderElements["pos-period-label"].textContent, olderOverviewWeek.label);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

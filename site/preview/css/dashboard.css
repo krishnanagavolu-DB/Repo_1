@@ -11,7 +11,7 @@
   --line: #d2dce5;
   --bg: #e8eef2;
   --panel: #ffffff;
-  --good: #168a45;
+  --good: #147f40;
   --font: "futura-pt", "Futura PT", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
@@ -378,14 +378,15 @@ body {
 }
 
 .olo-slide-summary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
 }
 
 .olo-support {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-top: 10px;
+  margin-top: 14px;
 }
 
 .olo-support-row {
@@ -435,17 +436,44 @@ body {
 }
 
 .pos-slide-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   min-width: 0;
+  overflow: hidden;
+}
+
+.pos-slide-stat .hero-label {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .pos-slide-stat .hero-value {
-  font-size: 24px;
+  font-size: 26px;
+  line-height: 1.05;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pos-slide-stat .kpi-delta {
-  min-height: 20px;
-  padding: 3px 0 0;
-  font-size: 10px;
+  min-height: 18px;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-slide-stat .hero-sub {
+  margin-top: 2px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pos-slide-tenders {
@@ -977,7 +1005,7 @@ main {
   }
 
   .olo-slide-summary {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1100,6 +1128,11 @@ main {
   margin-bottom: 28px;
 }
 
+.coming.olo-coming {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0 8px;
+}
+
 .coming-card {
   background: var(--panel);
   border: 1px dashed #c5d0db;
@@ -1108,6 +1141,16 @@ main {
   color: var(--muted-2);
   font-size: 13px;
   font-weight: 500;
+}
+
+.coming-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .error {
@@ -1537,6 +1580,294 @@ body.auth-unlocked .auth-gate {
   letter-spacing: 0.08em;
 }
 
+/* Executive overview */
+.executive-slide {
+  max-width: 1500px;
+  margin-inline: auto;
+  margin-bottom: 48px;
+}
+
+.executive-slide .slide-band span {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+/* Rows: KPI cards, channel band, the two charts, watchlist. Only the chart
+   row stretches; the band sizes to its content. */
+.executive-board {
+  display: grid;
+  grid-template-columns: 1.45fr 0.85fr;
+  grid-template-rows: auto auto minmax(240px, 1fr) auto;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg);
+}
+
+.executive-kpis {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.executive-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px 6px;
+}
+
+.executive-kpi-source {
+  min-height: 2.3em;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.executive-kpi strong {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.executive-kpi > span {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.executive-kpi small {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.executive-kpi small.up {
+  color: var(--good);
+}
+
+.executive-kpi small.down {
+  color: var(--red);
+}
+
+.executive-kpi small.flat {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ===== Channel band: which door the money came through ===== */
+.channel-band {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px 14px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.channel-band-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.channel-band-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.channel-band-total {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dark);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.channel-band-flag {
+  padding: 2px 9px;
+  border: 1px dashed #c5d0db;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.channel-band-pending {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-2);
+}
+
+.channel-band-pending code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg);
+  font-size: 11px;
+  color: var(--dark);
+}
+
+.channel-bar {
+  display: flex;
+  width: 100%;
+  height: 26px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.channel-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.channel-seg + .channel-seg {
+  border-left: 1px solid var(--panel);
+}
+
+.channel-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+}
+
+.channel-key {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.channel-key b {
+  font-weight: 800;
+  color: var(--dark);
+}
+
+.channel-key em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--blue);
+}
+
+.channel-key span {
+  color: var(--muted-2);
+}
+
+.channel-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.executive-sales-panel .panel-body {
+  min-height: 0;
+}
+
+.executive-mix-panel .panel-body {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* Fixed-size wrapper, not the canvas itself: Chart.js's own responsive
+   resize observes this container and sizes the canvas bitmap to match, so
+   forcing !important dimensions directly on the canvas is unnecessary and
+   fights that resize, distorting the circle. `flex: none` overrides the
+   generic `.panel-body .chart-wrap { flex: 1 }` (which sizes a chart to
+   fill a column-flow panel elsewhere); without it, that rule's flex-basis
+   wins the cross-axis size here and silently ignores width/height. */
+.executive-mix-panel .chart-wrap {
+  flex: none;
+  width: 130px;
+  height: 130px;
+}
+
+.executive-mix-panel .compact-legend {
+  margin: 0;
+  font-size: 10px;
+}
+
+.executive-mix-panel .compact-legend td {
+  padding: 3px 0;
+}
+
+.executive-watch-panel {
+  grid-column: 1 / -1;
+  min-height: 108px;
+}
+
+.executive-watchlist {
+  margin: 0;
+  padding: 8px 16px 8px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dark);
+  line-height: 1.3;
+}
+
+.executive-watchlist li {
+  padding-left: 10px;
+  border-left: 3px solid var(--line);
+}
+
+.executive-watchlist li[data-tone="watch"] {
+  border-left-color: var(--yellow);
+  color: var(--navy);
+}
+
+.executive-watchlist li[data-tone="positive"] {
+  border-left-color: var(--good);
+  color: var(--good);
+}
+
+.executive-watchlist li[data-tone="context"] {
+  border-left-color: var(--blue);
+  color: var(--blue);
+}
+
+.executive-reconciliation {
+  margin: 0;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 @media (max-width: 900px) {
   .kpi-grid,
   .charts-2,
@@ -1566,5 +1897,30 @@ body.auth-unlocked .auth-gate {
 
   .auth-phrase {
     font-size: 18px;
+  }
+
+  .executive-board {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .executive-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .executive-watch-panel {
+    grid-column: auto;
+  }
+
+  .executive-mix-panel .panel-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .executive-mix-panel .chart-wrap {
+    flex: none;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
   }
 }

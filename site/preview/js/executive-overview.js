@@ -1,0 +1,1014 @@
+/* Executive overview: pure cross-channel calculations for the preview dashboard. */
+
+(function () {
+function finiteNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function compactUsd(value) {
+  const number = finiteNumber(value);
+  if (number === null) return "—";
+  const absolute = Math.abs(number);
+  if (absolute >= 1_000_000) return `$${(number / 1_000_000).toFixed(1)}M`;
+  if (absolute >= 1_000) return `$${(number / 1_000).toFixed(0)}K`;
+  return number.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function compactCount(value) {
+  const number = finiteNumber(value);
+  if (number === null) return "—";
+  const absolute = Math.abs(number);
+  if (absolute >= 1_000_000) return `${(number / 1_000_000).toFixed(2)}M`;
+  if (absolute >= 1_000) return `${(number / 1_000).toFixed(0)}K`;
+  return Math.round(number).toLocaleString("en-US");
+}
+
+/* Matches the ASCII hyphen used by pos-sales.js/olo-pay.js wowLabel(), not the
+   Unicode minus sign, so overview and channel-tab deltas read consistently. */
+function formatSignedPct(value) {
+  const number = finiteNumber(value);
+  if (number === null) return "—";
+  if (number > 0) return `+${number.toFixed(1)}%`;
+  if (number < 0) return `-${Math.abs(number).toFixed(1)}%`;
+  return "0.0%";
+}
+
+function signedPoints(value) {
+  const number = finiteNumber(value);
+  if (number === null) return "—";
+  if (number > 0) return `+${number.toFixed(2)} pts`;
+  if (number < 0) return `-${Math.abs(number).toFixed(2)} pts`;
+  return "0.00 pts";
+}
+
+function worldpayWeeks(payload) {
+  const weeks = Array.isArray(payload?.periods?.weeks) ? payload.periods.weeks : [];
+  return weeks
+    .map((week) => ({
+      id: week.id,
+      label: week.label,
+      authRate: finiteNumber(week?.kpis?.auth_rate?.value) === null
+        ? null
+        : Number(week.kpis.auth_rate.value) * 100,
+      authDeltaPp: finiteNumber(week?.kpis?.auth_rate?.delta) === null
+        ? null
+        : Number(week.kpis.auth_rate.delta) * 100,
+      icRate: finiteNumber(week?.kpis?.ic_rate?.value),
+      icFee: finiteNumber(week?.kpis?.ic_fee?.value),
+      authApprovedCnt: finiteNumber(week?.totals?.auth_approved_cnt),
+      authAttemptsCnt: finiteNumber(week?.totals?.auth_total_cnt),
+    }))
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+}
+
+function intersectPeriodIds(posWeeks, worldpay, oloWeeks) {
+  const pos = new Set(posWeeks.map((week) => week.sortKey));
+  const wp = new Set(worldpay.map((week) => week.id));
+  const olo = new Set(oloWeeks.map((week) => week.sortKey));
+  return [...pos].filter((id) => wp.has(id) && olo.has(id)).sort();
+}
+
+function periodIdsForAvailableSources(sources) {
+  const periodLists = [
+    (sources?.pos || []).map((week) => week.sortKey),
+    (sources?.worldpay || []).map((week) => week.id),
+    (sources?.olo || []).map((week) => week.sortKey),
+  ].filter((ids) => ids.length);
+  if (!periodLists.length) return [];
+
+  const otherSources = periodLists.slice(1).map((ids) => new Set(ids));
+  return [...new Set(periodLists[0])]
+    .filter((id) => otherSources.every((ids) => ids.has(id)))
+    .sort();
+}
+
+function isPriorWeek(currentId, priorId) {
+  const current = Date.parse(`${currentId}T00:00:00Z`);
+  const prior = Date.parse(`${priorId}T00:00:00Z`);
+  return Number.isFinite(current) && Number.isFinite(prior) && current - prior === 7 * 24 * 60 * 60 * 1000;
+}
+
+function selectedAndPrior(weeks, periodId, idKey) {
+  const sorted = [...(weeks || [])].sort((a, b) =>
+    String(a?.[idKey] || "").localeCompare(String(b?.[idKey] || ""))
+  );
+  const index = sorted.findIndex((week) => week?.[idKey] === periodId);
+  const candidate = index > 0 ? sorted[index - 1] : null;
+  return {
+    selected: index >= 0 ? sorted[index] : null,
+    prior: candidate && isPriorWeek(periodId, candidate?.[idKey]) ? candidate : null,
+  };
+}
+
+function percentChange(current, prior) {
+  const currentNumber = finiteNumber(current);
+  const priorNumber = finiteNumber(prior);
+  if (currentNumber === null || priorNumber === null || priorNumber === 0) return null;
+  return ((currentNumber - priorNumber) / priorNumber) * 100;
+}
+
+function pointChange(current, prior) {
+  const currentNumber = finiteNumber(current);
+  const priorNumber = finiteNumber(prior);
+  if (currentNumber === null || priorNumber === null) return null;
+  return currentNumber - priorNumber;
+}
+
+function delta(value, unit) {
+  const number = finiteNumber(value);
+  if (number === null) return null;
+  const display = unit === "points" ? signedPoints(number) : formatSignedPct(number);
+  return {
+    value: number,
+    unit,
+    display,
+    text: `${display} vs prior week`,
+    tone: number > 0 ? "up" : number < 0 ? "down" : "flat",
+  };
+}
+
+function kpi(label, value, display, movement, source) {
+  return { label, value, display, delta: movement, source };
+}
+
+function buildSalesTrend(periodId, posWeeks, oloWeeks) {
+  const pos = (posWeeks || []).filter((week) => week.sortKey <= periodId).slice(-12);
+  const olo = (oloWeeks || []).filter((week) => week.sortKey <= periodId).slice(-12);
+  const labels = [...new Set([...pos, ...olo].map((week) => week.sortKey))].sort().slice(-12);
+  const posById = new Map(pos.map((week) => [week.sortKey, week]));
+  const oloById = new Map(olo.map((week) => [week.sortKey, week]));
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: "Total sales",
+        source: "POS · ex-tip",
+        data: labels.map((id) => {
+          const week = posById.get(id);
+          return week ? finiteNumber(week.reportedTotal ?? week.tenderTotal) : null;
+        }),
+      },
+      {
+        label: "Order-ahead card sales",
+        source: "Olo Pay · ex-tip",
+        data: labels.map((id) => finiteNumber(oloById.get(id)?.sales)),
+      },
+    ],
+  };
+}
+
+/* Channel split: which door the money came through, not how it was tendered.
+   In shop covers drive-thru and walk-up; order ahead is paid in the app; other
+   is third-party delivery. Colors reuse the slide's existing assignments —
+   brand yellow is skipped because the tender doughnut already owns it and it
+   fails contrast at band size. */
+const CHANNEL_ORDER = ["In shop", "Order ahead", "Other / delivery"];
+const CHANNEL_COLORS = {
+  "In shop": "#006098",
+  "Order ahead": "#154167",
+  "Other / delivery": "#4094A7",
+};
+/* Below this share a true-width segment renders sub-pixel and disappears. */
+const MIN_SEGMENT_WIDTH_PCT = 1.5;
+const RECONCILE_TOLERANCE = 0.01;
+
+/* Reads the channel rows the POS extract will carry once Gold publishes
+   CHANNEL. Shapes without them yield an empty list, which the band reports as
+   coming next. */
+function normalizeChannelWeeks(payload) {
+  const weeks = Array.isArray(payload?.weeks) ? payload.weeks : [];
+  const normalized = [];
+  for (const week of weeks) {
+    const rows = week?.channels || week?.channel_mix;
+    if (!rows) continue;
+    const list = Array.isArray(rows)
+      ? rows.map((row) => ({
+          label: String(row?.label ?? row?.name ?? row?.channel ?? "").trim(),
+          sales: finiteNumber(row?.sales ?? row?.amount ?? row?.SALES_VOLUME),
+          orders: finiteNumber(row?.orders ?? row?.ORDER_COUNT ?? row?.order_count),
+        }))
+      : Object.entries(rows).map(([label, row]) => ({
+          label: String(label).trim(),
+          sales: finiteNumber(row?.sales ?? row?.amount ?? row?.SALES_VOLUME),
+          orders: finiteNumber(row?.orders ?? row?.ORDER_COUNT ?? row?.order_count),
+        }));
+    if (!list.length) continue;
+    normalized.push({
+      sortKey: String(week?.week_start_date ?? week?.sortKey ?? ""),
+      channels: list,
+    });
+  }
+  return normalized;
+}
+
+function findChannelWeek(channelWeeks, periodId) {
+  if (!Array.isArray(channelWeeks) || !periodId) return null;
+  return channelWeeks.find((week) => week.sortKey === periodId) || null;
+}
+
+/* Returns null rather than a partial or estimated split. A channel breakdown
+   that disagrees with the headline total is worse than none: it invites a
+   reader to trust arithmetic the dashboard cannot stand behind. */
+function buildChannelSplit(posWeek, channelWeek) {
+  const total = finiteNumber(posWeek?.reportedTotal ?? posWeek?.tenderTotal);
+  const totalOrders = finiteNumber(posWeek?.orderCount);
+  const rows = Array.isArray(channelWeek?.channels) ? channelWeek.channels : [];
+  if (total === null || total <= 0 || !rows.length) return null;
+
+  const segments = [];
+  for (const row of rows) {
+    const sales = finiteNumber(row?.sales);
+    if (sales === null) return null;
+    const orders = finiteNumber(row?.orders);
+    segments.push({
+      label: String(row?.label || "").trim(),
+      sales,
+      orders,
+      avgTicket: orders ? sales / orders : null,
+      share: sales / total,
+      color: CHANNEL_COLORS[String(row?.label || "").trim()] || "#4094A7",
+    });
+  }
+
+  const salesSum = segments.reduce((sum, segment) => sum + segment.sales, 0);
+  if (Math.abs(salesSum - total) > RECONCILE_TOLERANCE) return null;
+  if (totalOrders !== null) {
+    const orderSum = segments.reduce((sum, segment) => sum + (segment.orders || 0), 0);
+    if (Math.abs(orderSum - totalOrders) > 1) return null;
+  }
+
+  segments.sort((a, b) => {
+    const ai = CHANNEL_ORDER.indexOf(a.label);
+    const bi = CHANNEL_ORDER.indexOf(b.label);
+    if (ai !== -1 || bi !== -1) return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    return b.sales - a.sales;
+  });
+
+  /* Widths are scaled so the floor given to a tiny segment is taken back from
+     the others, keeping the bar exactly 100% wide without overstating it. */
+  const raw = segments.map((segment) => segment.share * 100);
+  const floored = raw.map((value) => (value > 0 && value < MIN_SEGMENT_WIDTH_PCT ? MIN_SEGMENT_WIDTH_PCT : value));
+  const borrowed = floored.reduce((sum, v) => sum + v, 0) - 100;
+  const donors = floored.reduce((sum, v, i) => sum + (raw[i] >= MIN_SEGMENT_WIDTH_PCT ? v : 0), 0);
+  segments.forEach((segment, i) => {
+    let width = floored[i];
+    if (borrowed > 0 && donors > 0 && raw[i] >= MIN_SEGMENT_WIDTH_PCT) {
+      width -= borrowed * (floored[i] / donors);
+    }
+    segment.renderWidth = Math.max(width, 0);
+  });
+
+  return { total, totalOrders, segments };
+}
+
+function buildTenderMix(posWeek) {
+  const rows = (posWeek?.tenders || []).map((row) => ({
+    label: row.label,
+    amount: finiteNumber(row.amount),
+    pct: finiteNumber(row.pct),
+  }));
+  return {
+    labels: rows.map((row) => row.label),
+    datasets: [{ label: "POS tender mix", data: rows.map((row) => row.pct) }],
+    rows,
+  };
+}
+
+function buildWatchlist(model) {
+  const missing = Object.entries(model.coverage || {})
+    .filter(([, available]) => !available)
+    .map(([source]) => ({ pos: "POS", worldpay: "Worldpay", olo: "Olo Pay" })[source]);
+  const coverageNotice = missing.length
+    ? {
+        tone: "context",
+        text: `${missing.join(", ")} ${missing.length === 1 ? "is" : "are"} not available for this period.`,
+        movement: null,
+      }
+    : null;
+
+  /* Percent movements are comparable with one another. Point changes are
+     not ranked against percentages; Card auth health receives its own
+     fixed slot below instead. */
+  const comparableMovements = Object.entries(model.kpis || {})
+    .filter(([key, item]) =>
+      key !== "cardAuthRate" &&
+      item?.delta?.unit === "percent" &&
+      finiteNumber(item?.delta?.value) !== null
+    )
+    .map(([, item]) => ({
+      tone: item.delta.value > 0 ? "positive" : item.delta.value < 0 ? "watch" : "context",
+      text: `${item.label} ${item.delta.text}.`,
+      movement: Math.abs(item.delta.value),
+    }))
+    .sort((a, b) => b.movement - a.movement);
+
+  const cardAuth = model.kpis?.cardAuthRate;
+  const cardAuthMovement =
+    finiteNumber(cardAuth?.delta?.value) === null
+      ? null
+      : {
+          tone: cardAuth.delta.value > 0 ? "positive" : cardAuth.delta.value < 0 ? "watch" : "context",
+          text: `${cardAuth.label} ${cardAuth.delta.text}.`,
+          movement: Math.abs(cardAuth.delta.value),
+        };
+
+  const orderAheadAuth = model.kpis?.orderAheadAuthRate;
+  const orderAheadAuthMovement =
+    finiteNumber(orderAheadAuth?.delta?.value) === null
+      ? null
+      : {
+          tone:
+            orderAheadAuth.delta.value > 0
+              ? "positive"
+              : orderAheadAuth.delta.value < 0
+                ? "watch"
+                : "context",
+          text: `${orderAheadAuth.label} ${orderAheadAuth.delta.text}.`,
+          movement: Math.abs(orderAheadAuth.delta.value),
+        };
+
+  const items = [];
+  let nextComparable = 0;
+  if (comparableMovements[nextComparable]) {
+    items.push(comparableMovements[nextComparable]);
+    nextComparable += 1;
+  }
+  if (cardAuthMovement) items.push(cardAuthMovement);
+  else if (comparableMovements[nextComparable]) {
+    items.push(comparableMovements[nextComparable]);
+    nextComparable += 1;
+  }
+  if (coverageNotice) items.push(coverageNotice);
+  else if (orderAheadAuthMovement) items.push(orderAheadAuthMovement);
+  else if (comparableMovements[nextComparable]) items.push(comparableMovements[nextComparable]);
+
+  return items.slice(0, 3);
+}
+
+function overviewForPeriod(periodId, sources) {
+  const pos = selectedAndPrior(sources?.pos, periodId, "sortKey");
+  const worldpay = selectedAndPrior(sources?.worldpay, periodId, "id");
+  const olo = selectedAndPrior(sources?.olo, periodId, "sortKey");
+
+  const posSales = finiteNumber(pos.selected?.reportedTotal ?? pos.selected?.tenderTotal);
+  const posOrders = finiteNumber(pos.selected?.orderCount);
+  const posAvgTicket = finiteNumber(pos.selected?.avgTicket);
+  const cardAuthRate = finiteNumber(worldpay.selected?.authRate);
+  const oloAuthRate = finiteNumber(olo.selected?.authRatePct);
+
+  const model = {
+    periodId,
+    label: pos.selected?.label || worldpay.selected?.label || olo.selected?.label || periodId,
+    coverage: {
+      pos: Boolean(pos.selected),
+      worldpay: Boolean(worldpay.selected),
+      olo: Boolean(olo.selected),
+    },
+    /* The POS extract carries no channel filter, so SALES_VOLUME spans every
+       channel. These read "Total", not "In-shop"; the channel band below
+       splits them once Gold publishes CHANNEL. */
+    kpis: {
+      totalSales: kpi(
+        "Total sales",
+        posSales,
+        posSales === null ? "Not available" : compactUsd(posSales),
+        delta(percentChange(posSales, pos.prior?.reportedTotal ?? pos.prior?.tenderTotal), "percent"),
+        "POS · ex-tip"
+      ),
+      totalOrders: kpi(
+        "Total orders",
+        posOrders,
+        posOrders === null ? "Not available" : compactCount(posOrders),
+        delta(percentChange(posOrders, pos.prior?.orderCount), "percent"),
+        "POS · guest checks"
+      ),
+      avgTicket: kpi(
+        "Avg ticket",
+        posAvgTicket,
+        posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
+        delta(percentChange(posAvgTicket, pos.prior?.avgTicket), "percent"),
+        "POS · ex-tip"
+      ),
+      cardAuthRate: kpi(
+        "Card auth rate",
+        cardAuthRate,
+        cardAuthRate === null ? "Not available" : `${cardAuthRate.toFixed(2)}%`,
+        delta(pointChange(cardAuthRate, worldpay.prior?.authRate), "points"),
+        "Worldpay · card present"
+      ),
+      /* Olo stays as payment health only. Its sales cover card captures, so
+         app orders paid by Dutch Pass or gift card never reach Stripe and it
+         cannot stand in for the order-ahead channel total. */
+      orderAheadAuthRate: kpi(
+        "Order-ahead auth rate",
+        oloAuthRate,
+        oloAuthRate === null ? "Not available" : `${oloAuthRate.toFixed(2)}%`,
+        delta(pointChange(oloAuthRate, olo.prior?.authRatePct), "points"),
+        "Stripe · order ahead"
+      ),
+    },
+    channelSplit: buildChannelSplit(pos.selected, findChannelWeek(sources?.channels, periodId)),
+    salesTrend: buildSalesTrend(periodId, sources?.pos, sources?.olo),
+    tenderMix: buildTenderMix(pos.selected),
+  };
+  model.watchlist = buildWatchlist(model);
+  if (!model.watchlist.length) {
+    model.watchlist = [
+      {
+        tone: "context",
+        text: "Prior-week comparison is unavailable for this period.",
+        movement: null,
+      },
+    ];
+  }
+  return model;
+}
+
+function isHistoryPeriod(periodId) {
+  return periodId === "history" || periodId === "ytd";
+}
+
+/* Volume-weighted card auth rate: sum(approved) / sum(attempts) across the
+   given weeks, matching the certified aggregation the Worldpay pipeline
+   itself uses for periods.ytd (src/worldpay_dashboard/kpis.py sums
+   auth_approved_cnt/auth_total_cnt across weeks, not the mean of weekly
+   rates) — restricted here to the overview's common weeks rather than
+   Worldpay's own longer history. A simple mean of weekly rates would let a
+   low-volume week move the aggregate as much as a high-volume week; this
+   does not. */
+function weightedAuthRate(weeks) {
+  let approvedSum = 0;
+  let attemptsSum = 0;
+  for (const week of weeks || []) {
+    const approved = finiteNumber(week?.authApprovedCnt);
+    const attempts = finiteNumber(week?.authAttemptsCnt);
+    if (approved === null || attempts === null || attempts <= 0) continue;
+    approvedSum += approved;
+    attemptsSum += attempts;
+  }
+  if (attemptsSum <= 0) return null;
+  return (approvedSum / attemptsSum) * 100;
+}
+
+/* Cross-channel "Available history" aggregate, restricted to the periods
+   common to POS, Worldpay, and Olo (never each source's own full history,
+   which differ in length). Reuses each channel's own existing aggregateWeeks
+   helper for POS and Olo, and never sums POS, Worldpay, or Olo sales
+   together. There is no meaningful "prior period" for an aggregate, so KPI
+   deltas stay null (rendered as "Comparison unavailable") rather than
+   inventing one. */
+function overviewForHistory(periodIds, sources) {
+  const ids = new Set(periodIds || []);
+  const posSubset = (sources?.pos || []).filter((week) => ids.has(week.sortKey));
+  const oloSubset = (sources?.olo || []).filter((week) => ids.has(week.sortKey));
+  const worldpaySubset = (sources?.worldpay || []).filter((week) => ids.has(week.id));
+
+  const posAgg = window.__posSales?.aggregateWeeks(posSubset) || null;
+  const oloAgg = window.__oloPay?.aggregateWeeks(oloSubset) || null;
+  const worldpayAuthRate = weightedAuthRate(worldpaySubset);
+
+  const posSales = finiteNumber(posAgg?.reportedTotal ?? posAgg?.tenderTotal);
+  const posOrders = finiteNumber(posAgg?.orderCount);
+  const posAvgTicket = finiteNumber(posAgg?.avgTicket);
+  const oloAuthRate = finiteNumber(oloAgg?.authRatePct);
+
+  const model = {
+    periodId: "history",
+    label: "Available history",
+    coverage: {
+      pos: Boolean(posSubset.length),
+      worldpay: Boolean(worldpaySubset.length),
+      olo: Boolean(oloSubset.length),
+    },
+    kpis: {
+      totalSales: kpi(
+        "Total sales",
+        posSales,
+        posSales === null ? "Not available" : compactUsd(posSales),
+        null,
+        "POS · ex-tip"
+      ),
+      totalOrders: kpi(
+        "Total orders",
+        posOrders,
+        posOrders === null ? "Not available" : compactCount(posOrders),
+        null,
+        "POS · guest checks"
+      ),
+      avgTicket: kpi(
+        "Avg ticket",
+        posAvgTicket,
+        posAvgTicket === null ? "Not available" : `$${posAvgTicket.toFixed(2)}`,
+        null,
+        "POS · ex-tip"
+      ),
+      cardAuthRate: kpi(
+        "Card auth rate",
+        worldpayAuthRate,
+        worldpayAuthRate === null ? "Not available" : `${worldpayAuthRate.toFixed(2)}%`,
+        null,
+        "Worldpay · card present"
+      ),
+      orderAheadAuthRate: kpi(
+        "Order-ahead auth rate",
+        oloAuthRate,
+        oloAuthRate === null ? "Not available" : `${oloAuthRate.toFixed(2)}%`,
+        null,
+        "Stripe · order ahead"
+      ),
+    },
+    /* Aggregating a channel split across weeks needs certified per-week
+       channel rows to sum; until they exist history shows the same
+       coming-next band as a single week. */
+    channelSplit: null,
+    salesTrend: buildSalesTrend((periodIds || []).at(-1) || "", sources?.pos, sources?.olo),
+    tenderMix: buildTenderMix(posAgg),
+  };
+  model.watchlist = buildWatchlist(model);
+  /* An aggregate has no per-week delta and (by construction) no coverage
+     gaps, so buildWatchlist() above returns nothing to show. A blank panel
+     reads as broken; state one neutral, factual line about the coverage
+     itself instead of inventing a trend or cause. */
+  if (!model.watchlist.length) {
+    const coverage = overviewDataStart(periodIds, sources);
+    if (coverage) {
+      const endLabel = endOfWeekLabel(periodLabelFor((periodIds || []).at(-1), sources));
+      model.watchlist = [
+        {
+          tone: "context",
+          text: `Available history covers ${coverage.weekCount} common certified weeks from ${coverage.startLabel} through ${endLabel}.`,
+          movement: null,
+        },
+      ];
+    }
+  }
+  return model;
+}
+
+/* Screenshot-ready overview panel: loads its own three certified feeds,
+   intersects their periods, and renders the compact leadership slide. */
+
+const POS_DATA_URL = "data/in_shop_sales_data.json";
+const WORLDPAY_DATA_URL = "data/dashboard.json";
+const OLO_DATA_URL = "data/olo_pay_data.json";
+
+const SALES_LINE_COLORS = ["#006098", "#154167"];
+const TENDER_COLORS = {
+  Card: "#006098",
+  Cash: "#154167",
+  "Gift Card / Dutch Pass": "#F6E300",
+};
+/* Brand yellow fails WCAG as small text, so ink uses official navy. */
+const TENDER_INK = {
+  "Gift Card / Dutch Pass": "#154167",
+  "Gift Card": "#154167",
+};
+
+let selectedPeriodId = null;
+let overviewSalesChart = null;
+let overviewTenderChart = null;
+
+function tenderColor(label, idx = 0) {
+  return TENDER_COLORS[label] || ["#006098", "#154167", "#F6E300"][idx % 3];
+}
+
+function tenderInk(label, idx = 0) {
+  return TENDER_INK[label] || tenderColor(label, idx);
+}
+
+function sharePct(fraction) {
+  const share = finiteNumber(fraction) === null ? 0 : fraction * 100;
+  if (share > 0 && share < 0.05) return "<0.1%";
+  return `${share.toFixed(1)}%`;
+}
+
+/** "Sep 14 – Sep 20, 2026" -> "Sep 14", to fit the sales-trend x-axis. */
+function shortLabel(label) {
+  return String(label || "").replace(/\s*–.*$/, "");
+}
+
+/** "Sep 14 – Sep 20, 2026" -> "Sep 20, 2026", the week's certified end date. */
+function endOfWeekLabel(label) {
+  const match = String(label || "").match(/–\s*(.+)$/);
+  return match ? match[1].trim() : String(label || "");
+}
+
+function periodLabelFor(periodId, sources) {
+  const pos = (sources?.pos || []).find((week) => week.sortKey === periodId);
+  if (pos) return pos.label;
+  const worldpay = (sources?.worldpay || []).find((week) => week.id === periodId);
+  if (worldpay) return worldpay.label;
+  const olo = (sources?.olo || []).find((week) => week.sortKey === periodId);
+  return olo ? olo.label : periodId;
+}
+
+function deltaHtml(movement) {
+  if (!movement) return `<small class="flat">Comparison unavailable</small>`;
+  return `<small class="${movement.tone}">${movement.text}</small>`;
+}
+
+function renderKpis(model) {
+  const grid = document.getElementById("overview-kpis");
+  if (!grid) return;
+  grid.innerHTML = Object.values(model.kpis)
+    .map(
+      (item) => `
+      <article class="executive-kpi">
+        <span class="executive-kpi-source">${item.source}</span>
+        <strong>${item.display}</strong>
+        <span>${item.label}</span>
+        ${deltaHtml(item.delta)}
+      </article>`
+    )
+    .join("");
+}
+
+/* The band states a certified split or says it is coming. It never estimates
+   channel share from Olo, which would undercount app orders paid by Dutch
+   Pass or gift card. */
+function renderChannelBand(model) {
+  const band = document.getElementById("overview-channel-band");
+  if (!band) return;
+  const split = model.channelSplit;
+
+  if (!split) {
+    band.classList.add("is-pending");
+    band.innerHTML = `
+      <div class="channel-band-head">
+        <span class="channel-band-title">Where the money came from</span>
+        <span class="channel-band-flag">Coming next</span>
+      </div>
+      <p class="channel-band-pending">
+        In shop, order ahead, and delivery split publishes once the weekly
+        extract carries the Gold <code>CHANNEL</code> field.
+      </p>`;
+    return;
+  }
+
+  band.classList.remove("is-pending");
+  const totals = `${compactUsd(split.total)} total${
+    split.totalOrders === null ? "" : ` · ${compactCount(split.totalOrders)} orders`
+  }`;
+  const bar = split.segments
+    .map((segment) => {
+      const inlineLabel =
+        segment.renderWidth >= 12 ? `${segment.label} ${sharePct(segment.share)}` : "";
+      return `<span class="channel-seg" style="width:${segment.renderWidth.toFixed(
+        3
+      )}%;background:${segment.color}" title="${segment.label} ${sharePct(
+        segment.share
+      )}">${inlineLabel}</span>`;
+    })
+    .join("");
+  const keys = split.segments
+    .map(
+      (segment) => `
+      <span class="channel-key">
+        <i class="channel-dot" style="background:${segment.color}" aria-hidden="true"></i>
+        ${segment.label}
+        <b>${compactUsd(segment.sales)}</b>
+        <em>${sharePct(segment.share)}</em>
+        ${segment.orders === null ? "" : `<span>${compactCount(segment.orders)} orders</span>`}
+        ${segment.avgTicket === null ? "" : `<span>$${segment.avgTicket.toFixed(2)} ticket</span>`}
+      </span>`
+    )
+    .join("");
+
+  band.innerHTML = `
+    <div class="channel-band-head">
+      <span class="channel-band-title">Where the money came from</span>
+      <span class="channel-band-total">${totals}</span>
+    </div>
+    <div class="channel-bar" role="img" aria-label="Sales share by order channel">${bar}</div>
+    <div class="channel-keys">${keys}</div>`;
+}
+
+function renderSalesChart(model, sources) {
+  const canvas = document.getElementById("chart-overview-sales");
+  if (!canvas || typeof Chart === "undefined") return;
+  if (overviewSalesChart) overviewSalesChart.destroy();
+  const trend = model.salesTrend;
+  overviewSalesChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: trend.labels.map((id) => shortLabel(periodLabelFor(id, sources))),
+      datasets: trend.datasets.map((dataset, idx) => ({
+        label: dataset.label,
+        data: dataset.data,
+        valueFormatter: (value) => compactUsd(value),
+        borderColor: SALES_LINE_COLORS[idx % SALES_LINE_COLORS.length],
+        backgroundColor: "transparent",
+        borderWidth: 3,
+        spanGaps: true,
+        pointRadius: 3,
+        tension: 0.25,
+      })),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        inlineValueLabels: { display: true },
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+          labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${compactUsd(ctx.raw)}`,
+          },
+        },
+      },
+      layout: { padding: { top: 14 } },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#5a6f82", font: { size: 10 }, maxRotation: 0 },
+        },
+        y: { display: false, grace: "18%" },
+      },
+      elements: { point: { hoverRadius: 4 } },
+    },
+  });
+}
+
+/* Legend dots use tenderInk, not the raw chart-slice color: brand yellow
+   fails WCAG as small text/iconography, so Gift Card / Dutch Pass reads as
+   navy in the legend even though its doughnut slice stays true yellow. */
+function renderTenderLegend(rows) {
+  const el = document.getElementById("legend-overview-tender");
+  if (!el) return;
+  el.innerHTML = rows
+    .map(
+      (row, idx) => `
+      <tr>
+        <td><span style="color:${tenderInk(row.label, idx)}" aria-hidden="true">●</span> ${row.label}</td>
+        <td>${sharePct(row.pct)} <span class="mix-hint">${compactUsd(row.amount)}</span></td>
+      </tr>`
+    )
+    .join("");
+}
+
+function renderTenderChart(model) {
+  const canvas = document.getElementById("chart-overview-tender");
+  if (!canvas || typeof Chart === "undefined") return;
+  if (overviewTenderChart) overviewTenderChart.destroy();
+  const rows = model.tenderMix.rows;
+  const colors = rows.map((row, idx) => tenderColor(row.label, idx));
+  renderTenderLegend(rows);
+  overviewTenderChart = new Chart(canvas, {
+    type: "doughnut",
+    data: {
+      labels: rows.map((row) => row.label),
+      datasets: [
+        {
+          data: rows.map((row) => row.pct),
+          valueFormatter: (value) => (Number(value) >= 0.05 ? sharePct(value) : ""),
+          backgroundColor: colors,
+          borderWidth: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "58%",
+      plugins: {
+        inlineValueLabels: { display: true },
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const row = rows[ctx.dataIndex];
+              if (!row) return "";
+              return `${sharePct(row.pct)} · ${compactUsd(row.amount)}`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function renderWatchlist(model) {
+  const list = document.getElementById("overview-watchlist");
+  if (!list) return;
+  list.innerHTML = model.watchlist
+    .map((item) => `<li data-tone="${item.tone}">${item.text}</li>`)
+    .join("");
+}
+
+function showOverviewReady() {
+  const empty = document.getElementById("overview-empty");
+  const content = document.getElementById("overview-content");
+  if (empty) empty.hidden = true;
+  if (content) content.hidden = false;
+}
+
+function showOverviewNotice(technical) {
+  const empty = document.getElementById("overview-empty");
+  const content = document.getElementById("overview-content");
+  if (content) content.hidden = true;
+  if (!empty) return;
+  empty.hidden = false;
+  const options = {
+    title: "Payments Executive Overview isn't available right now",
+    message: "No usable reporting periods are available from the published payment sources.",
+    technical,
+    fix: [
+      "Confirm each published payment JSON feed is reachable and contains usable completed weeks.",
+      "Refresh after the source feeds have been republished.",
+    ],
+  };
+  if (window.__notices) window.__notices.renderNotice(empty, options);
+  else empty.innerHTML = `<h3>${options.title}</h3><p>${options.message}</p>`;
+}
+
+/** Earliest common week, used to register a meaningful available-history
+    banner for the overview tab (the intersection, not any one source's
+    own longer history). */
+function overviewDataStart(periodIds, sources) {
+  if (!periodIds?.length) return null;
+  const firstId = periodIds[0];
+  const label = shortLabel(periodLabelFor(firstId, sources));
+  const year = String(firstId).slice(0, 4);
+  return {
+    startLabel: `${label}, ${year}`,
+    weekCount: periodIds.length,
+  };
+}
+
+function renderOverview(periodId, { force = false } = {}) {
+  const state = window.__executiveOverviewState;
+  if (!state?.periodIds?.length) return;
+  const resolvedId = isHistoryPeriod(periodId)
+    ? "history"
+    : state.periodIds.includes(periodId)
+      ? periodId
+      : state.periodIds.at(-1);
+
+  /* registerPeriods() below can synchronously echo a "dashboard:period"
+     event back into this same listener before loadOverview()'s own explicit
+     call runs; skip the second call for the same resolved period instead of
+     re-building both charts twice on every load. `force` bypasses this for
+     the dashboard:tab handler below, which needs a real rebuild even when
+     the period id hasn't changed. */
+  if (!force && resolvedId === selectedPeriodId && overviewSalesChart) return;
+  selectedPeriodId = resolvedId;
+
+  const sources = {
+    pos: state.pos,
+    worldpay: state.worldpay,
+    olo: state.olo,
+    channels: state.channels,
+  };
+  const model =
+    resolvedId === "history"
+      ? overviewForHistory(state.periodIds, sources)
+      : overviewForPeriod(resolvedId, sources);
+
+  const periodLabel = document.getElementById("overview-period-label");
+  if (periodLabel) periodLabel.textContent = model.label;
+  renderKpis(model);
+  renderChannelBand(model);
+  renderSalesChart(model, state);
+  renderTenderChart(model);
+  renderWatchlist(model);
+}
+
+async function loadOverview() {
+  async function loadFeed(url, label, normalize) {
+    try {
+      const payload = await window.__dashboardAuth.loadJson(url);
+      const weeks = normalize(payload);
+      if (!Array.isArray(weeks) || !weeks.length) {
+        return { weeks: [], payload, error: `${label}: ${url} contained no usable completed weeks.` };
+      }
+      return { weeks, payload, error: null };
+    } catch (err) {
+      return { weeks: [], payload: null, error: `${label}: ${String(err?.message || err)}` };
+    }
+  }
+
+  const [posResult, worldpayResult, oloResult] = await Promise.all([
+    loadFeed(POS_DATA_URL, "POS", (payload) =>
+      window.__posSales?.normalizePosData(payload) || []
+    ),
+    loadFeed(WORLDPAY_DATA_URL, "Worldpay", worldpayWeeks),
+    loadFeed(OLO_DATA_URL, "Olo Pay", (payload) =>
+      window.__oloPay?.normalizeOloData(payload) || []
+    ),
+  ]);
+
+  const sources = {
+    pos: posResult.weeks,
+    worldpay: worldpayResult.weeks,
+    olo: oloResult.weeks,
+  };
+  /* Channel rows ride along in the POS payload, since the contract adds
+     CHANNEL to that same extract. Absent until it lands, which the band
+     reports rather than estimating around. */
+  const channels = normalizeChannelWeeks(posResult.payload);
+  const periodIds = periodIdsForAvailableSources(sources);
+  const errors = [posResult.error, worldpayResult.error, oloResult.error].filter(Boolean);
+  window.__executiveOverviewState = { ...sources, channels, periodIds, sourceErrors: errors };
+
+  if (!periodIds.length) {
+    const technical = errors.length
+      ? errors.join("\n")
+      : "The available feeds do not share any usable reporting period.";
+    showOverviewNotice(technical);
+    return;
+  }
+
+  showOverviewReady();
+  window.__ytdBanner?.register("overview", overviewDataStart(periodIds, sources));
+  window.__dashboardTabs?.registerPeriods(
+    "overview",
+    periodIds.map((id) => ({ id, label: periodLabelFor(id, sources) }))
+  );
+  /* If registerPeriods() above already rendered via its event echo (the
+     common case, since Executive Overview is the default active tab),
+     renderOverview()'s own guard makes this a no-op; it only does real
+     work when the echo did not fire (e.g. overview is not the active
+     tab, or the tab coordinator is unavailable). */
+  renderOverview(selectedPeriodId || periodIds.at(-1));
+}
+
+window.__executiveOverview = {
+  worldpayWeeks,
+  intersectPeriodIds,
+  periodIdsForAvailableSources,
+  overviewForPeriod,
+  isHistoryPeriod,
+  overviewForHistory,
+  buildWatchlist,
+  buildChannelSplit,
+  findChannelWeek,
+  normalizeChannelWeeks,
+  tenderInk,
+  formatSignedPct,
+  loadOverview,
+  renderOverview,
+  getSelectedPeriod() {
+    return selectedPeriodId;
+  },
+};
+
+function startOverviewWhenUnlocked() {
+  if (document.body.classList.contains("auth-unlocked")) {
+    loadOverview();
+    return;
+  }
+  window.addEventListener("dashboard:unlocked", () => loadOverview(), { once: true });
+}
+
+window.addEventListener("dashboard:period", (event) => {
+  const tabId = event.detail?.tabId;
+  if (tabId !== "overview") return;
+  const periodId = event.detail?.periodId;
+  if (!periodId) return;
+  if (event.detail?.reason === "tab-activation") {
+    selectedPeriodId = periodId;
+    return;
+  }
+  if (!window.__executiveOverviewState?.periodIds?.length) {
+    selectedPeriodId = periodId;
+    return;
+  }
+  renderOverview(periodId);
+});
+
+/* If a viewer switches away from Executive Overview before loadOverview()
+   finishes fetching, loadOverview()'s own render call still fires while the
+   panel is hidden, building both charts against a 0×0 canvas. Chrome's
+   ResizeObserver-driven Chart.js responsive resize happens to self-correct
+   once the panel is unhidden again (confirmed by measuring canvas width/
+   height before and after re-activating the tab), but that isn't guaranteed
+   across browsers/Chart.js versions, and the period-echo render this module
+   already listens for is guarded against re-firing for an unchanged period
+   id. Force a fresh render whenever the overview tab is (re)activated and
+   data is already loaded, so the charts are deterministically rebuilt
+   against the panel's real, visible dimensions rather than depending on
+   that self-correction. */
+window.addEventListener("dashboard:tab", (event) => {
+  if (event.detail?.tabId !== "overview") return;
+  const state = window.__executiveOverviewState;
+  if (!state?.periodIds?.length) return;
+  renderOverview(event.detail?.periodId || selectedPeriodId || state.periodIds.at(-1), {
+    force: true,
+  });
+});
+
+document.addEventListener("DOMContentLoaded", startOverviewWhenUnlocked);
+})();

@@ -1,12 +1,15 @@
 {
-  "generated_at": "2026-08-31T15:15:25-07:00",
+  "generated_at": "2026-09-21T23:01:21-07:00",
   "week_cadence": "Monday-Sunday",
   "dashboard_tab": "Olo Pay",
   "environment": "prod",
   "definitions": {
-    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops. Tips sit in TIP_PORTION on the source row and are not subtracted here; amount is the billing total Olo stored.",
+    "SALES_VOLUME": "Approved Stripe Sale dollars at Company Owned shops, minus TIP_PORTION. Drink/order total, not the card billed total.",
+    "TIP_VOLUME": "Sum of TIP_PORTION on those approved Sales.",
+    "BILLED_VOLUME": "SALES_VOLUME + TIP_VOLUME (what Stripe captured).",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT (ex-tip).",
     "AUTHORIZATION_RATE": "Approved vs Declined or Failure on Sale attempts at Company Owned shops.",
-    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales. Wallet service is Phase 2."
+    "CARD_BRAND_MIX": "Base card network from ACCOUNT_ISSUER on Company Owned approved Sales, using ex-tip dollars. Wallet service is Phase 2."
   },
   "methodology_file": "olo_pay_methodology.json",
   "filter": {
@@ -18,7 +21,9 @@
       "VoidSale"
     ],
     "sales_status": "Approved",
-    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded."
+    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded.",
+    "sales_excludes_tip": true,
+    "tip_field": "TIP_PORTION"
   },
   "brand_order": [
     "Visa",
@@ -31,13 +36,17 @@
       "week_start_date": "2026-06-22",
       "week_end_date": "2026-06-28",
       "totals": {
-        "SALES_VOLUME": 5413105.27,
+        "SALES_VOLUME": 5037828.13,
+        "TIP_VOLUME": 375277.14,
+        "BILLED_VOLUME": 5413105.27,
         "TRANSACTION_COUNT": 470110,
         "ORDER_COUNT": 470110,
-        "AVG_TICKET": 11.51,
-        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
-        "REFUND_VOLUME": 1013.91,
-        "VOID_VOLUME": 103.88
+        "TIPPED_ORDER_COUNT": 186578,
+        "AVG_TICKET": 10.72,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 2.01,
+        "REFUND_VOLUME": 957.77,
+        "VOID_VOLUME": 92.61
       },
       "authorization": {
         "approved": 470110,
@@ -48,34 +57,34 @@
       },
       "card_brand_mix": {
         "Visa": {
-          "amount": 3920936.79,
-          "pct_of_digital_sales": 72.4,
+          "amount": 3652559.68,
+          "pct_of_digital_sales": 72.5,
           "TRANSACTION_COUNT": 339572
         },
         "Mastercard": {
-          "amount": 1179913.63,
+          "amount": 1096148.97,
           "pct_of_digital_sales": 21.8,
           "TRANSACTION_COUNT": 103284
         },
         "Amex": {
-          "amount": 103529.8,
+          "amount": 94942.81,
           "pct_of_digital_sales": 1.9,
           "TRANSACTION_COUNT": 8494
         },
         "Discover": {
-          "amount": 208725.05,
-          "pct_of_digital_sales": 3.9,
+          "amount": 194176.67,
+          "pct_of_digital_sales": 3.8,
           "TRANSACTION_COUNT": 18760
         }
       },
       "mix_checksum": 100.0,
       "ownership_split": {
-        "company_owned_sales": 5413105.27,
+        "company_owned_sales": 5037828.13,
         "franchised_sales": 0.0,
         "unmapped_or_other_sales": 0.0
       },
       "week_over_week": {
-        "SALES_VOLUME_PCT": -5.8,
+        "SALES_VOLUME_PCT": -5.7,
         "TRANSACTION_COUNT_PCT": -4.6,
         "AUTH_RATE_PP": -0.12
       }
@@ -84,7 +93,7 @@
   "shop_coverage": {
     "gold_store_ownership_counts": {
       "Company Owned": 1016,
-      "Franchised": 310
+      "Franchised": 312
     }
   },
   "artifacts": {
@@ -105,6 +114,10 @@
       "note": "FINAL_AMOUNT is currently null on this feed; INITIAL_AMOUNT is used."
     },
     {
+      "code": "tips_subtracted_from_sales",
+      "note": "SALES_VOLUME = billed minus TIP_PORTION. TIP_VOLUME is separate. Same as Genius: tips not in drink sales."
+    },
+    {
       "code": "phase_2_excluded",
       "note": "Apple Pay / Google Pay not split (BILLING_SCHEME_NM). Decline reason codes not extracted."
     },
@@ -112,7 +125,8 @@
       "code": "dedupe_billing_transaction_id",
       "source_rows_after_dedupe": 5671507,
       "distinct_id": 5671507,
-      "null_amount": 0
+      "null_amount": 0,
+      "tip_gt_billed": 0
     }
   ]
 }

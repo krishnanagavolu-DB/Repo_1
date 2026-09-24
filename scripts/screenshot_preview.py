@@ -14,6 +14,7 @@ import argparse
 import functools
 import http.server
 import json
+import os
 import socketserver
 import threading
 from pathlib import Path
@@ -37,6 +38,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=Path("/tmp/preview-shots"))
     parser.add_argument("--width", type=int, default=1440)
     parser.add_argument("--height", type=int, default=900)
+    parser.add_argument("--password", default=os.environ.get("DASHBOARD_PASSWORD", ""))
     args = parser.parse_args()
 
     from playwright.sync_api import sync_playwright
@@ -45,6 +47,9 @@ def main() -> int:
     config = json.loads((site / "auth-config.json").read_text())
     session_key = config.get("sessionKey", "db_wp_dashboard_auth_v1")
     password_hash = config["passwordHash"]
+    password = args.password
+    if not password:
+        raise SystemExit("Pass --password or DASHBOARD_PASSWORD so encrypted metrics can open.")
 
     args.out.mkdir(parents=True, exist_ok=True)
     httpd, port = serve(site)
@@ -59,6 +64,7 @@ def main() -> int:
             page.on("pageerror", lambda e: errors.append(str(e)))
             page.add_init_script(
                 f"sessionStorage.setItem({session_key!r}, {password_hash!r});"
+                f"sessionStorage.setItem({(session_key + '_material')!r}, {password!r});"
             )
             page.goto(base, wait_until="networkidle")
             page.wait_for_timeout(900)

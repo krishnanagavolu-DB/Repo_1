@@ -35,6 +35,29 @@ function check(name, actual, expected) {
   }
 }
 
+const html = fs.readFileSync("site/preview/index.html", "utf8");
+const posJs = fs.readFileSync("site/preview/js/pos-sales.js", "utf8");
+const oloJs = fs.readFileSync("site/preview/js/olo-pay.js", "utf8");
+check("POS slide label", html.includes("In-Shop Sales · Tender mix"), true);
+check("Worldpay slide label", html.includes("Card Health · Approval &amp; cost"), true);
+check("Olo slide label", html.includes("Order Ahead · Olo Pay &amp; Stripe"), true);
+check("no visible YTD acronym", />[^<]*\bYTD\b[^<]*</.test(html), false);
+check("aggregate period copy", html.includes("Available history"), true);
+check(
+  "default overview Ask Data blurb",
+  html.includes("Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead"),
+  true
+);
+check(
+  "default overview Ask Data prompt",
+  html.includes('data-question="Can I add POS and Worldpay sales?"'),
+  true
+);
+check("POS empty state uses executive label", /title: "In-Shop Sales\b/.test(posJs), true);
+check("POS empty state drops old label", /title: "All payments\b/.test(posJs), false);
+check("Olo empty state uses executive label", /title: "Order Ahead \(Olo Pay\)/.test(oloJs), true);
+check("Olo empty state drops standalone label", /title: "Olo Pay\b/.test(oloJs), false);
+
 // Deltas that round away at display precision must read neutral, not green.
 const pointsMetric = {
   formatDelta: (d) => `${fmt.signed(d * 100, 2)} pts`,

@@ -6,11 +6,17 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=20260811d" />
+    <link rel="stylesheet" href="css/dashboard.css?v=9b7c6e84d8" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=20260811d" defer></script>
-    <script src="js/dashboard.js?v=20260811d" defer></script>
-    <script src="js/chatbot.js?v=20260811d" defer></script>
+    <script src="js/auth-gate.js?v=5edc9f6406" defer></script>
+    <script src="js/notices.js?v=5306b66e42" defer></script>
+    <script src="js/ytd-banner.js?v=9a8d72ee87" defer></script>
+    <script src="js/chart-labels.js?v=cd7105563a" defer></script>
+    <script src="js/dashboard.js?v=9dd11c36a1" defer></script>
+    <script src="js/pos-sales.js?v=9dcca5c9c5" defer></script>
+    <script src="js/olo-pay.js?v=b3e0ceb31c" defer></script>
+    <script src="js/tabs.js?v=5d677809bc" defer></script>
+    <script src="js/chatbot.js?v=347f081e17" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -50,6 +56,7 @@
             <div>
               <div class="eyebrow">Payments · Preview</div>
               <h1>Executive KPI Dashboard</h1>
+              <span class="brand-rule" aria-hidden="true"><i></i><i></i><i></i></span>
             </div>
           </div>
           <div class="period">
@@ -62,92 +69,294 @@
           </div>
         </div>
         <nav class="tabs" aria-label="Sales channels">
-          <div class="tab active" aria-current="page">
-            <strong>In Shop</strong>
-            <span>Worldpay</span>
+          <div class="tab-group" role="group" aria-label="In Shop">
+            <span class="tab-group-label">In Shop</span>
+            <div class="tab-group-items">
+              <button type="button" class="tab active" data-tab="pos" aria-current="page">All payments</button>
+              <button type="button" class="tab" data-tab="worldpay">Card present</button>
+            </div>
           </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Olo Pay</strong>
-            <span>Coming soon</span>
-          </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Gift Cards</strong>
-            <span>Coming soon</span>
-          </div>
-          <div class="tab disabled" title="Coming soon">
-            <strong>Other</strong>
-            <span>Coming soon</span>
-          </div>
+          <button type="button" class="tab" data-tab="olo">Olo Pay</button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Gift Cards
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Other
+            <span class="tab-badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Coming soon
+            </span>
+          </button>
         </nav>
       </header>
 
       <main>
-        <div class="section-head">
-          <h2>In Shop performance</h2>
-          <p>Authorizations and interchange for physical shops</p>
-        </div>
+        <!-- Shown on every tab when the period is YTD; each channel reports its own start. -->
+        <div id="ytd-banner" class="ytd-banner" role="status" hidden></div>
 
-        <section id="auth-skeleton" class="kpi-grid auth-skeleton" aria-hidden="true">
-          <article class="kpi-card"><div class="label">Auth rate</div><div class="kpi-value">••.••%</div></article>
-          <article class="kpi-card"><div class="label">AOV</div><div class="kpi-value">$•.••</div></article>
-          <article class="kpi-card"><div class="label">Returns as % of sales</div><div class="kpi-value">•.••%</div></article>
-          <article class="kpi-card"><div class="label">Sales volume</div><div class="kpi-value">$••.•M</div></article>
-          <article class="kpi-card"><div class="label">Transaction volume</div><div class="kpi-value">•.••M</div></article>
-          <article class="kpi-card"><div class="label">IC rate</div><div class="kpi-value">•.••%</div></article>
-          <article class="kpi-card"><div class="label">Decline $</div><div class="kpi-value">$•••K</div></article>
-          <article class="kpi-card"><div class="label">IC fee $</div><div class="kpi-value">$•••K</div></article>
-          <article class="kpi-card"><div class="label">Downgrade rate</div><div class="kpi-value">•.••%</div></article>
-        </section>
+        <section id="panel-pos" class="tab-panel" data-panel="pos">
+          <div id="pos-empty" class="pos-empty" hidden></div>
 
-        <section class="kpi-grid" id="kpi-grid" aria-live="polite"></section>
+          <div id="pos-content" hidden>
+            <section class="slide" aria-label="All payments sales and tender mix">
+              <header class="slide-band">
+                <h2>All payments · Sales &amp; tender mix</h2>
+                <p id="pos-period-label">Most recent week</p>
+              </header>
 
-        <section class="charts-2">
-          <article class="panel">
-            <h3>Entry method mix</h3>
-            <div class="mix-body">
-              <div class="chart-wrap"><canvas id="chart-entry"></canvas></div>
-              <table class="mix-legend" id="legend-entry"></table>
-            </div>
-          </article>
-          <article class="panel">
-            <h3>Payment type mix</h3>
-            <div class="mix-body">
-              <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
-              <table class="mix-legend" id="legend-payment"></table>
-            </div>
-          </article>
-        </section>
+              <div class="slide-grid pos-slide-grid">
+                <article class="slide-panel slide-kpis">
+                  <div class="panel-band">Sales KPIs</div>
+                  <div class="panel-body">
+                    <div class="pos-slide-summary" id="pos-summary-grid"></div>
+                    <div class="pos-slide-tenders" id="pos-kpi-grid"></div>
+                  </div>
+                </article>
 
-        <section class="panel mix-panel">
-          <h3>Wallet mix</h3>
-          <div class="mix-body">
-            <div class="chart-wrap"><canvas id="chart-wallet"></canvas></div>
-            <table class="mix-legend" id="legend-wallet"></table>
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Sales over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-sales-trend"></canvas></div>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Tender mix</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-tender"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-pos-tender" aria-label="Tender mix legend"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel" id="pos-gift-panel" hidden>
+                  <div class="panel-band">Gift Card / Dutch Pass</div>
+                  <div class="panel-body">
+                    <p class="panel-note" id="pos-gift-note">Share of the Gift Card / Dutch Pass tender</p>
+                    <div class="chart-wrap"><canvas id="chart-pos-gift"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-pos-gift" aria-label="Gift Card versus Dutch Pass"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Payments over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-pos-payments-trend"></canvas></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <details class="slide-detail">
+              <summary>More detail — full tender values</summary>
+              <section class="charts-2 pos-charts">
+                <article class="panel">
+                  <h3>Tender mix</h3>
+                  <div class="mix-body">
+                    <table class="mix-legend" id="pos-tender-detail" aria-label="Full tender values"></table>
+                  </div>
+                </article>
+                <article class="panel">
+                  <h3>Gift Card / Dutch Pass split</h3>
+                  <div class="mix-body">
+                    <table class="mix-legend" id="pos-gift-detail" aria-label="Full Gift Card versus Dutch Pass values"></table>
+                  </div>
+                </article>
+              </section>
+            </details>
           </div>
         </section>
 
-        <section class="charts-2">
-          <article class="panel bar-panel">
-            <h3>Auth rate by entry method</h3>
-            <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry"></canvas></div>
-          </article>
-          <article class="panel bar-panel">
-            <h3>Decline reasons</h3>
-            <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
-          </article>
+        <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
+        <!-- Slide-shaped board: one screen, headline numbers first, detail folded below. -->
+        <section class="slide" aria-label="Card present approval and cost">
+          <header class="slide-band">
+            <h2>Card present · Approval &amp; cost</h2>
+            <p id="slide-period">Most recent week</p>
+          </header>
+
+          <div class="slide-grid">
+            <article class="slide-panel slide-kpis">
+              <div class="panel-band">Approval &amp; sales KPIs</div>
+              <div class="panel-body">
+                <div class="hero-kpis" id="hero-kpis">
+                  <div id="auth-skeleton" class="hero-kpi hero-skeleton" aria-hidden="true">
+                    <div class="hero-value">••.••%</div>
+                    <div class="hero-label">Auth rate</div>
+                  </div>
+                </div>
+                <div class="bench-strip" id="bench-strip"></div>
+                <div class="aux-kpis" id="aux-kpis" aria-live="polite"></div>
+              </div>
+            </article>
+
+            <article class="slide-panel slide-trend">
+              <div class="panel-band">Auth rate over time</div>
+              <div class="panel-body trend-body">
+                <div class="cat-rail" id="trend-categories" role="group" aria-label="Entry method"></div>
+                <div class="trend-chart"><canvas id="chart-auth-trend"></canvas></div>
+              </div>
+            </article>
+
+            <article class="slide-panel slide-reasons">
+              <div class="panel-band">Actionable decline reasons</div>
+              <div class="panel-body">
+                <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
+              </div>
+            </article>
+
+            <article class="slide-panel">
+              <div class="panel-band">Declines by type</div>
+              <div class="panel-body">
+                <div class="chart-wrap"><canvas id="chart-decline-mix"></canvas></div>
+              </div>
+            </article>
+
+            <article class="slide-panel">
+              <div class="panel-band">Declines over time</div>
+              <div class="panel-body">
+                <div class="chart-wrap"><canvas id="chart-declines-time"></canvas></div>
+              </div>
+            </article>
+          </div>
         </section>
 
-        <section class="coming" id="coming-soon">
-          <div class="coming-card">Coming soon · Auth latency</div>
-          <div class="coming-card">Coming soon · False decline / retry</div>
-          <div class="coming-card">Coming soon · Chargebacks</div>
+        <details class="slide-detail">
+          <summary>More detail — decline table, entry method, and mix</summary>
+
+          <section class="charts-2">
+            <article class="panel bar-panel">
+              <h3>Decline reasons</h3>
+              <table class="mix-legend decline-legend">
+                <thead>
+                  <tr>
+                    <th scope="col">Reason</th>
+                    <th scope="col">Requests</th>
+                    <th scope="col">Share</th>
+                  </tr>
+                </thead>
+                <tbody id="legend-declines"></tbody>
+              </table>
+              <p class="panel-note">Share of declines that carry a reason code from Worldpay.</p>
+            </article>
+            <article class="panel bar-panel">
+              <h3>Auth rate by entry method</h3>
+              <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry"></canvas></div>
+            </article>
+          </section>
+
+          <section class="charts-2">
+            <article class="panel">
+              <h3>Entry method mix</h3>
+              <div class="mix-body">
+                <div class="chart-wrap"><canvas id="chart-entry"></canvas></div>
+                <table class="mix-legend" id="legend-entry"></table>
+              </div>
+            </article>
+            <article class="panel">
+              <h3>Payment type mix</h3>
+              <div class="mix-body">
+                <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
+                <table class="mix-legend" id="legend-payment"></table>
+              </div>
+            </article>
+          </section>
+
+          <section class="panel mix-panel">
+            <h3>Wallet mix</h3>
+            <div class="mix-body">
+              <div class="chart-wrap"><canvas id="chart-wallet"></canvas></div>
+              <table class="mix-legend" id="legend-wallet"></table>
+            </div>
+          </section>
+
+          <section class="coming" id="coming-soon">
+            <div class="coming-card">Coming soon · Auth latency</div>
+            <div class="coming-card">Coming soon · False decline / retry</div>
+            <div class="coming-card">Coming soon · Chargebacks</div>
+          </section>
+        </details>
         </section>
 
-        <!-- In-page chatbot: title + chat thread + question bar -->
+        <section id="panel-olo" class="tab-panel" data-panel="olo" hidden>
+          <div id="olo-empty" class="pos-empty" hidden></div>
+
+          <div id="olo-content" hidden>
+            <section class="slide" aria-label="Olo Pay digital approval and sales">
+              <header class="slide-band">
+                <h2>OLO PAY · DIGITAL APPROVAL &amp; SALES</h2>
+                <p id="olo-period-label">Most recent week</p>
+              </header>
+
+              <div class="slide-grid olo-slide-grid">
+                <article class="slide-panel slide-kpis">
+                  <div class="panel-band">Approval &amp; sales KPIs</div>
+                  <div class="panel-body">
+                    <div class="pos-slide-summary olo-slide-summary" id="olo-summary-grid"></div>
+                    <div class="olo-support" id="olo-support"></div>
+                    <p class="panel-note">Company owned shops only</p>
+                  </div>
+                </article>
+
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Sales over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-sales-trend"></canvas></div>
+                  </div>
+                </article>
+
+                <article class="slide-panel">
+                  <div class="panel-band">Card brand mix</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-brand"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-olo-brand" aria-label="Card brand mix legend"></table>
+                  </div>
+                </article>
+
+                <article class="slide-panel slide-trend">
+                  <div class="panel-band">Auth rate over time</div>
+                  <div class="panel-body">
+                    <div class="chart-wrap"><canvas id="chart-olo-auth-trend"></canvas></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <details class="slide-detail">
+              <summary>More detail — brand values, approvals, refunds &amp; voids</summary>
+              <section class="charts-2 olo-charts">
+                <article class="panel">
+                  <h3>Full detail</h3>
+                  <div class="mix-body" id="olo-detail"></div>
+                </article>
+              </section>
+            </details>
+          </div>
+        </section>
+
+        <!-- Shared across every channel tab: definitions, KPIs, POS mix, benchmarks, competitors -->
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p>In Shop · Worldpay answers only — KPIs and payment definitions</p>
+            <p id="ask-data-blurb">Explore trends, definitions, POS tender mix, industry benchmarks, and competitor research</p>
+            <div class="ask-data-prompts" aria-label="Suggested questions">
+              <button type="button" data-question="Which metrics need attention?">What’s brewing in this week’s metrics?</button>
+              <button type="button" data-question="Show the POS tender mix">How did guests pay at the POS?</button>
+              <button type="button" data-question="How does our auth rate compare with industry benchmarks?">How does our auth rate stack up?</button>
+              <button type="button" data-question="What competitor research is available for Starbucks, Dunkin, and 7 Brew?">What can our competitors teach us?</button>
+              <button type="button" data-question="Is this data certified?">Has this data passed its quality checks?</button>
+            </div>
           </div>
           <div id="chat-log" class="ask-data-log" aria-live="polite"></div>
           <form id="chat-form" class="ask-data-form">
@@ -156,7 +365,7 @@
               id="chat-input"
               type="text"
               autocomplete="off"
-              placeholder="Type a question — e.g. What is the auth rate?"
+              placeholder="Type a question — e.g. What is the auth rate? or Show the POS tender mix"
             />
             <button type="submit">Ask</button>
           </form>

@@ -8,6 +8,7 @@ from typing import Any
 import pandas as pd
 
 from worldpay_dashboard.kpis import build_dashboard_payload, compute_week_kpis
+from worldpay_dashboard.validation import raise_for_errors, validate_discovered_weeks
 
 _WEEK_DIR_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -58,12 +59,20 @@ def discover_weeks(raw_root: Path) -> list[dict[str, Any]]:
 
 def ingest_raw_tree(raw_root: Path, out_json: Path) -> Path:
     discovered = discover_weeks(raw_root)
+    validation_report = validate_discovered_weeks(discovered)
+    raise_for_errors(validation_report)
     week_payloads = []
     for item in discovered:
         auth_df = pd.read_excel(item["auth"])
         ix_df = pd.read_excel(item["interchange"])
         week_payloads.append(compute_week_kpis(auth_df, ix_df, item["week_start"]))
     payload = build_dashboard_payload(week_payloads)
+    payload["meta"]["data_quality"] = {
+        "status": validation_report["status"],
+        "certified": validation_report["certified"],
+        "weeks_checked": validation_report["weeks_checked"],
+        "warning_count": validation_report["warning_count"],
+    }
     out_json.parent.mkdir(parents=True, exist_ok=True)
     out_json.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
     return out_json

@@ -1,0 +1,17 @@
+---
+description: Canonical SharePoint drop zone and Monday refresh schedule for Worldpay weekly files.
+alwaysApply: true
+---
+
+# Worldpay SharePoint drop zone
+
+When refreshing KPI data, pull Auth Summary + Interchange Excels from this folder only:
+
+- Config: `config/sharepoint-source.json`
+- Runbook: `docs/ops/monday-automation.md`
+- Folder: `sites/CoreShopTech/Shared Documents/General/Payment Systems/Reports/Worldpay/WP Weekly Reports`
+- URL: https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Worldpay/WP%20Weekly%20Reports?d=w23de4595d91f489fa3c825c6b52e4fcd&csf=1&web=1&e=uSIZpB
+
+Schedule expectation: **every Monday 11:00 America/Los_Angeles** via Cursor Automation.
+
+Do not invent alternate drop locations. If SharePoint auth fails, leave the prior dashboard live and report the failure.

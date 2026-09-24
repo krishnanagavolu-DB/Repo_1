@@ -1,0 +1,11 @@
+---
+description: When the user says promote or publish to leadership, use the promoting-preview skill.
+globs: site/**/*
+alwaysApply: false
+---
+
+# Promote is a skill, not a copy-paste
+
+If the user says **promote**, **publish to leadership**, or **make leadership match preview**,
+read `.cursor/skills/promoting-preview/SKILL.md` and run `python3 scripts/promote_preview.py`.
+Do not overwrite `site/index.html` with the preview page.

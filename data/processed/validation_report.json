@@ -1,0 +1,217 @@
+{
+  "status": "passed_with_warnings",
+  "certified": true,
+  "error_count": 0,
+  "warning_count": 11,
+  "weeks_checked": 6,
+  "checks": [
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.5% of declined requests have blank/unspecified reason text",
+      "week": "2026-07-20",
+      "details": {
+        "unlabeled_count": 4376.0,
+        "decline_count": 41869.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.2% of declined requests have blank/unspecified reason text",
+      "week": "2026-07-27",
+      "details": {
+        "unlabeled_count": 3730.0,
+        "decline_count": 36482.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "11.0% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-03",
+      "details": {
+        "unlabeled_count": 3354.0,
+        "decline_count": 30502.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.2% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-10",
+      "details": {
+        "unlabeled_count": 3261.0,
+        "decline_count": 31901.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "9.6% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-17",
+      "details": {
+        "unlabeled_count": 3242.0,
+        "decline_count": 33929.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.6% of declined requests have blank/unspecified reason text",
+      "week": "2026-08-24",
+      "details": {
+        "unlabeled_count": 3378.0,
+        "decline_count": 31976.0
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "sales_cnt changed -15.4% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "sales_cnt",
+        "change": -0.15401222194620134
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "approved_auth_amt changed -15.5% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "approved_auth_amt",
+        "change": -0.15495296503811842
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "week_over_week_outlier",
+      "message": "auth_total_cnt changed -16.3% week over week",
+      "week": "2026-07-27",
+      "details": {
+        "field": "auth_total_cnt",
+        "change": -0.16261396228228997
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "multiweek_sales_trend",
+      "message": "Sales changed -26.1% from first to latest loaded week",
+      "week": "2026-08-24",
+      "details": {
+        "first_week": "2026-07-20",
+        "change": -0.2605883494733346
+      }
+    },
+    {
+      "severity": "warning",
+      "code": "amex_fee_blind_spot",
+      "message": "Amex has sales volume but $0 interchange fee in the source; blended IC rate understates full cost",
+      "week": null,
+      "details": {
+        "affected_weeks": [
+          "2026-07-20",
+          "2026-07-27",
+          "2026-08-03",
+          "2026-08-10",
+          "2026-08-17",
+          "2026-08-24"
+        ]
+      }
+    }
+  ],
+  "week_summaries": [
+    {
+      "week_start": "2026-07-20",
+      "auth_rows": 318,
+      "interchange_rows": 590,
+      "auth_total_cnt": 3120550.0,
+      "auth_approved_cnt": 3078681.0,
+      "auth_rate": 0.9865828139270321,
+      "approved_auth_amt": 37193822.0,
+      "sales_cnt": 3095579.0,
+      "sales_amt": 37866168.0,
+      "return_amt": 35546.0,
+      "interchange_fee": 734074.0,
+      "auth_to_sales_count_ratio": 1.0054887141603823,
+      "auth_to_sales_amount_ratio": 1.0180768193169285
+    },
+    {
+      "week_start": "2026-07-27",
+      "auth_rows": 309,
+      "interchange_rows": 569,
+      "auth_total_cnt": 2613105.0,
+      "auth_approved_cnt": 2576623.0,
+      "auth_rate": 0.9860388311988993,
+      "approved_auth_amt": 31430529.0,
+      "sales_cnt": 2618822.0,
+      "sales_amt": 32397433.27,
+      "return_amt": 30179.28,
+      "interchange_fee": 624314.95,
+      "auth_to_sales_count_ratio": 1.0163776384826184,
+      "auth_to_sales_amount_ratio": 1.0307632197345453
+    },
+    {
+      "week_start": "2026-08-03",
+      "auth_rows": 314,
+      "interchange_rows": 568,
+      "auth_total_cnt": 2360909.0,
+      "auth_approved_cnt": 2330407.0,
+      "auth_rate": 0.98708039996459,
+      "approved_auth_amt": 28337599.0,
+      "sales_cnt": 2323472.0,
+      "sales_amt": 28316860.07,
+      "return_amt": 27070.949999999993,
+      "interchange_fee": 550568.26,
+      "auth_to_sales_count_ratio": 0.9970241249704451,
+      "auth_to_sales_amount_ratio": 0.999268147947185
+    },
+    {
+      "week_start": "2026-08-10",
+      "auth_rows": 302,
+      "interchange_rows": 563,
+      "auth_total_cnt": 2348200.0,
+      "auth_approved_cnt": 2316299.0,
+      "auth_rate": 0.9864147006217528,
+      "approved_auth_amt": 28142374.0,
+      "sales_cnt": 2318150.0,
+      "sales_amt": 28194629.82,
+      "return_amt": 28325.049999999996,
+      "interchange_fee": 549128.2,
+      "auth_to_sales_count_ratio": 1.000799119630065,
+      "auth_to_sales_amount_ratio": 1.0018568376640862
+    },
+    {
+      "week_start": "2026-08-17",
+      "auth_rows": 286,
+      "interchange_rows": 552,
+      "auth_total_cnt": 2388796.0,
+      "auth_approved_cnt": 2354867.0,
+      "auth_rate": 0.9857966105100645,
+      "approved_auth_amt": 28400118.0,
+      "sales_cnt": 2339042.0,
+      "sales_amt": 28125984.96,
+      "return_amt": 28851.14,
+      "interchange_fee": 550451.54,
+      "auth_to_sales_count_ratio": 0.9932798752541014,
+      "auth_to_sales_amount_ratio": 0.9903474682746036
+    },
+    {
+      "week_start": "2026-08-24",
+      "auth_rows": 294,
+      "interchange_rows": 560,
+      "auth_total_cnt": 2346082.0,
+      "auth_approved_cnt": 2314106.0,
+      "auth_rate": 0.9863704678694095,
+      "approved_auth_amt": 27757962.0,
+      "sales_cnt": 2330273.0,
+      "sales_amt": 27998685.78,
+      "return_amt": 28404.68999999999,
+      "interchange_fee": 548134.7300000001,
+      "auth_to_sales_count_ratio": 1.0069862832558232,
+      "auth_to_sales_amount_ratio": 1.0086722425803452
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Worldpay WP Weekly Reports",
+  "purpose": "Drop zone for Dutch Bros In Shop Auth Summary + Interchange Excels",
+  "site": "CoreShopTech",
+  "folder_path": "Shared Documents/General/Payment Systems/Reports/Worldpay/WP Weekly Reports",
+  "url": "https://dutchbros.sharepoint.com/:f:/r/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Worldpay/WP%20Weekly%20Reports?d=w23de4595d91f489fa3c825c6b52e4fcd&csf=1&web=1&e=uSIZpB",
+  "url_clean": "https://dutchbros.sharepoint.com/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Worldpay/WP%20Weekly%20Reports",
+  "expected_files": [
+    "Auth Summary (Dutch Bros Prior week Auth Summary *.xlsx)",
+    "Interchange (Dutch - Interchange Report Prior Week *.xlsx)"
+  ],
+  "week_convention": "Folder under data/raw/{prior-week-Monday}/ covering Mon–Sun",
+  "refresh_schedule": {
+    "day": "Monday",
+    "local_time": "11:00",
+    "timezone": "America/Los_Angeles",
+    "cron": "CRON_TZ=America/Los_Angeles 0 11 * * 1",
+    "automation": "Cursor Automation (see docs/ops/monday-automation.md)"
+  },
+  "notes": [
+    "Raw Excels stay private; only site/ aggregates are published to GitHub Pages.",
+    "Automation must authenticate to dutchbros.sharepoint.com (OAuth or app registration)."
+  ]
+}

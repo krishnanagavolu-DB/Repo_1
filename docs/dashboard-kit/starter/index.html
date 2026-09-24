@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Dutch Bros · Sample KPI Dashboard</title>
+    <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
+    <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="js/notices.js" defer></script>
+    <script src="js/chart-labels.js" defer></script>
+    <script src="js/tabs.js" defer></script>
+    <script src="js/kit.js" defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <div class="preview-banner" role="status">
+        <strong>Sample kit</strong>
+        <span>Invented numbers for layout only. Replace sample.json with your feed.</span>
+      </div>
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="brand">
+            <img src="assets/dutchbros-logo.svg" alt="Dutch Bros" width="160" height="38" />
+            <div class="brand-divider" aria-hidden="true"></div>
+            <div>
+              <div class="eyebrow">Team template</div>
+              <h1>Executive KPI Dashboard</h1>
+              <span class="brand-rule" aria-hidden="true"><i></i><i></i><i></i></span>
+            </div>
+          </div>
+          <div class="period">
+            <div class="period-label">Period</div>
+            <div class="period-control">
+              <label for="period-select" class="visually-hidden">Period</label>
+              <select id="period-select" aria-label="Select period"></select>
+            </div>
+            <div class="scope" id="scope-line">Sample shops · fictional week</div>
+          </div>
+        </div>
+        <nav class="tabs" aria-label="Dashboard tabs">
+          <button type="button" class="tab active" data-tab="scorecard" aria-current="page">Scorecard</button>
+          <button type="button" class="tab" data-tab="mix">Mix</button>
+          <button type="button" class="tab locked" disabled aria-disabled="true">
+            Coming next
+            <span class="tab-badge">Coming soon</span>
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        <section id="panel-scorecard" class="tab-panel" data-panel="scorecard">
+          <section class="slide" aria-label="Sample scorecard">
+            <header class="slide-band">
+              <h2>Scorecard</h2>
+              <p id="slide-period">Sample period</p>
+            </header>
+            <div class="slide-grid">
+              <article class="slide-panel slide-kpis">
+                <div class="panel-band">Headline KPIs</div>
+                <div class="panel-body">
+                  <div class="hero-kpis" id="hero-kpis"></div>
+                </div>
+              </article>
+              <article class="slide-panel slide-trend">
+                <div class="panel-band">Completion over time</div>
+                <div class="panel-body trend-body">
+                  <div class="trend-chart chart-wrap"><canvas id="chart-trend"></canvas></div>
+                </div>
+              </article>
+              <article class="slide-panel slide-reasons">
+                <div class="panel-band">Top issues</div>
+                <div class="panel-body">
+                  <div class="chart-wrap bar-chart"><canvas id="chart-reasons"></canvas></div>
+                </div>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <section id="panel-mix" class="tab-panel" data-panel="mix" hidden>
+          <section class="slide" aria-label="Sample mix">
+            <header class="slide-band">
+              <h2>Mix</h2>
+              <p>Doughnut + legend — swap the slices in sample.json</p>
+            </header>
+            <section class="charts-2">
+              <article class="panel">
+                <h3>Channel mix</h3>
+                <div class="mix-body">
+                  <div class="chart-wrap"><canvas id="chart-mix"></canvas></div>
+                  <table class="mix-legend" id="legend-mix" aria-label="Channel mix"></table>
+                </div>
+              </article>
+            </section>
+          </section>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

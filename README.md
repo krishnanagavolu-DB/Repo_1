@@ -74,6 +74,7 @@ Config: [`config/nso-source.json`](config/nso-source.json) · email templates: [
 
 ## Docs
 
+- Dashboard kit for other teams (no datasets): [`docs/dashboard-kit/README.md`](docs/dashboard-kit/README.md) · Cursor skill `.cursor/skills/building-dutch-bros-dashboard/`
 - Design: `docs/superpowers/specs/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard-design.md`
 - Plan: `docs/superpowers/plans/2026-08-10-dutch-bros-worldpay-executive-kpi-dashboard.md`
 - Monday ops: `docs/ops/monday-automation.md`

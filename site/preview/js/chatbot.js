@@ -871,10 +871,11 @@ function answerDevicesQuestion(q) {
       "After the latest PO extract date, remaining inventory burns at **5.5 shops per week** (**55 devices per week**)."
     );
   }
-  if (/\b2,?500|order threshold|order more hardware|safety buffer|e235\b/.test(q)) {
+  if (/\b1,?000|2,?500|order threshold|order more hardware|safety buffer|e235\b/.test(q)) {
     return (
-      "The **2,500-unit** line is when to start ordering e235 hardware. " +
-      "The **1,000-unit** line is the field-service safety buffer. Those two numbers are standing assumptions."
+      "The **1,000-unit** line is both the e235 cutover trigger and the field-service safety buffer: " +
+      "once the e285 pool reaches it, the remaining units are held for break-fix and the next hardware order starts. " +
+      "That number is a standing assumption, not a workbook value."
     );
   }
   if (!payload?.certified || !payload.summary) {
@@ -1826,7 +1827,7 @@ const TAB_PROMPTS = {
     { question: "How many Verifone e285 units do we still have?", label: "What’s the firm inventory?" },
     { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
     { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
-    { question: "When should we order more hardware?", label: "What’s the 2,500-unit e235 threshold?" },
+    { question: "When should we order more hardware?", label: "What’s the 1,000-unit e235 threshold?" },
   ],
 };
 

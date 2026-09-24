@@ -425,9 +425,9 @@ function renderAssumptions(payload) {
       note: "Company-owned and franchise/Boersma shops draw from one pool.",
     },
     {
-      title: "Tracked Item",
-      value: a.target_item || "—",
-      note: "Only this e285 SKU burns the contract pool.",
+      title: "Counting Rule",
+      value: "Shipped beats booked",
+      note: "One shop burns once, and pre-Feb 2026 shipments stay on the prior contract.",
     },
   ];
   grid.innerHTML = cards

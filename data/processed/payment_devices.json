@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-24T20:15:08+00:00",
+  "generated_at": "2026-09-24T22:52:24+00:00",
   "status": "certified",
   "certified": true,
   "assumptions": {
@@ -10,7 +10,7 @@
     "devices_per_week": 55.0,
     "staging_lead_days": 14,
     "safety_buffer": 1000,
-    "order_threshold": 2500,
+    "order_threshold": 1000,
     "target_item": "M087-500-14-WWA",
     "scope": "Tracks total ecosystem hardware depletion (Company-Owned and Franchise/Boersma locations combined) against the 5,700-unit master contract"
   },

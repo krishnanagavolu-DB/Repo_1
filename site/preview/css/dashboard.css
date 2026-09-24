@@ -1878,18 +1878,35 @@ body[data-active-tab="devices"] .period {
   margin-bottom: 48px;
 }
 
+/* One gutter for every block inside the slide: ribbon, chart, assumptions.
+   Each child used to carry its own margins, so the columns never lined up. */
+.devices-slide {
+  --devices-gutter: 14px;
+  padding-bottom: var(--devices-gutter);
+}
+
+.devices-ribbon,
+.devices-chart-panel,
+.devices-context {
+  margin-inline: var(--devices-gutter);
+}
+
 .devices-chart-panel {
-  padding-bottom: 8px;
+  padding-bottom: 14px;
+  margin-bottom: var(--devices-gutter);
 }
 
 .devices-ribbon {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin: 0 0 16px;
+  gap: 12px;
+  margin-top: var(--devices-gutter);
+  margin-bottom: var(--devices-gutter);
 }
 
 .devices-kpi {
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border: 1px solid var(--line, #d2dce5);
   border-top: 3px solid var(--blue, #006098);
@@ -1909,24 +1926,31 @@ body[data-active-tab="devices"] .period {
   font-weight: 700;
 }
 
+/* One inline line box, so a card with a unit ("3,760 Units") keeps the same
+   height and baseline as one without ("37 shops"). A flex row here pushed the
+   cards 5px out of line. */
 .devices-kpi-value {
-  margin-top: 6px;
-  font-size: 30px;
-  line-height: 1.1;
+  margin-top: 8px;
+  height: 34px;
+  font-size: 28px;
+  line-height: 34px;
   font-weight: 700;
+  white-space: nowrap;
   color: var(--navy, #154167);
 }
 
 .devices-kpi-unit {
-  font-size: 14px;
+  margin-left: 2px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--muted, #5a6f82);
 }
 
 .devices-kpi-note {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
+  min-height: 34px;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 17px;
   color: var(--muted-2, #7a8da0);
 }
 
@@ -1936,11 +1960,11 @@ body[data-active-tab="devices"] .period {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding-right: 16px;
+  margin-bottom: 14px;
 }
 
 .devices-chart-head h3 {
-  margin-bottom: 0;
+  margin: 0;
 }
 
 .devices-runrate {
@@ -1998,10 +2022,12 @@ body[data-active-tab="devices"] .period {
 }
 
 .devices-assumption {
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border: 1px solid var(--line, #d2dce5);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 12px 14px 13px;
 }
 
 .devices-assumption-title {
@@ -2013,16 +2039,21 @@ body[data-active-tab="devices"] .period {
 }
 
 .devices-assumption-value {
-  margin-top: 4px;
+  margin-top: 6px;
+  min-height: 21px;
   font-size: 15px;
+  line-height: 21px;
   font-weight: 700;
   color: var(--navy, #154167);
 }
 
+/* Two reserved lines keep the six cards on a consistent baseline whether the
+   note wraps or not. */
 .devices-assumption-note {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
+  min-height: 34px;
   font-size: 12px;
-  line-height: 1.45;
+  line-height: 17px;
   color: var(--muted-2, #7a8da0);
 }
 
@@ -2056,44 +2087,26 @@ body[data-active-tab="devices"] .period {
   box-shadow: 0 8px 20px rgba(21, 65, 103, 0.12);
 }
 
+/* Flush with the panel heading above it, not indented by its own margin. */
 .devices-source-note {
-  margin: 8px 16px 16px;
+  margin: 12px 0 0;
   font-size: 12px;
   color: var(--muted);
 }
 
 .devices-context {
-  margin: 0 0 24px;
+  margin-bottom: 0;
 }
 
 .devices-context h3 {
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--blue);
 }
 
-.devices-context ul {
-  margin: 0;
-  padding: 16px 18px 16px 32px;
-  background: #fff;
-  border: 1px solid var(--line, #d2dce5);
-  border-radius: 12px;
-  color: var(--navy);
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.devices-context li + li {
-  margin-top: 8px;
-}
-
 @media (max-width: 900px) {
-  .devices-context {
-    grid-template-columns: 1fr;
-  }
-
   .devices-chart-wrap {
     height: 320px;
   }

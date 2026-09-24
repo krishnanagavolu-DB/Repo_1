@@ -34,7 +34,7 @@ DEVICES_PER_DAY = DEVICES_PER_WEEK / 7
 STAGING_LEAD_DAYS = 14
 THRESHOLDS = (3000, 2500, 2000, 1500, 1000)
 SAFETY_BUFFER = 1000
-ORDER_THRESHOLD = 2500
+ORDER_THRESHOLD = 1000
 CHART_END = date(2028, 6, 30)
 SCOPE = (
     "Tracks total ecosystem hardware depletion (Company-Owned and Franchise/Boersma "

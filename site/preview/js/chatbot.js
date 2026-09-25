@@ -862,7 +862,7 @@ function answerDevicesQuestion(q) {
       "**Exact match, lifecycle rules.** `NewCo ID` and `End Customer Name` are the same 6-character shop id. " +
       "If the shop is on **Shipped Orders** for item **M087-500-14-WWA** with a shipping date on or after **1 Feb 2026**, use Shipped Qty and ignore booked rows. " +
       "A 2025 shipment does not fulfill a current-contract PO. " +
-      "If it is booked only, those units come off the firm line on the report extract date."
+      "If it is booked only, those units come off the Verifone balance on the report extract date."
     );
   }
   if (/\b5\.5|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {
@@ -887,7 +887,7 @@ function answerDevicesQuestion(q) {
   }
   const summary = payload.summary;
   return (
-    `Current **firm inventory** is **${Number(summary.firm_inventory).toLocaleString("en-US")}** ` +
+    `Current **Verifone balance** is **${Number(summary.firm_inventory).toLocaleString("en-US")}** ` +
     `Verifone e285 units as of **${summary.as_of}** from the **5,700** Feb 2026 baseline. ` +
     `**${summary.shipped_shops}** shops have shipped since Feb 2026. ` +
     `**${summary.pending_shops}** PO shops are still awaiting MIDs/booking (**${summary.pending_units}** units).`
@@ -1824,7 +1824,7 @@ const TAB_PROMPTS = {
     { question: "Is this data certified?", label: "Has this data passed its quality checks?" },
   ],
   devices: [
-    { question: "How many Verifone e285 units do we still have?", label: "What’s the firm inventory?" },
+    { question: "How many Verifone e285 units do we still have?", label: "What’s the Verifone balance?" },
     { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
     { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
     { question: "When should we order more hardware?", label: "What’s the 1,000-unit e235 threshold?" },

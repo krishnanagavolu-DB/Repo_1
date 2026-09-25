@@ -27,6 +27,9 @@ check("run-rate range floor is half a shop", html.includes('min="0.5"'), true);
 check("run-rate range ceiling is ten shops", html.includes('max="10"'), true);
 check("run-rate steps by half a shop", html.includes('step="0.5"'), true);
 check("run-rate has decrement and increment", html.includes('id="devices-runrate-down"') && html.includes('id="devices-runrate-up"'), true);
+check("card uses requested projected exhaustion label", html.includes(">Proj Exhaution<"), true);
+check("chart uses requested title", html.includes(">Verifone E285 Burndown Chart<"), true);
+check("control is labelled PO run rate", html.includes(">PO Run-Rate<"), true);
 
 const source = fs.readFileSync("site/preview/js/payment-devices.js", "utf8");
 const sandbox = {
@@ -96,6 +99,26 @@ check(
   baseline.points[0].inventory,
   payload.summary.firm_inventory
 );
+check(
+  "PO pipeline ends on the certified pipeline end",
+  baseline.pipelinePoints.at(-1).date,
+  payload.summary.pipeline_end_date
+);
+check(
+  "projected demand starts where the PO pipeline ends",
+  JSON.stringify(baseline.demandPoints[0]),
+  JSON.stringify(baseline.pipelinePoints.at(-1))
+);
+check(
+  "PO pipeline is a separate blue dash-dot series",
+  source.includes('label: "Order in Pipeline"') && source.includes("borderDash: [8, 4, 2, 4]"),
+  true
+);
+check(
+  "red projected demand is a solid tail",
+  source.includes('label: `Projected Demand') && source.includes("borderDash: []"),
+  true
+);
 
 const faster = api.projectSeries(payload, 10);
 const slower = api.projectSeries(payload, 1);
@@ -112,6 +135,11 @@ check(
 check("run rate is clamped to the control range", api.clampRunRate(99), 10);
 check("run rate snaps to half-shop steps", api.clampRunRate(5.7), 5.5);
 check("run rate always reads with one decimal", api.fmtRate(4), "4.0");
+check("annualized run rate is calculated dynamically", api.shopsPerYear(5.5), 286);
+check("depletion copy uses annualized shops", api.depletionNote(baseline), "Pool depleted Jun 14, 2028 at 286 shops/year");
+check("Kimlie stock status is named as a source", source.includes("Kimlie’s bi-weekly stock status"), true);
+check("depot stock is explicitly not modelled", source.includes('title: "Depot / Spare Stock"'), true);
+check("depot recommendation is 500 devices", source.includes("500 devices"), true);
 
 // A slow rate can stretch the axis past four years; quarterly ticks would
 // overlap, so the step widens with the span.

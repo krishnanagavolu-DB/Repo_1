@@ -5,6 +5,7 @@ const DATA_URL = "data/payment_devices.json";
 const NAVY = "#154167";
 const MUTED = "#9aa8b5";
 const BLACK = "#111111";
+const BLUE = "#006098";
 const RED = "#d9272d";
 
 const RUN_RATE_MIN = 0.5;
@@ -60,6 +61,10 @@ function fmtRate(value) {
   return n.toFixed(1);
 }
 
+function shopsPerYear(value) {
+  return Math.round(clampRunRate(value) * 52);
+}
+
 function clampRunRate(value, fallback = 5.5) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
@@ -90,26 +95,38 @@ function projectSeries(payload, shopsPerWeek) {
   const head = projected
     .filter((point) => String(point.date) <= String(pipelineEnd))
     .map((point) => ({ date: point.date, inventory: Number(point.inventory) }));
-  const points = head.length ? head : projected.map((p) => ({ date: p.date, inventory: Number(p.inventory) }));
+  const pipelinePoints = head.length
+    ? head
+    : projected.map((p) => ({ date: p.date, inventory: Number(p.inventory) }));
+  const demandPoints = pipelinePoints.length ? [{ ...pipelinePoints.at(-1) }] : [];
 
   const perDay = (devicesPerShop * clampRunRate(shopsPerWeek)) / 7;
-  let remaining = points.at(-1)?.inventory ?? 0;
+  let remaining = pipelinePoints.at(-1)?.inventory ?? 0;
   let offset = 0;
   while (remaining > 0 && perDay > 0) {
     offset += 1;
     remaining = Math.max(0, remaining - perDay);
     if (remaining < 1e-9) remaining = 0;
     if (remaining === 0 || offset % 7 === 0) {
-      points.push({ date: addDays(pipelineEnd, offset), inventory: remaining });
+      demandPoints.push({ date: addDays(pipelineEnd, offset), inventory: remaining });
     }
   }
 
+  const points = [...pipelinePoints, ...demandPoints.slice(1)];
   return {
     points,
+    pipelinePoints,
+    demandPoints,
     zeroDate: points.at(-1)?.date || null,
     crossings: crossingsFor(points, thresholds),
     shopsPerWeek: clampRunRate(shopsPerWeek),
   };
+}
+
+function depletionNote(projection) {
+  return `Pool depleted ${fmtDate(projection.zeroDate)} at ${fmtInt(
+    shopsPerYear(projection.shopsPerWeek)
+  )} shops/year`;
 }
 
 function crossingsFor(points, thresholds) {
@@ -283,7 +300,8 @@ function renderChart(payload, shopsPerWeek) {
   const rate = clampRunRate(shopsPerWeek ?? payload.assumptions?.shops_per_week);
   const projection = projectSeries(payload, rate);
   const firmData = pointsFor(payload.series?.firm);
-  const projectedData = pointsFor(projection.points);
+  const pipelineData = pointsFor(projection.pipelinePoints);
+  const projectedData = pointsFor(projection.demandPoints);
   const yMax = Number(payload.chart?.y_max) || 6000;
   const xMin = toMs(payload.chart?.x_min || payload.series?.firm?.[0]?.date);
   // The tail moves with the run rate, so the axis follows the longer of the
@@ -299,7 +317,7 @@ function renderChart(payload, shopsPerWeek) {
     data: {
       datasets: [
         {
-          label: "Actual/Booked Inventory (Verifone Firm Balance)",
+          label: "Verifone Balance",
           data: firmData,
           borderColor: BLACK,
           backgroundColor: BLACK,
@@ -308,12 +326,22 @@ function renderChart(payload, shopsPerWeek) {
           tension: 0,
         },
         {
-          label: `Projected Demand (Pending Orders + ${fmtRate(rate)} Shops/Wk)`,
+          label: "Order in Pipeline",
+          data: pipelineData,
+          borderColor: BLUE,
+          backgroundColor: BLUE,
+          borderWidth: 2,
+          borderDash: [8, 4, 2, 4],
+          pointRadius: 0,
+          tension: 0,
+        },
+        {
+          label: `Projected Demand (${fmtRate(rate)} Shops/Wk)`,
           data: projectedData,
           borderColor: RED,
           backgroundColor: RED,
           borderWidth: 2,
-          borderDash: [7, 5],
+          borderDash: [],
           pointRadius: 0,
           tension: 0,
         },
@@ -388,10 +416,7 @@ function renderRibbon(payload, projection) {
     `${fmtInt(summary.shipped_shops)} shops shipped since ${fmtDate(payload.assumptions?.baseline_date)}`
   );
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
-  setText(
-    "devices-kpi-zero-note",
-    `Pool exhausted ${fmtDate(projection.zeroDate)} at ${fmtRate(projection.shopsPerWeek)} shops/wk`
-  );
+  setText("devices-kpi-zero-note", depletionNote(projection));
 }
 
 function renderAssumptions(payload) {
@@ -425,9 +450,9 @@ function renderAssumptions(payload) {
       note: "Company-owned and franchise/Boersma shops draw from one pool.",
     },
     {
-      title: "Counting Rule",
-      value: "Shipped beats booked",
-      note: "One shop burns once, and pre-Feb 2026 shipments stay on the prior contract.",
+      title: "Depot / Spare Stock",
+      value: "Not modelled",
+      note: "Depot stock is excluded; consider reserving 500 devices for depot and spares.",
     },
   ];
   grid.innerHTML = cards
@@ -507,7 +532,7 @@ function renderDevices(payload) {
   registerSnapshot(payload);
   const note = document.getElementById("devices-source-note");
   if (note && payload.sources) {
-    note.textContent = `Sources: ${payload.sources.po_extract} · ${payload.sources.orders_report} · item ${payload.assumptions?.target_item || "M087-500-14-WWA"}`;
+    note.textContent = `Sources: ${payload.sources.po_extract} · ${payload.sources.orders_report} · Kimlie’s bi-weekly stock status · item ${payload.assumptions?.target_item || "M087-500-14-WWA"}`;
   }
 }
 
@@ -538,6 +563,8 @@ function startWhenUnlocked() {
 window.__paymentDevices = {
   fmtInt,
   fmtRate,
+  shopsPerYear,
+  depletionNote,
   toMs,
   addDays,
   pointsFor,

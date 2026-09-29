@@ -107,11 +107,11 @@ check("compact millions", pos.compactUsd(31681899.99), "$31.7M");
 check("compact thousands", pos.compactUsd(7358837.24), "$7.4M");
 check("missing WoW stays blank", pos.wowLabel(null), null);
 
-const live = pos.normalizePosData(
-  JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"))
-);
+const rawLive = JSON.parse(fs.readFileSync("data/processed/in_shop_sales_data.json", "utf8"));
+const rawWeeks = rawLive.weeks;
+const live = pos.normalizePosData(rawLive);
 const liveLatest = live[live.length - 1];
-check("live wow sales", liveLatest.wow.salesPct, -4.7);
+check("live wow sales", liveLatest.wow.salesPct, rawWeeks.at(-1).week_over_week.SALES_VOLUME_PCT);
 check("gift split parts", liveLatest.giftSplit.parts.length, 2);
 check("gift split gift label", liveLatest.giftSplit.parts[0].label, "Gift Card");
 check("dutch pass label", liveLatest.giftSplit.parts[1].label, "Dutch Pass");
@@ -122,22 +122,49 @@ if (Math.abs(giftShare - 1) > 0.000001) {
 
 // Available history means the aggregate of every week held by All payments.
 const liveYtd = pos.aggregateWeeks(live);
-check("history label", liveYtd.label, "Available history · Jun 29 – Sep 20, 2026");
+function shortDate(iso) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+const historyStart = shortDate(rawWeeks[0].week_start_date).replace(/, \d{4}$/, "");
+const historyEnd = shortDate(rawWeeks.at(-1).week_end_date);
+check("history label", liveYtd.label, `Available history · ${historyStart} – ${historyEnd}`);
 check("history sort key", liveYtd.sortKey, "history");
 check("history id accepted", pos.isHistoryPeriod("history"), true);
 check("legacy ytd id accepted", pos.isHistoryPeriod("ytd"), true);
-check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), 552386112.87);
-check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), 552386112.87);
-check("YTD transactions", liveYtd.transactions, 51837171);
-check("YTD avg ticket", liveYtd.avgTicket.toFixed(2), "10.84");
-check("YTD card dollars", Number(liveYtd.tenders[0].amount.toFixed(2)), 381135573.81);
+const sumOf = (pick) => Number(rawWeeks.reduce((sum, week) => sum + pick(week), 0).toFixed(2));
+check("YTD total sales", Number(liveYtd.reportedTotal.toFixed(2)), sumOf((week) => week.totals.SALES_VOLUME));
+check("YTD tender total reconciles", Number(liveYtd.tenderTotal.toFixed(2)), sumOf((week) => week.totals.SALES_VOLUME));
+check("YTD transactions", liveYtd.transactions, sumOf((week) => week.totals.TRANSACTION_COUNT));
+check(
+  "YTD avg ticket",
+  liveYtd.avgTicket.toFixed(2),
+  (sumOf((week) => week.totals.SALES_VOLUME) / sumOf((week) => week.totals.ORDER_COUNT)).toFixed(2)
+);
+check("YTD card dollars", Number(liveYtd.tenders[0].amount.toFixed(2)), sumOf((week) => week.tender_mix.Card.amount));
 check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.0%");
-check("YTD cash dollars", Number(liveYtd.tenders[1].amount.toFixed(2)), 88326702.6);
-check("YTD gift/Dutch Pass dollars", Number(liveYtd.tenders[2].amount.toFixed(2)), 82923836.46);
-check("YTD Gift Card dollars", Number(liveYtd.giftSplit.parts[0].amount.toFixed(2)), 54947983.63);
-check("YTD Dutch Pass dollars", Number(liveYtd.giftSplit.parts[1].amount.toFixed(2)), 27975852.83);
+check("YTD cash dollars", Number(liveYtd.tenders[1].amount.toFixed(2)), sumOf((week) => week.tender_mix.Cash.amount));
+check(
+  "YTD gift/Dutch Pass dollars",
+  Number(liveYtd.tenders[2].amount.toFixed(2)),
+  sumOf((week) => week.tender_mix["Gift Card / Dutch Pass"].amount)
+);
+check(
+  "YTD Gift Card dollars",
+  Number(liveYtd.giftSplit.parts[0].amount.toFixed(2)),
+  sumOf((week) => week.tender_mix["Gift Card / Dutch Pass"].components.GIFT.amount)
+);
+check(
+  "YTD Dutch Pass dollars",
+  Number(liveYtd.giftSplit.parts[1].amount.toFixed(2)),
+  sumOf((week) => week.tender_mix["Gift Card / Dutch Pass"].components.CUSTOM.amount)
+);
 check("YTD has no week-over-week sales delta", liveYtd.wow.salesPct, null);
-check("live orderCount on rebuilt week", liveLatest.orderCount, 4197913);
+check("live orderCount on rebuilt week", liveLatest.orderCount, rawWeeks.at(-1).totals.ORDER_COUNT);
 check("live avgTicketBasis on rebuilt week", liveLatest.avgTicketBasis, "distinct_ORDER_ID");
 check("order-basis YTD uses distinct ORDER_ID", liveYtd.avgTicketBasis, "distinct_ORDER_ID");
 
@@ -200,15 +227,15 @@ check("mixed YTD does not claim a single ticket basis", mixedBasis.avgTicketBasi
 
 // Sparkline series for the summary cards, oldest week first.
 const salesTrend = pos.trendSeries(live, "sales");
-check("sales trend length", salesTrend.length, 12);
-check("sales trend starts oldest", salesTrend[0].value, 47563011.32);
-check("sales trend ends newest", salesTrend[11].value, 44151389.8);
+check("sales trend length", salesTrend.length, live.length);
+check("sales trend starts oldest", salesTrend[0].value, rawWeeks[0].totals.SALES_VOLUME);
+check("sales trend ends newest", salesTrend.at(-1).value, rawWeeks.at(-1).totals.SALES_VOLUME);
 check("sales trend label", salesTrend[0].label, "Jun 29 – Jul 5, 2026");
 
 const paymentsTrend = pos.trendSeries(live, "payments");
-check("payments trend length", paymentsTrend.length, 12);
-check("payments trend first", paymentsTrend[0].value, 4291073);
-check("payments trend last", paymentsTrend[11].value, 4266914);
+check("payments trend length", paymentsTrend.length, live.length);
+check("payments trend first", paymentsTrend[0].value, rawWeeks[0].totals.TRANSACTION_COUNT);
+check("payments trend last", paymentsTrend.at(-1).value, rawWeeks.at(-1).totals.TRANSACTION_COUNT);
 
 // One week cannot form a line, so no series is offered.
 check("single week has no trend", pos.trendSeries([live[0]], "sales").length, 0);
@@ -216,7 +243,7 @@ check("unknown metric has no trend", pos.trendSeries(live, "nope").length, 0);
 
 // The data start feeds the YTD banner.
 check("pos data start", pos.getDataStart(live).startLabel, "Jun 29, 2026");
-check("pos data week count", pos.getDataStart(live).weekCount, 12);
+check("pos data week count", pos.getDataStart(live).weekCount, rawWeeks.length);
 
 const renderElements = {
   "pos-period-label": { textContent: "" },

@@ -1,0 +1,33 @@
+{
+  "title": "In-shop sales \u2014 data notes",
+  "audience": "Dashboard and static chatbot. Do not treat this as Worldpay settlement.",
+  "source": {
+    "system": "Gold Semantic Sales (Xenial-sourced)",
+    "snowflake_tables": [
+      "GOLD_SEMANTIC.SALES.VW_FACT_ORDER_PAYMENT",
+      "GOLD_SEMANTIC.SALES.VW_DIM_ORDER_PAYMENT_TYPE",
+      "GOLD_SEMANTIC.SALES.VW_DIM_DATE_LEAP_YEAR_UPDATED",
+      "GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED"
+    ],
+    "shop_list": "VW_DIM_STORE_CURATED.OWNERSHIP = Company Owned. No Excel mapping file.",
+    "join": "STORE_CODE = NEWCOID. Date: DIM_BUSINESS_DATE_KEY = DIM_DATE_KEY."
+  },
+  "time": {
+    "grain": "Completed Monday\u2013Sunday weeks (DATEADD on dim DATE).",
+    "date_field": "VW_DIM_DATE_LEAP_YEAR_UPDATED.DATE via DIM_BUSINESS_DATE_KEY"
+  },
+  "kpi_definitions": {
+    "SALES_VOLUME": "Company Owned STORE_CODE payment dollars, QUARANTINE = FALSE, subtype payment. Refunds already signed. Tips/change excluded.",
+    "TRANSACTION_COUNT": "Count of Gold payment-fact rows.",
+    "ORDER_COUNT": "Distinct ORDER_ID on Gold payment-fact rows (mapped tenders, subtype payment).",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 ORDER_COUNT",
+    "Card": "ORDER_PAYMENT_TYPE_FORM = CREDIT",
+    "Cash": "ORDER_PAYMENT_TYPE_FORM = CASH",
+    "Gift Card / Dutch Pass": "FORM IN (GIFT, CUSTOM)"
+  },
+  "not_in_this_extract": [
+    "Worldpay / WORLDPAY_TRANS_100",
+    "Parquet grain",
+    "Shop_Type_Mapping.xlsx"
+  ]
+}

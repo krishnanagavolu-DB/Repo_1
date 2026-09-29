@@ -918,10 +918,15 @@ async function runRenderingRegressionChecks() {
     full.elements["overview-kpis"].innerHTML.includes(model.kpis.totalSales.display),
     true
   );
-  /* The published POS weeks carry channel rows, so the band must render the
-     split and its segments must add back to the headline total. */
+  /* The band follows the week on screen. A week without channel rows says
+     coming next; a week that has them must name those rows. */
   const bandHtml = full.elements["overview-channel-band"].innerHTML;
-  const publishedChannels = posPayload.weeks.at(-1).channels;
+  const shownWeek = posPayload.weeks.find(
+    (week) =>
+      sandbox.window.__posSales.normalizePosData({ weeks: [week] })[0]?.label ===
+      full.elements["overview-period-label"].textContent
+  );
+  const publishedChannels = shownWeek?.channels;
   renderCheck(
     "band renders the certified split rather than a placeholder",
     /coming next/i.test(bandHtml),

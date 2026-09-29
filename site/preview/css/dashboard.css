@@ -2087,6 +2087,26 @@ body[data-active-tab="devices"] .period {
   box-shadow: 0 8px 20px rgba(21, 65, 103, 0.12);
 }
 
+.devices-pipeline-detail {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line, #d2dce5);
+}
+
+.devices-pipeline-title {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--blue, #006098);
+  margin-bottom: 6px;
+}
+
+.devices-pipeline-wrap {
+  height: 190px;
+  position: relative;
+}
+
 /* Flush with the panel heading above it, not indented by its own margin. */
 .devices-source-note {
   margin: 12px 0 0;

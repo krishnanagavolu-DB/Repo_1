@@ -14,6 +14,7 @@ const RUN_RATE_STEP = 0.5;
 const DAY_MS = 86400000;
 
 let burndownChart = null;
+let pipelineChart = null;
 let runRate = null;
 
 function fmtInt(value) {
@@ -120,6 +121,33 @@ function projectSeries(payload, shopsPerWeek) {
     zeroDate: points.at(-1)?.date || null,
     crossings: crossingsFor(points, thresholds),
     shopsPerWeek: clampRunRate(shopsPerWeek),
+  };
+}
+
+function tooltipTitle(items) {
+  const x = items?.[0]?.parsed?.x;
+  if (!Number.isFinite(x)) return "";
+  return new Date(x).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function tooltipLabel(item) {
+  return `${item?.dataset?.label || ""}: ${fmtInt(item?.parsed?.y)} units`;
+}
+
+/* A marker only where inventory drops, so each order batch reads as its own
+   step instead of blending into one line. */
+function orderStepRadius(points) {
+  return (points || []).map((point, index) =>
+    index > 0 && point.inventory < points[index - 1].inventory ? 4 : 0
+  );
+}
+
+function pipelineRange(points) {
+  const values = (points || []).map((point) => Number(point.inventory)).filter(Number.isFinite);
+  if (!values.length) return { min: 0, max: 1 };
+  return {
+    min: Math.floor((Math.min(...values) - 20) / 50) * 50,
+    max: Math.ceil((Math.max(...values) + 20) / 50) * 50,
   };
 }
 
@@ -322,7 +350,9 @@ function renderChart(payload, shopsPerWeek) {
           borderColor: BLACK,
           backgroundColor: BLACK,
           borderWidth: 2.5,
+          stepped: "after",
           pointRadius: 0,
+          pointHoverRadius: 5,
           tension: 0,
         },
         {
@@ -330,9 +360,11 @@ function renderChart(payload, shopsPerWeek) {
           data: pipelineData,
           borderColor: BLUE,
           backgroundColor: BLUE,
-          borderWidth: 2,
-          borderDash: [8, 4, 2, 4],
+          borderWidth: 3,
+          borderDash: [10, 4, 2, 4],
+          stepped: "after",
           pointRadius: 0,
+          pointHoverRadius: 6,
           tension: 0,
         },
         {
@@ -343,6 +375,7 @@ function renderChart(payload, shopsPerWeek) {
           borderWidth: 2,
           borderDash: [],
           pointRadius: 0,
+          pointHoverRadius: 5,
           tension: 0,
         },
       ],
@@ -350,9 +383,12 @@ function renderChart(payload, shopsPerWeek) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
+      interaction: { mode: "nearest", intersect: false },
       layout: { padding: { bottom: 18, top: 8 } },
       plugins: {
+        tooltip: {
+          callbacks: { title: tooltipTitle, label: tooltipLabel },
+        },
         legend: {
           position: "top",
           labels: { boxWidth: 18, font: { family: "futura-pt, Arial, sans-serif", weight: 700 } },
@@ -387,6 +423,64 @@ function renderChart(payload, shopsPerWeek) {
           max: yMax,
           title: { display: true, text: "Inventory units remaining" },
           ticks: { callback: (value) => fmtInt(value) },
+        },
+      },
+    },
+  });
+  renderPipelineDetail(projection.pipelinePoints);
+}
+
+function renderPipelineDetail(points) {
+  const canvas = document.getElementById("chart-devices-pipeline");
+  if (!canvas || typeof Chart === "undefined" || !points?.length) return;
+  const range = pipelineRange(points);
+  const xMin = toMs(points[0].date);
+  const xMax = toMs(points.at(-1).date);
+  if (pipelineChart) pipelineChart.destroy();
+  pipelineChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      datasets: [
+        {
+          label: "Order in Pipeline",
+          data: pointsFor(points),
+          borderColor: BLUE,
+          backgroundColor: BLUE,
+          borderWidth: 2.5,
+          borderDash: [10, 4, 2, 4],
+          stepped: "after",
+          pointRadius: orderStepRadius(points),
+          pointHoverRadius: 6,
+          pointBackgroundColor: BLUE,
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          tension: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { title: tooltipTitle, label: tooltipLabel } },
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: xMin,
+          max: xMax,
+          afterBuildTicks(axis) {
+            axis.ticks = monthTicks(axis.min, axis.max, 1).map((value) => ({ value }));
+          },
+          ticks: { maxRotation: 0, autoSkip: false, callback: (value) => monthLabel(value) },
+          grid: { display: false },
+        },
+        y: {
+          min: range.min,
+          max: range.max,
+          ticks: { stepSize: 50, callback: (value) => fmtInt(value) },
         },
       },
     },
@@ -565,6 +659,10 @@ window.__paymentDevices = {
   fmtRate,
   shopsPerYear,
   depletionNote,
+  tooltipTitle,
+  tooltipLabel,
+  orderStepRadius,
+  pipelineRange,
   toMs,
   addDays,
   pointsFor,

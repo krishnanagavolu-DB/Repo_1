@@ -111,7 +111,7 @@ check(
 );
 check(
   "PO pipeline is a separate blue dash-dot series",
-  source.includes('label: "Order in Pipeline"') && source.includes("borderDash: [8, 4, 2, 4]"),
+  source.includes('label: "Order in Pipeline"') && source.includes("borderDash: [10, 4, 2, 4]"),
   true
 );
 check(
@@ -146,6 +146,37 @@ check("depot recommendation is 500 devices", source.includes("500 devices"), tru
 const twoYears = new Date(2026, 1, 1).getTime();
 check("a short span keeps quarterly ticks", api.tickStepMonths(twoYears, new Date(2028, 1, 1).getTime()), 3);
 check("a long span widens the tick step", api.tickStepMonths(twoYears, new Date(2030, 6, 1).getTime()), 6);
+
+// Hover shows one line at one date. Index mode on a time axis mixed three
+// series at three different dates under a raw millisecond title.
+check("hover picks the single nearest point", /interaction:\s*\{\s*mode:\s*"nearest"/.test(source), true);
+const hovered = { parsed: { x: new Date(2027, 2, 1).getTime(), y: 3390 }, dataset: { label: "Order in Pipeline" } };
+check("tooltip title is a readable date", api.tooltipTitle([hovered]), "Mar 1, 2027");
+check("tooltip body is one balance", api.tooltipLabel(hovered), "Order in Pipeline: 3,390 units");
+
+// Balance and pipeline change on discrete dates, so they step rather than
+// sliding between events.
+check("balance, pipeline, and detail are stepped", (source.match(/stepped: "after"/g) || []).length, 3);
+const radii = api.orderStepRadius([
+  { inventory: 3760 },
+  { inventory: 3740 },
+  { inventory: 3740 },
+  { inventory: 3730 },
+]);
+check("each order step gets a marker", JSON.stringify(radii), JSON.stringify([0, 4, 0, 4]));
+
+// A 10-unit order is about 1px tall on the 0–6,000 main axis, so the pipeline
+// gets its own zoomed detail with a y-axis fitted to the orders.
+check("pipeline detail canvas exists", html.includes('id="chart-devices-pipeline"'), true);
+const range = api.pipelineRange([{ inventory: 3760 }, { inventory: 3390 }]);
+check("detail axis floor hugs the lowest balance", range.min, 3350);
+check("detail axis ceiling hugs the highest balance", range.max, 3800);
+check(
+  "main chart drops crowded order markers",
+  source.includes("pointRadius: orderStepRadius(projection.pipelinePoints)"),
+  false
+);
+check("detail chart marks each order step", source.includes("pointRadius: orderStepRadius(points)"), true);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

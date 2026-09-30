@@ -14,7 +14,6 @@ const RUN_RATE_STEP = 0.5;
 const DAY_MS = 86400000;
 
 let burndownChart = null;
-let pipelineChart = null;
 let runRate = null;
 
 function fmtInt(value) {
@@ -152,9 +151,7 @@ function pipelineRange(points) {
 }
 
 function depletionNote(projection) {
-  return `Pool depleted ${fmtDate(projection.zeroDate)} at ${fmtInt(
-    shopsPerYear(projection.shopsPerWeek)
-  )} shops/year`;
+  return `${fmtInt(shopsPerYear(projection.shopsPerWeek))} shops/year`;
 }
 
 function crossingsFor(points, thresholds) {
@@ -267,10 +264,6 @@ const thresholdPlugin = {
       if (right - left < 8) return;
       ctx.fillStyle = era.fill;
       ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
-      ctx.fillStyle = NAVY;
-      ctx.font = "700 12px futura-pt, Arial, sans-serif";
-      ctx.textAlign = "left";
-      ctx.fillText(era.name, left + 8, chartArea.top + 16);
     });
     ctx.restore();
   },
@@ -445,7 +438,15 @@ function renderChart(payload, shopsPerWeek) {
         },
         legend: {
           position: "top",
-          labels: { boxWidth: 18, font: { family: "futura-pt, Arial, sans-serif", weight: 700 } },
+          labels: {
+            boxWidth: 36,
+            boxHeight: 3,
+            font: { family: "futura-pt, Arial, sans-serif", weight: 700 },
+            generateLabels(chart) {
+              const items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              return items.map((item) => ({ ...item, fillStyle: "transparent", lineWidth: 3 }));
+            },
+          },
         },
         deviceThresholds: {
           thresholds: payload.thresholds || [3000, 2500, 2000, 1500, 1000],
@@ -479,64 +480,6 @@ function renderChart(payload, shopsPerWeek) {
       },
     },
   });
-  renderPipelineDetail(projection.pipelinePoints);
-}
-
-function renderPipelineDetail(points) {
-  const canvas = document.getElementById("chart-devices-pipeline");
-  if (!canvas || typeof Chart === "undefined" || !points?.length) return;
-  const range = pipelineRange(points);
-  const xMin = toMs(points[0].date);
-  const xMax = toMs(points.at(-1).date);
-  if (pipelineChart) pipelineChart.destroy();
-  pipelineChart = new Chart(canvas, {
-    type: "line",
-    data: {
-      datasets: [
-        {
-          label: "Order in Pipeline",
-          data: pointsFor(points),
-          borderColor: BLUE,
-          backgroundColor: BLUE,
-          borderWidth: 2.5,
-          borderDash: [10, 4, 2, 4],
-          stepped: "after",
-          pointRadius: orderStepRadius(points),
-          pointHoverRadius: 6,
-          pointBackgroundColor: BLUE,
-          pointBorderColor: "#ffffff",
-          pointBorderWidth: 1.5,
-          tension: 0,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "nearest", intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { title: tooltipTitle, label: tooltipLabel } },
-      },
-      scales: {
-        x: {
-          type: "linear",
-          min: xMin,
-          max: xMax,
-          afterBuildTicks(axis) {
-            axis.ticks = monthTicks(axis.min, axis.max, 1).map((value) => ({ value }));
-          },
-          ticks: { maxRotation: 0, autoSkip: false, callback: (value) => monthLabel(value) },
-          grid: { display: false },
-        },
-        y: {
-          min: range.min,
-          max: range.max,
-          ticks: { stepSize: 50, callback: (value) => fmtInt(value) },
-        },
-      },
-    },
-  });
 }
 
 function setText(id, value) {
@@ -551,26 +494,23 @@ function renderRibbon(payload, projection) {
   const future = timeline.future || {};
   setText("devices-era-past-title", `Past · ${fmtDate(past.start)} – ${fmtDate(past.end)}`);
   setText("devices-kpi-contract-value", fmtDate(past.start));
-  setText("devices-kpi-contract-note", `Opening amount ${fmtInt(past.opening_amount)} units`);
+  setText("devices-kpi-contract-note", `${fmtInt(past.opening_amount)} units`);
   setText("devices-kpi-opened-value", `${fmtInt(past.shops_opened)} shops`);
-  setText(
-    "devices-kpi-opened-note",
-    `${fmtInt(past.consumed_qty)} units consumed. Depot orders ${fmtInt(past.depot_qty_since_baseline)} since Feb 1. ${fmtInt(past.depot_qty_prior_contract)} depot units shipped in 2025, prior contract.`
-  );
+  setText("devices-kpi-opened-note", `${fmtInt(past.consumed_qty)} units`);
   setText("devices-era-present-title", `Present · ${fmtDate(present.start)} – ${fmtDate(present.end)}`);
   setText("devices-kpi-planned-value", `${fmtInt(present.planned_shops)} shops`);
   setText(
     "devices-kpi-planned-note",
-    `${fmtInt(present.in_process_shops)} in process (${fmtInt(present.shipped_shops)} shipped, ${fmtInt(present.booked_shops)} booked). ${fmtInt(present.pending_shops)} pending orders.`
+    `${fmtInt(present.shipped_shops)} shipped · ${fmtInt(present.booked_shops)} booked · ${fmtInt(present.pending_shops)} pending`
   );
   setText("devices-kpi-setaside-value", fmtInt(present.set_aside_units));
   setText(
     "devices-kpi-setaside-note",
-    `${fmtInt(present.committed_units)} already shipped or booked. ${fmtInt(present.pending_units)} still pending.`
+    `${fmtInt(present.committed_units)} committed · ${fmtInt(present.pending_units)} pending`
   );
   setText("devices-era-future-title", `Future · after ${fmtDate(future.start)}`);
   setText("devices-kpi-remaining-value", fmtInt(future.remaining_units));
-  setText("devices-kpi-remaining-note", "What the PO run-rate burns after the last projected opening.");
+  setText("devices-kpi-remaining-note", "After the last opening");
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
   setText("devices-kpi-zero-note", depletionNote(projection));
 }
@@ -583,32 +523,32 @@ function renderAssumptions(payload) {
     {
       title: "Master Contract",
       value: `${fmtInt(a.baseline_inventory)} Units`,
-      note: `${fmtDate(a.baseline_date)} baseline, covers all entity types.`,
+      note: fmtDate(a.baseline_date),
     },
     {
       title: "Shop Allocation",
       value: `${fmtInt(a.devices_per_shop)} Units/Shop`,
-      note: `Assumed shipped ${fmtInt(a.staging_lead_days)} days pre-opening.`,
+      note: `${fmtInt(a.staging_lead_days)} days pre-opening`,
     },
     {
       title: "Safety Buffer",
       value: `${fmtInt(a.safety_buffer)} Units`,
-      note: "Reserved for field service / break-fix.",
+      note: "Field service",
     },
     {
       title: "e235 Cutover Target",
       value: `${fmtInt(a.order_threshold)} Units`,
-      note: "Remaining e285 balance that triggers the next hardware order.",
+      note: "Next hardware order",
     },
     {
       title: "Scope",
       value: "Whole network",
-      note: "Company-owned and franchise/Boersma shops draw from one pool.",
+      note: "Company + franchise",
     },
     {
       title: "Depot / Spare Stock",
-      value: `${fmtInt(payload.timeline?.past?.depot_qty_prior_contract)} units in 2025`,
-      note: "None since Feb 1. Those 2025 receipts are prior contract. Consider keeping 500 devices for depot and spares; the 2025 shipments may already cover that.",
+      value: `${fmtInt(payload.timeline?.past?.depot_qty_prior_contract)} in 2025`,
+      note: "0 since Feb 1 · keep 500 devices",
     },
   ];
   grid.innerHTML = cards

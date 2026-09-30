@@ -74,7 +74,7 @@ check("first tick is the baseline month", api.monthLabel(ticks[0]), "Feb 2026");
 // keep saying both entity types draw from the same pool.
 check(
   "scope assumption names both entity types",
-  /company-owned and franchise\/boersma/i.test(source),
+  /company \+ franchise/i.test(source),
   true
 );
 
@@ -136,10 +136,10 @@ check("run rate is clamped to the control range", api.clampRunRate(99), 10);
 check("run rate snaps to half-shop steps", api.clampRunRate(5.7), 5.5);
 check("run rate always reads with one decimal", api.fmtRate(4), "4.0");
 check("annualized run rate is calculated dynamically", api.shopsPerYear(5.5), 286);
-check("depletion copy uses annualized shops", api.depletionNote(baseline), "Pool depleted Jun 14, 2028 at 286 shops/year");
+check("depletion copy uses annualized shops", api.depletionNote(baseline), "286 shops/year");
 check("Kimlie stock status is named as a source", source.includes("Kimlie’s bi-weekly stock status"), true);
-check("depot card names the 2025 receipts", source.includes("units in 2025"), true);
-check("chart labels the three era boundaries", source.includes("axisTickLabel") && source.includes("era.name"), true);
+check("depot card names the 2025 receipts", source.includes("in 2025"), true);
+check("chart labels the three era boundaries", source.includes("axisTickLabel") && source.includes("function chartEras"), true);
 check("depot recommendation is 500 devices", source.includes("500 devices"), true);
 
 // A slow rate can stretch the axis past four years; quarterly ticks would
@@ -157,7 +157,7 @@ check("tooltip body is one balance", api.tooltipLabel(hovered), "Order in Pipeli
 
 // Balance and pipeline change on discrete dates, so they step rather than
 // sliding between events.
-check("balance, pipeline, and detail are stepped", (source.match(/stepped: "after"/g) || []).length, 3);
+check("balance and pipeline are stepped", (source.match(/stepped: "after"/g) || []).length, 2);
 const radii = api.orderStepRadius([
   { inventory: 3760 },
   { inventory: 3740 },
@@ -168,16 +168,12 @@ check("each order step gets a marker", JSON.stringify(radii), JSON.stringify([0,
 
 // A 10-unit order is about 1px tall on the 0–6,000 main axis, so the pipeline
 // gets its own zoomed detail with a y-axis fitted to the orders.
-check("pipeline detail canvas exists", html.includes('id="chart-devices-pipeline"'), true);
-const range = api.pipelineRange([{ inventory: 3760 }, { inventory: 3390 }]);
-check("detail axis floor hugs the lowest balance", range.min, 3350);
-check("detail axis ceiling hugs the highest balance", range.max, 3800);
+check("pipeline detail chart is removed", html.includes('id="chart-devices-pipeline"'), false);
 check(
-  "main chart drops crowded order markers",
-  source.includes("pointRadius: orderStepRadius(projection.pipelinePoints)"),
-  false
+  "legend swatches are lines, not filled boxes",
+  source.includes('fillStyle: "transparent"') && source.includes("boxHeight: 3"),
+  true
 );
-check("detail chart marks each order step", source.includes("pointRadius: orderStepRadius(points)"), true);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

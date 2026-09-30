@@ -44,6 +44,7 @@ SCOPE = (
 PO_NAME = re.compile(r"PO_Extract_.*\.(xlsx|json)$", re.I)
 ORDERS_NAME = re.compile(r"Daily Dutch Bros Booked Shipped Orders Report.*\.(xlsx|json)$", re.I)
 ISO_IN_NAME = re.compile(r"(20\d{2})[-_]?(\d{2})[-_]?(\d{2})")
+PO_MMDDYY = re.compile(r"PO_Extract_(\d{2})(\d{2})(\d{2})")
 NEWCO_RE = re.compile(r"^[A-Za-z]{2}\d{4}$")
 
 PO_ID_HEADERS = ("newco id", "newcoid", "newco_id", "shop id", "shop_id")
@@ -120,19 +121,23 @@ def is_target_item(value) -> bool:
     return cell_text(value).upper() == TARGET_ITEM
 
 
+def file_stamp(path: Path) -> date:
+    """Date embedded in the filename. PO extracts use MMDDYY, orders use ISO."""
+    iso = ISO_IN_NAME.search(path.name)
+    if iso:
+        return date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
+    po = PO_MMDDYY.search(path.name)
+    if po:
+        month, day, year = (int(po.group(i)) for i in (1, 2, 3))
+        return date(2000 + year, month, day)
+    return date.min
+
+
 def latest_file(directory: Path, pattern: re.Pattern[str]) -> Path | None:
     matches = [path for path in directory.glob("*") if path.is_file() and pattern.search(path.name)]
     if not matches:
         return None
-
-    def sort_key(path: Path) -> tuple:
-        found = ISO_IN_NAME.search(path.name)
-        stamp = date.min
-        if found:
-            stamp = date(int(found.group(1)), int(found.group(2)), int(found.group(3)))
-        return (stamp, path.stat().st_mtime)
-
-    return max(matches, key=sort_key)
+    return max(matches, key=lambda path: (file_stamp(path), path.stat().st_mtime))
 
 
 def report_extract_date(path: Path) -> date | None:

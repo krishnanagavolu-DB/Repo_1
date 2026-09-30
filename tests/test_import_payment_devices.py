@@ -303,6 +303,18 @@ def test_missing_sources_do_not_invent_numbers(tmp_path: Path):
     assert payload["series"]["firm"] == []
 
 
+def test_newer_po_extract_wins_even_when_the_older_file_was_touched_later(tmp_path: Path):
+    older = tmp_path / "PO_Extract_092426_0944.xlsx"
+    newer = tmp_path / "PO_Extract_093026_0806.xlsx"
+    older.write_bytes(b"old")
+    newer.write_bytes(b"new")
+    os_utime = __import__("os").utime
+    os_utime(newer, (1_000, 1_000))
+    os_utime(older, (2_000, 2_000))
+    assert devices.latest_file(tmp_path, devices.PO_NAME) == newer
+    assert devices.file_stamp(newer) == date(2026, 9, 30)
+
+
 def test_current_workbooks_count_pre_contract_po_matches_as_pending():
     payload = devices.build_payload(devices.RAW_DIR, today=date(2026, 9, 24))
     if not payload["certified"]:

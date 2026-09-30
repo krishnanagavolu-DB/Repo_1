@@ -397,6 +397,8 @@ function renderChart(payload, shopsPerWeek) {
           borderColor: BLACK,
           backgroundColor: BLACK,
           borderWidth: 2.5,
+          borderCapStyle: "round",
+          borderJoinStyle: "round",
           stepped: "after",
           pointRadius: 0,
           pointHoverRadius: 5,
@@ -407,8 +409,9 @@ function renderChart(payload, shopsPerWeek) {
           data: pipelineData,
           borderColor: BLUE,
           backgroundColor: BLUE,
-          borderWidth: 3,
-          borderDash: [10, 4, 2, 4],
+          borderWidth: 2.5,
+          borderCapStyle: "round",
+          borderJoinStyle: "round",
           stepped: "after",
           pointRadius: 0,
           pointHoverRadius: 6,
@@ -419,7 +422,9 @@ function renderChart(payload, shopsPerWeek) {
           data: projectedData,
           borderColor: RED,
           backgroundColor: RED,
-          borderWidth: 2,
+          borderWidth: 2.5,
+          borderCapStyle: "round",
+          borderJoinStyle: "round",
           borderDash: [],
           pointRadius: 0,
           pointHoverRadius: 5,
@@ -430,6 +435,7 @@ function renderChart(payload, shopsPerWeek) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       interaction: { mode: "nearest", intersect: false },
       layout: { padding: { bottom: 18, top: 8 } },
       plugins: {
@@ -509,8 +515,11 @@ function renderRibbon(payload, projection) {
     `${fmtInt(present.committed_units)} committed · ${fmtInt(present.pending_units)} pending`
   );
   setText("devices-era-future-title", `Future · after ${fmtDate(future.start)}`);
-  setText("devices-kpi-remaining-value", fmtInt(future.remaining_units));
-  setText("devices-kpi-remaining-note", "After the last opening");
+  setText("devices-kpi-remaining-value", fmtInt(payload.summary?.firm_inventory));
+  setText(
+    "devices-kpi-remaining-note",
+    `${fmtInt(future.remaining_units)} after ${fmtInt(present.pending_shops)} pending`
+  );
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
   setText("devices-kpi-zero-note", depletionNote(projection));
 }

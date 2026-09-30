@@ -110,10 +110,11 @@ check(
   JSON.stringify(baseline.pipelinePoints.at(-1))
 );
 check(
-  "PO pipeline is a separate blue dash-dot series",
-  source.includes('label: "Order in Pipeline"') && source.includes("borderDash: [10, 4, 2, 4]"),
+  "PO pipeline is a solid blue line",
+  source.includes('label: "Order in Pipeline"') && source.includes('borderCapStyle: "round"'),
   true
 );
+check("pipeline dash pattern is not used", source.includes("borderDash: [10, 4, 2, 4]"), false);
 check(
   "red projected demand is a solid tail",
   source.includes('label: `Projected Demand') && source.includes("borderDash: []"),

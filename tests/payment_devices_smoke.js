@@ -17,9 +17,9 @@ check("payment-devices script is loaded", html.includes('src="js/payment-devices
 // Leadership reads the headline numbers before the chart, so they are cards,
 // not a paragraph underneath it.
 check("KPI ribbon exists", html.includes('id="devices-ribbon"'), true);
-check("firm balance card exists", html.includes('id="devices-kpi-firm"'), true);
-check("pending pipeline card exists", html.includes('id="devices-kpi-pending"'), true);
-check("shipped card exists", html.includes('id="devices-kpi-shipped"'), true);
+check("past present future groups exist", html.includes('class="devices-eras"') && html.includes("devices-era-past") && html.includes("devices-era-future"), true);
+check("contract and opened cards exist", html.includes('id="devices-kpi-contract"') && html.includes('id="devices-kpi-opened"'), true);
+check("present and future cards exist", html.includes('id="devices-kpi-planned"') && html.includes('id="devices-kpi-remaining"'), true);
 
 // The run-rate control models a different opening speed without a reimport.
 check("run-rate slider exists", html.includes('id="devices-runrate"'), true);
@@ -138,7 +138,8 @@ check("run rate always reads with one decimal", api.fmtRate(4), "4.0");
 check("annualized run rate is calculated dynamically", api.shopsPerYear(5.5), 286);
 check("depletion copy uses annualized shops", api.depletionNote(baseline), "Pool depleted Jun 14, 2028 at 286 shops/year");
 check("Kimlie stock status is named as a source", source.includes("Kimlie’s bi-weekly stock status"), true);
-check("depot stock is explicitly not modelled", source.includes('title: "Depot / Spare Stock"'), true);
+check("depot card names the 2025 receipts", source.includes("units in 2025"), true);
+check("chart labels the three era boundaries", source.includes("axisTickLabel") && source.includes("era.name"), true);
 check("depot recommendation is 500 devices", source.includes("500 devices"), true);
 
 // A slow rate can stretch the axis past four years; quarterly ticks would

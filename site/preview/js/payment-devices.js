@@ -182,6 +182,40 @@ function crossingDate(points, threshold) {
   return null;
 }
 
+function eraBounds(payload) {
+  const timeline = payload?.timeline;
+  if (!timeline?.past || !timeline?.present) return [];
+  return [timeline.past.start, timeline.past.end, timeline.present.end].map(toMs);
+}
+
+function axisTickValues(minMs, maxMs, boundaries) {
+  const quarterly = monthTicks(minMs, maxMs, tickStepMonths(minMs, maxMs));
+  const kept = quarterly.filter((tick) => !boundaries.some((bound) => Math.abs(bound - tick) < 50 * DAY_MS));
+  const extra = boundaries.filter((bound) => bound >= minMs && bound <= maxMs);
+  return [...kept, ...extra].sort((a, b) => a - b);
+}
+
+function axisTickLabel(value, boundaries) {
+  const isBoundary = boundaries.some((bound) => Math.abs(bound - value) < 12 * 60 * 60 * 1000);
+  if (!isBoundary) return monthLabel(value);
+  const date = new Date(value);
+  return [
+    date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    String(date.getFullYear()),
+  ];
+}
+
+function chartEras(payload, projection) {
+  const timeline = payload?.timeline;
+  if (!timeline) return [];
+  const futureEnd = projection?.zeroDate || payload?.chart?.x_max;
+  return [
+    { name: "Past", start: timeline.past.start, end: timeline.past.end, fill: "rgba(21, 65, 103, 0.08)" },
+    { name: "Present", start: timeline.present.start, end: timeline.present.end, fill: "rgba(0, 96, 152, 0.12)" },
+    { name: "Future", start: timeline.future.start, end: futureEnd, fill: "rgba(217, 39, 45, 0.08)" },
+  ];
+}
+
 function tickStepMonths(minMs, maxMs) {
   const months = (maxMs - minMs) / (DAY_MS * 30.44);
   if (months <= 30) return 3;
@@ -220,6 +254,26 @@ function showContent() {
 
 const thresholdPlugin = {
   id: "deviceThresholds",
+  beforeDatasetsDraw(chart, _args, options) {
+    const eras = options?.eras || [];
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea || !scales.x) return;
+    ctx.save();
+    eras.forEach((era) => {
+      const x0 = scales.x.getPixelForValue(toMs(era.start));
+      const x1 = scales.x.getPixelForValue(toMs(era.end));
+      const left = Math.max(chartArea.left, Math.min(x0, x1));
+      const right = Math.min(chartArea.right, Math.max(x0, x1));
+      if (right - left < 8) return;
+      ctx.fillStyle = era.fill;
+      ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+      ctx.fillStyle = NAVY;
+      ctx.font = "700 12px futura-pt, Arial, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(era.name, left + 8, chartArea.top + 16);
+    });
+    ctx.restore();
+  },
   afterDraw(chart, _args, options) {
     const crossings = options?.crossings || [];
     const thresholds = options?.thresholds || [];
@@ -397,6 +451,7 @@ function renderChart(payload, shopsPerWeek) {
           thresholds: payload.thresholds || [3000, 2500, 2000, 1500, 1000],
           crossings: projection.crossings,
           gap: payload.gap || null,
+          eras: chartEras(payload, projection),
         },
       },
       scales: {
@@ -405,16 +460,13 @@ function renderChart(payload, shopsPerWeek) {
           min: xMin,
           max: xMax,
           afterBuildTicks(axis) {
-            // A slow run rate can push depletion years out; widen the step so
-            // the axis never turns into a wall of overlapping labels.
-            axis.ticks = monthTicks(axis.min, axis.max, tickStepMonths(axis.min, axis.max)).map(
-              (value) => ({ value })
-            );
+            const boundaries = eraBounds(payload);
+            axis.ticks = axisTickValues(axis.min, axis.max, boundaries).map((value) => ({ value }));
           },
           ticks: {
             maxRotation: 0,
             autoSkip: false,
-            callback: (value) => monthLabel(value),
+            callback: (value) => axisTickLabel(value, eraBounds(payload)),
           },
           grid: { display: false },
         },
@@ -493,22 +545,32 @@ function setText(id, value) {
 }
 
 function renderRibbon(payload, projection) {
-  const summary = payload.summary || {};
-  setText("devices-kpi-firm-value", `${fmtInt(summary.firm_inventory)}`);
+  const timeline = payload.timeline || {};
+  const past = timeline.past || {};
+  const present = timeline.present || {};
+  const future = timeline.future || {};
+  setText("devices-era-past-title", `Past · ${fmtDate(past.start)} – ${fmtDate(past.end)}`);
+  setText("devices-kpi-contract-value", fmtDate(past.start));
+  setText("devices-kpi-contract-note", `Opening amount ${fmtInt(past.opening_amount)} units`);
+  setText("devices-kpi-opened-value", `${fmtInt(past.shops_opened)} shops`);
   setText(
-    "devices-kpi-firm-note",
-    `${fmtInt(summary.baseline_inventory)} contracted − ${fmtInt(summary.shipped_qty)} shipped − ${fmtInt(summary.booked_qty)} booked`
+    "devices-kpi-opened-note",
+    `${fmtInt(past.consumed_qty)} units consumed. Depot orders ${fmtInt(past.depot_qty_since_baseline)} since Feb 1. ${fmtInt(past.depot_qty_prior_contract)} depot units shipped in 2025, prior contract.`
   );
-  setText("devices-kpi-pending-value", `${fmtInt(summary.pending_shops)} shops`);
+  setText("devices-era-present-title", `Present · ${fmtDate(present.start)} – ${fmtDate(present.end)}`);
+  setText("devices-kpi-planned-value", `${fmtInt(present.planned_shops)} shops`);
   setText(
-    "devices-kpi-pending-note",
-    `${fmtInt(summary.pending_units)} units in the PO pipeline awaiting MIDs/booking`
+    "devices-kpi-planned-note",
+    `${fmtInt(present.in_process_shops)} in process (${fmtInt(present.shipped_shops)} shipped, ${fmtInt(present.booked_shops)} booked). ${fmtInt(present.pending_shops)} pending orders.`
   );
-  setText("devices-kpi-shipped-value", `${fmtInt(summary.shipped_qty)}`);
+  setText("devices-kpi-setaside-value", fmtInt(present.set_aside_units));
   setText(
-    "devices-kpi-shipped-note",
-    `${fmtInt(summary.shipped_shops)} shops shipped since ${fmtDate(payload.assumptions?.baseline_date)}`
+    "devices-kpi-setaside-note",
+    `${fmtInt(present.committed_units)} already shipped or booked. ${fmtInt(present.pending_units)} still pending.`
   );
+  setText("devices-era-future-title", `Future · after ${fmtDate(future.start)}`);
+  setText("devices-kpi-remaining-value", fmtInt(future.remaining_units));
+  setText("devices-kpi-remaining-note", "What the PO run-rate burns after the last projected opening.");
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
   setText("devices-kpi-zero-note", depletionNote(projection));
 }
@@ -545,8 +607,8 @@ function renderAssumptions(payload) {
     },
     {
       title: "Depot / Spare Stock",
-      value: "Not modelled",
-      note: "Depot stock is excluded; consider reserving 500 devices for depot and spares.",
+      value: `${fmtInt(payload.timeline?.past?.depot_qty_prior_contract)} units in 2025`,
+      note: "None since Feb 1. Those 2025 receipts are prior contract. Consider keeping 500 devices for depot and spares; the 2025 shipments may already cover that.",
     },
   ];
   grid.innerHTML = cards
@@ -663,6 +725,10 @@ window.__paymentDevices = {
   tooltipLabel,
   orderStepRadius,
   pipelineRange,
+  eraBounds,
+  axisTickValues,
+  axisTickLabel,
+  chartEras,
   toMs,
   addDays,
   pointsFor,

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-24T22:52:24+00:00",
+  "generated_at": "2026-09-30T00:33:59+00:00",
   "status": "certified",
   "certified": true,
   "assumptions": {
@@ -27,9 +27,36 @@
     "y_min": 0,
     "y_max": 6000
   },
+  "timeline": {
+    "past": {
+      "start": "2026-02-01",
+      "end": "2026-09-30",
+      "opening_amount": 5700,
+      "shops_opened": 109,
+      "consumed_qty": 1090,
+      "depot_qty_since_baseline": 0,
+      "depot_qty_prior_contract": 1250
+    },
+    "present": {
+      "start": "2026-09-30",
+      "end": "2027-04-09",
+      "planned_shops": 122,
+      "in_process_shops": 85,
+      "shipped_shops": 74,
+      "booked_shops": 11,
+      "pending_shops": 37,
+      "set_aside_units": 1220,
+      "committed_units": 850,
+      "pending_units": 370
+    },
+    "future": {
+      "start": "2027-04-09",
+      "remaining_units": 3390
+    }
+  },
   "summary": {
     "baseline_inventory": 5700,
-    "as_of": "2026-09-24",
+    "as_of": "2026-09-30",
     "extract_date": "2026-09-22",
     "firm_inventory": 3760,
     "shipped_shops": 183,
@@ -205,19 +232,19 @@
         "series": "firm"
       },
       {
-        "date": "2026-09-24",
+        "date": "2026-09-30",
         "inventory": 3760.0,
         "series": "firm"
       }
     ],
     "projected": [
       {
-        "date": "2026-09-24",
+        "date": "2026-09-30",
         "inventory": 3760.0,
         "series": "projected"
       },
       {
-        "date": "2026-09-25",
+        "date": "2026-10-01",
         "inventory": 3740.0,
         "series": "projected"
       },
@@ -696,7 +723,7 @@
     }
   ],
   "gap": {
-    "date": "2026-09-24",
+    "date": "2026-09-30",
     "inventory": 3760,
     "shops": 37,
     "units": 370,

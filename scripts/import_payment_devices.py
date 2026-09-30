@@ -290,6 +290,74 @@ def reconcile_order_lifecycle(
     return sorted(shipped_events + booked_events, key=lambda event: (event["date"], event["id"]))
 
 
+def _is_depot(shop_id: str) -> bool:
+    return "DEPOT" in str(shop_id or "").upper()
+
+
+def build_timeline(
+    po_shops: list[dict],
+    events: list[dict],
+    shipped_rows: list[dict],
+    pending: list[dict],
+    firm_end: date,
+    pipeline_end: date,
+) -> dict:
+    """Split the contract into past, present, and future without double-counting.
+
+    Past is consumption by shops that have already opened: shipped since the
+    baseline and absent from the upcoming-opening list. Present is every shop
+    on that list, whether the devices are already shipped, booked, or still a
+    pending order. Future is whatever remains after those two.
+    """
+    po_ids = {shop["id"] for shop in po_shops}
+    opened = [
+        event
+        for event in events
+        if event["source"] == "shipped" and event["id"] not in po_ids and not _is_depot(event["id"])
+    ]
+    present_shipped = [event for event in events if event["source"] == "shipped" and event["id"] in po_ids]
+    booked = [event for event in events if event["source"] == "booked"]
+    opened_qty = sum(int(event["qty"]) for event in opened)
+    committed_qty = sum(int(event["qty"]) for event in present_shipped) + sum(int(event["qty"]) for event in booked)
+    pending_units = len(pending) * DEVICES_PER_SHOP
+    set_aside = committed_qty + pending_units
+    depot_since = sum(int(event["qty"]) for event in events if _is_depot(event["id"]))
+    depot_prior = 0
+    for row in shipped_rows:
+        if not is_target_item(row.get("item")) or not _is_depot(row.get("id")):
+            continue
+        when = row.get("shipping_date") or row.get("requested_date")
+        if when is not None and when < BASELINE_DATE:
+            depot_prior += int(row.get("qty") or 0)
+    return {
+        "past": {
+            "start": BASELINE_DATE.isoformat(),
+            "end": firm_end.isoformat(),
+            "opening_amount": BASELINE_INVENTORY,
+            "shops_opened": len({event["id"] for event in opened}),
+            "consumed_qty": opened_qty,
+            "depot_qty_since_baseline": depot_since,
+            "depot_qty_prior_contract": depot_prior,
+        },
+        "present": {
+            "start": firm_end.isoformat(),
+            "end": pipeline_end.isoformat(),
+            "planned_shops": len(po_shops),
+            "in_process_shops": len({event["id"] for event in present_shipped}) + len({event["id"] for event in booked}),
+            "shipped_shops": len({event["id"] for event in present_shipped}),
+            "booked_shops": len({event["id"] for event in booked}),
+            "pending_shops": len(pending),
+            "set_aside_units": set_aside,
+            "committed_units": committed_qty,
+            "pending_units": pending_units,
+        },
+        "future": {
+            "start": pipeline_end.isoformat(),
+            "remaining_units": BASELINE_INVENTORY - opened_qty - set_aside,
+        },
+    }
+
+
 def pending_shops(po_shops: list[dict], ordered_ids: set[str]) -> list[dict]:
     """Keep PO shops that are not booked and have no current-contract shipment."""
     return [shop for shop in po_shops if shop["id"] not in ordered_ids]
@@ -471,6 +539,14 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         )
 
     pending_units = len(pending) * DEVICES_PER_SHOP
+    timeline = build_timeline(
+        po_shops,
+        events,
+        shipped,
+        pending,
+        projection["firm_end_date"],
+        projection["pipeline_end_date"],
+    )
     return {
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "status": "certified",
@@ -489,6 +565,7 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         },
         "thresholds": list(THRESHOLDS),
         "chart": {"x_min": BASELINE_DATE.isoformat(), "x_max": CHART_END.isoformat(), "y_min": 0, "y_max": 6000},
+        "timeline": timeline,
         "summary": {
             "baseline_inventory": BASELINE_INVENTORY,
             "as_of": projection["firm_end_date"].isoformat(),

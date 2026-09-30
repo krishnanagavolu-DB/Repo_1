@@ -8,7 +8,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=53619235cc" />
+    <link rel="stylesheet" href="css/dashboard.css?v=480b0d4e8f" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -18,7 +18,7 @@
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
     <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
-    <script src="js/payment-devices.js?v=fd286e059f" defer></script>
+    <script src="js/payment-devices.js?v=5bb785e169" defer></script>
     <script src="js/tabs.js?v=835b13ae94" defer></script>
     <script src="js/chatbot.js?v=d69b438bd9" defer></script>
   </head>
@@ -410,27 +410,46 @@
                 <span>Verifone e285 lifecycle &middot; 5,700-unit contract</span>
               </div>
             </header>
-            <section id="devices-ribbon" class="devices-ribbon" aria-label="Current device position">
-              <article class="devices-kpi" id="devices-kpi-firm">
-                <div class="devices-kpi-label">Balance</div>
-                <div class="devices-kpi-value"><span id="devices-kpi-firm-value">—</span> <span class="devices-kpi-unit">Units</span></div>
-                <p class="devices-kpi-note" id="devices-kpi-firm-note"></p>
-              </article>
-              <article class="devices-kpi" id="devices-kpi-pending">
-                <div class="devices-kpi-label">Pending Pipeline</div>
-                <div class="devices-kpi-value"><span id="devices-kpi-pending-value">—</span></div>
-                <p class="devices-kpi-note" id="devices-kpi-pending-note"></p>
-              </article>
-              <article class="devices-kpi" id="devices-kpi-shipped">
-                <div class="devices-kpi-label">Shipped to Date</div>
-                <div class="devices-kpi-value"><span id="devices-kpi-shipped-value">—</span> <span class="devices-kpi-unit">Units</span></div>
-                <p class="devices-kpi-note" id="devices-kpi-shipped-note"></p>
-              </article>
-              <article class="devices-kpi devices-kpi-modelled" id="devices-kpi-zero">
-                <div class="devices-kpi-label">Proj Exhaution</div>
-                <div class="devices-kpi-value"><span id="devices-kpi-zero-value">—</span></div>
-                <p class="devices-kpi-note" id="devices-kpi-zero-note"></p>
-              </article>
+            <section id="devices-ribbon" class="devices-eras" aria-label="Past, present, and future">
+              <div class="devices-era devices-era-past">
+                <h3 id="devices-era-past-title">Past</h3>
+                <article class="devices-kpi" id="devices-kpi-contract">
+                  <div class="devices-kpi-label">Contract start</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-contract-value">—</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-contract-note"></p>
+                </article>
+                <article class="devices-kpi" id="devices-kpi-opened">
+                  <div class="devices-kpi-label">Shops opened</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-opened-value">—</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-opened-note"></p>
+                </article>
+              </div>
+              <div class="devices-era devices-era-present">
+                <h3 id="devices-era-present-title">Present</h3>
+                <article class="devices-kpi" id="devices-kpi-planned">
+                  <div class="devices-kpi-label">Planned openings</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-planned-value">—</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-planned-note"></p>
+                </article>
+                <article class="devices-kpi" id="devices-kpi-setaside">
+                  <div class="devices-kpi-label">Set aside</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-setaside-value">—</span> <span class="devices-kpi-unit">Units</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-setaside-note"></p>
+                </article>
+              </div>
+              <div class="devices-era devices-era-future">
+                <h3 id="devices-era-future-title">Future</h3>
+                <article class="devices-kpi" id="devices-kpi-remaining">
+                  <div class="devices-kpi-label">Left after pipeline</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-remaining-value">—</span> <span class="devices-kpi-unit">Units</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-remaining-note"></p>
+                </article>
+                <article class="devices-kpi devices-kpi-modelled" id="devices-kpi-zero">
+                  <div class="devices-kpi-label">Proj Exhaution</div>
+                  <div class="devices-kpi-value"><span id="devices-kpi-zero-value">—</span></div>
+                  <p class="devices-kpi-note" id="devices-kpi-zero-note"></p>
+                </article>
+              </div>
             </section>
             <article class="panel devices-chart-panel">
               <div class="devices-chart-head">

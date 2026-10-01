@@ -42,6 +42,8 @@ SCOPE = (
 )
 
 PO_NAME = re.compile(r"PO_Extract_.*\.(xlsx|json)$", re.I)
+KIMLIE_NAME = re.compile(r"(Dutch Bro Burndown Chart|E235 Burndown Report).*\.xlsx$", re.I)
+TAB_DATE = re.compile(r"^(\d{2})-(\d{2})-(\d{4})$")
 ORDERS_NAME = re.compile(r"Daily Dutch Bros Booked Shipped Orders Report.*\.(xlsx|json)$", re.I)
 ISO_IN_NAME = re.compile(r"(20\d{2})[-_]?(\d{2})[-_]?(\d{2})")
 PO_MMDDYY = re.compile(r"PO_Extract_(\d{2})(\d{2})(\d{2})")
@@ -119,6 +121,49 @@ def normalize_shop_id(value) -> str:
 
 def is_target_item(value) -> bool:
     return cell_text(value).upper() == TARGET_ITEM
+
+
+def parse_verifone_burndown(path: Path) -> dict:
+    """Read Kimlie/Patrick's workbook. The latest dated tab wins, not sheet order."""
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        dated: list[tuple[date, str]] = []
+        for name in workbook.sheetnames:
+            match = TAB_DATE.match(name.strip())
+            if not match:
+                continue
+            month, day, year = (int(match.group(i)) for i in (1, 2, 3))
+            dated.append((date(year, month, day), name))
+        if not dated:
+            raise ValueError(f"{path.name}: no tab named MM-DD-YYYY")
+        as_of, tab = max(dated)
+        rows = list(workbook[tab].iter_rows(values_only=True))
+    finally:
+        workbook.close()
+
+    metrics: dict[str, int] = {}
+    for row in rows:
+        cells = list(row)
+        for index in range(0, len(cells) - 1, 3):
+            label = cell_text(cells[index])
+            if not label or label.lower() in {"metric", "category"}:
+                continue
+            qty = parse_qty(cells[index + 1])
+            metrics[label.lower()] = qty
+    if "remaining balance" not in metrics:
+        raise ValueError(f"{path.name}: tab {tab} has no Remaining Balance")
+    return {
+        "file": path.name,
+        "tab": tab,
+        "as_of": as_of.isoformat(),
+        "original_amount": metrics.get("original amount"),
+        "shipped_since_feb": metrics.get("qty shipped since feb"),
+        "picked_qty": metrics.get("qty in picked status"),
+        "in_process_qty": metrics.get("total shipped / in process"),
+        "backlog_qty": metrics.get("backlog qty"),
+        "remaining_balance": metrics["remaining balance"],
+        "forecasted_amount": metrics.get("forecasted amount"),
+    }
 
 
 def file_stamp(path: Path) -> date:
@@ -535,8 +580,24 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
     booked_events = [event for event in events if event["source"] == "booked"]
     shipped_qty = sum(int(event["qty"]) for event in shipped_since)
     booked_qty = sum(int(event["qty"]) for event in booked_events)
-    firm_inventory = BASELINE_INVENTORY - shipped_qty - booked_qty
+    po_firm_inventory = BASELINE_INVENTORY - shipped_qty - booked_qty
+    firm_inventory = po_firm_inventory
     warnings = []
+    kimlie = None
+    kimlie_path = latest_file(raw_dir, KIMLIE_NAME)
+    if kimlie_path is not None:
+        try:
+            kimlie = parse_verifone_burndown(kimlie_path)
+        except ValueError as err:
+            warnings.append(str(err))
+    balance_gap = None
+    if kimlie is not None:
+        balance_gap = po_firm_inventory - int(kimlie["remaining_balance"])
+        if balance_gap:
+            warnings.append(
+                f"Kimlie remaining balance {kimlie['remaining_balance']} on {kimlie['tab']} "
+                f"differs from the PO count {po_firm_inventory} by {balance_gap}."
+            )
     odd_ids = [shop["id"] for shop in po_shops if not NEWCO_RE.match(shop["id"])]
     if odd_ids:
         warnings.append(
@@ -576,6 +637,9 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
             "as_of": projection["firm_end_date"].isoformat(),
             "extract_date": extract_date.isoformat(),
             "firm_inventory": firm_inventory,
+            "po_firm_inventory": po_firm_inventory,
+            "balance_now": kimlie["remaining_balance"] if kimlie else po_firm_inventory,
+            "balance_gap": balance_gap,
             "shipped_shops": len({event["id"] for event in shipped_since}),
             "shipped_qty": shipped_qty,
             "booked_shops": len({event["id"] for event in booked_events}),
@@ -602,7 +666,10 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
             "po_extract": po_path.name,
             "orders_report": orders_path.name,
             "orders_extract_date": extract_date.isoformat(),
+            "verifone_burndown": kimlie["file"] if kimlie else None,
+            "verifone_tab": kimlie["tab"] if kimlie else None,
         },
+        "verifone": kimlie,
         "warnings": warnings,
     }
 

@@ -515,10 +515,14 @@ function renderRibbon(payload, projection) {
     `${fmtInt(present.committed_units)} committed · ${fmtInt(present.pending_units)} pending`
   );
   setText("devices-era-future-title", `Future · after ${fmtDate(future.start)}`);
-  setText("devices-kpi-remaining-value", fmtInt(payload.summary?.firm_inventory));
+  const summary = payload.summary || {};
+  setText("devices-kpi-remaining-value", fmtInt(summary.balance_now ?? summary.firm_inventory));
+  const gap = Number(summary.balance_gap);
   setText(
     "devices-kpi-remaining-note",
-    `${fmtInt(future.remaining_units)} after ${fmtInt(present.pending_shops)} pending`
+    Number.isFinite(gap) && gap !== 0
+      ? `PO count ${fmtInt(summary.po_firm_inventory)} · gap ${fmtInt(gap)}`
+      : `${fmtInt(future.remaining_units)} after ${fmtInt(present.pending_shops)} pending`
   );
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
   setText("devices-kpi-zero-note", depletionNote(projection));
@@ -637,7 +641,8 @@ function renderDevices(payload) {
   registerSnapshot(payload);
   const note = document.getElementById("devices-source-note");
   if (note && payload.sources) {
-    note.textContent = `Sources: ${payload.sources.po_extract} · ${payload.sources.orders_report} · Kimlie’s bi-weekly stock status · item ${payload.assumptions?.target_item || "M087-500-14-WWA"}`;
+    const kimlie = payload.verifone?.tab ? ` · Kimlie ${payload.verifone.tab}` : "";
+    note.textContent = `Sources: ${payload.sources.po_extract} · ${payload.sources.orders_report}${kimlie} · item ${payload.assumptions?.target_item || "M087-500-14-WWA"}`;
   }
 }
 

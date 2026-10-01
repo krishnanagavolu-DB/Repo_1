@@ -1,0 +1,17 @@
+{
+  "name": "Verifone E235 Burndown Report",
+  "purpose": "Kimlie or Patrick drop the Verifone burndown workbook every two weeks. The latest dated tab is the official remaining balance.",
+  "site": "CoreShopTech",
+  "folder_path": "Shared Documents/General/Payment Systems/Reports/Verifone/E235 Burndown Report",
+  "url_clean": "https://dutchbros.sharepoint.com/sites/CoreShopTech/Shared Documents/General/Payment Systems/Reports/Verifone/E235 Burndown Report",
+  "repo_copy": "data/raw/payment-devices/",
+  "expected_files": [
+    "Dutch Bro Burndown Chart.xlsx"
+  ],
+  "tab_convention": "One sheet per update, named MM-DD-YYYY. The greatest date wins, not the rightmost sheet.",
+  "balance_field": "Remaining Balance",
+  "refresh_schedule": {
+    "cadence": "every 2 weeks",
+    "note": "Sibling of the Worldpay WP Weekly Reports folder. Do not drop this file inside WP Weekly Reports."
+  }
+}

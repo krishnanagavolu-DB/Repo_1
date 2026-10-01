@@ -2,9 +2,21 @@
 
 The **Payment Devices** tab projects remaining Verifone e285 handhelds from a **5,700-unit contract baseline on 1 Feb 2026**.
 
-Live firm balance is always:
+The number on the page is Kimlie’s **Remaining Balance** from the latest dated tab of `Dutch Bro Burndown Chart.xlsx`. The PO extract and orders report still draw the shops and the future slope. When those two disagree, the card shows Kimlie’s balance and the gap. It does not hide either number.
 
-`5,700 − shipped qty since Feb 2026 − booked qty` from the orders workbook (item `M087-500-14-WWA` only). Vendor email totals are never used to override that.
+## Where Kimlie’s file goes
+
+SharePoint, next to the Worldpay reports folder, not inside it:
+
+`Shared Documents/General/Payment Systems/Reports/Verifone/E235 Burndown Report`
+
+https://dutchbros.sharepoint.com/sites/CoreShopTech/Shared%20Documents/General/Payment%20Systems/Reports/Verifone/E235%20Burndown%20Report
+
+Sync that folder to the Mac. Drop the workbook there every two weeks. Create the SharePoint folder once if it is not there yet. Config: [`config/verifone-source.json`](../../config/verifone-source.json).
+
+PO math, kept for the chart and the gap:
+
+`5,700 − shipped qty since Feb 2026 − booked qty` from the orders workbook (item `M087-500-14-WWA` only).
 
 ## Refresh
 

@@ -303,6 +303,42 @@ def test_missing_sources_do_not_invent_numbers(tmp_path: Path):
     assert payload["series"]["firm"] == []
 
 
+def _write_kimlie(path: Path) -> None:
+    wb = Workbook()
+    older = wb.active
+    older.title = "08-31-2026"
+    older["A4"] = "Metric"
+    older["B4"] = "Quantity"
+    older["A10"] = "Remaining Balance"
+    older["B10"] = 3870
+    latest = wb.create_sheet("10-01-2026")
+    latest["A6"] = "Qty Shipped Since Feb"
+    latest["B6"] = 1930
+    latest["A7"] = "Qty in Picked Status"
+    latest["B7"] = 120
+    latest["A10"] = "Remaining Balance"
+    latest["B10"] = 3650
+    latest["A11"] = "Forecasted Amount"
+    latest["B11"] = 3700
+    # A later sheet with an earlier date must not win.
+    decoy = wb.create_sheet("09-15-2026")
+    decoy["A10"] = "Remaining Balance"
+    decoy["B10"] = 3770
+    wb.save(path)
+
+
+def test_kimlie_workbook_uses_the_latest_dated_tab(tmp_path: Path):
+    path = tmp_path / "Dutch Bro Burndown Chart.xlsx"
+    _write_kimlie(path)
+    parsed = devices.parse_verifone_burndown(path)
+    assert parsed["tab"] == "10-01-2026"
+    assert parsed["as_of"] == "2026-10-01"
+    assert parsed["remaining_balance"] == 3650
+    assert parsed["shipped_since_feb"] == 1930
+    assert parsed["picked_qty"] == 120
+    assert parsed["forecasted_amount"] == 3700
+
+
 def test_newer_po_extract_wins_even_when_the_older_file_was_touched_later(tmp_path: Path):
     older = tmp_path / "PO_Extract_092426_0944.xlsx"
     newer = tmp_path / "PO_Extract_093026_0806.xlsx"
@@ -336,3 +372,7 @@ def test_current_workbooks_count_pre_contract_po_matches_as_pending():
     assert future["remaining_units"] == 3360
     assert payload["summary"]["firm_inventory"] - payload["summary"]["pending_units"] == future["remaining_units"]
     assert past["consumed_qty"] + present["set_aside_units"] + future["remaining_units"] == 5700
+    assert payload["summary"]["po_firm_inventory"] == 3760
+    assert payload["summary"]["balance_now"] == 3650
+    assert payload["summary"]["balance_gap"] == 110
+    assert payload["verifone"]["tab"] == "10-01-2026"

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-30T15:19:59+00:00",
+  "generated_at": "2026-10-01T23:01:52+00:00",
   "status": "certified",
   "certified": true,
   "assumptions": {
@@ -59,6 +59,9 @@
     "as_of": "2026-09-30",
     "extract_date": "2026-09-30",
     "firm_inventory": 3760,
+    "po_firm_inventory": 3760,
+    "balance_now": 3650,
+    "balance_gap": 110,
     "shipped_shops": 194,
     "shipped_qty": 1940,
     "booked_shops": 0,
@@ -747,7 +750,23 @@
   "sources": {
     "po_extract": "PO_Extract_093026_0806.xlsx",
     "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-09-30-06-33-27.xlsx",
-    "orders_extract_date": "2026-09-30"
+    "orders_extract_date": "2026-09-30",
+    "verifone_burndown": "Dutch Bro Burndown Chart.xlsx",
+    "verifone_tab": "10-01-2026"
   },
-  "warnings": []
+  "verifone": {
+    "file": "Dutch Bro Burndown Chart.xlsx",
+    "tab": "10-01-2026",
+    "as_of": "2026-10-01",
+    "original_amount": 5700,
+    "shipped_since_feb": 1930,
+    "picked_qty": 120,
+    "in_process_qty": 2050,
+    "backlog_qty": 0,
+    "remaining_balance": 3650,
+    "forecasted_amount": 3700
+  },
+  "warnings": [
+    "Kimlie remaining balance 3650 on 10-01-2026 differs from the PO count 3760 by 110."
+  ]
 }

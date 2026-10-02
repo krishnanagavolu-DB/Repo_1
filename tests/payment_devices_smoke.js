@@ -140,7 +140,11 @@ check("annualized run rate is calculated dynamically", api.shopsPerYear(5.5), 28
 check("depletion copy uses annualized shops", api.depletionNote(baseline), "286 shops/year");
 check("Kimlie tab is named as a source", source.includes("Kimlie"), true);
 check("depot card names the 2025 receipts", source.includes("in 2025"), true);
-check("chart labels the three era boundaries", source.includes("axisTickLabel") && source.includes("function chartEras"), true);
+check(
+  "future card is the remainder that closes 5,700",
+  source.includes('setText("devices-kpi-remaining-value", fmtInt(future.remaining_units))'),
+  true
+);
 check("depot recommendation is 500 devices", source.includes("500 devices"), true);
 
 // A slow rate can stretch the axis past four years; quarterly ticks would

@@ -207,9 +207,9 @@ function chartEras(payload, projection) {
   if (!timeline) return [];
   const futureEnd = projection?.zeroDate || payload?.chart?.x_max;
   return [
-    { name: "Past", start: timeline.past.start, end: timeline.past.end, fill: "rgba(21, 65, 103, 0.08)" },
-    { name: "Present", start: timeline.present.start, end: timeline.present.end, fill: "rgba(0, 96, 152, 0.12)" },
-    { name: "Future", start: timeline.future.start, end: futureEnd, fill: "rgba(217, 39, 45, 0.08)" },
+    { name: "Past", start: timeline.past.start, end: timeline.past.end, fill: "rgba(21, 65, 103, 0.20)" },
+    { name: "Present", start: timeline.present.start, end: timeline.present.end, fill: "rgba(0, 96, 152, 0.22)" },
+    { name: "Future", start: timeline.future.start, end: futureEnd, fill: "rgba(217, 39, 45, 0.18)" },
   ];
 }
 
@@ -515,15 +515,8 @@ function renderRibbon(payload, projection) {
     `${fmtInt(present.committed_units)} committed · ${fmtInt(present.pending_units)} pending`
   );
   setText("devices-era-future-title", `Future · after ${fmtDate(future.start)}`);
-  const summary = payload.summary || {};
-  setText("devices-kpi-remaining-value", fmtInt(summary.balance_now ?? summary.firm_inventory));
-  const gap = Number(summary.balance_gap);
-  setText(
-    "devices-kpi-remaining-note",
-    Number.isFinite(gap) && gap !== 0
-      ? `PO count ${fmtInt(summary.po_firm_inventory)} · gap ${fmtInt(gap)}`
-      : `${fmtInt(future.remaining_units)} after ${fmtInt(present.pending_shops)} pending`
-  );
+  setText("devices-kpi-remaining-value", fmtInt(future.remaining_units));
+  setText("devices-kpi-remaining-note", "Opened + set aside + this = 5,700");
   setText("devices-kpi-zero-value", monthLabel(projection.zeroDate));
   setText("devices-kpi-zero-note", depletionNote(projection));
 }

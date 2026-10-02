@@ -24,6 +24,11 @@ Why the agent cannot finish this alone:
 If Microsoft blocks you or asks for admin approval → stop and forward
 `docs/ops/it-sharepoint-access-request.md` to Tech Help. Do not keep trying random settings.
 
+**Known blocker: error AADSTS53003.** Conditional Access blocks interactive sign-in from
+unmanaged/unregistered contexts. Retrying will not fix it — Tech Help must provide a
+service principal (see the request doc). Until then, weekly files can be attached in chat
+and published normally.
+
 ### Click 2 — Create the Automation
 1. Open: https://cursor.com/automations/new
 2. Name: `Worldpay Monday KPI refresh`

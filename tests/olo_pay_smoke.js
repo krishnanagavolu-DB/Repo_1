@@ -114,7 +114,7 @@ const weeks = olo.normalizeOloData(raw);
 const rawLatest = raw.weeks.at(-1);
 
 check("week count", weeks.length, raw.weeks.length);
-check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Sep 21 – Sep 27, 2026");
+check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Oct 5 – Oct 11, 2026");
 check("oldest first", weeks[0].label, "Jun 15 – Jun 21, 2026");
 
 const latest = weeks[weeks.length - 1];
@@ -139,7 +139,7 @@ approx("Visa share pct", latest.brands[0].pctOfSales, rawLatest.card_brand_mix.V
 check("Visa transactions", latest.brands[0].transactions, rawLatest.card_brand_mix.Visa.TRANSACTION_COUNT);
 
 const ytd = olo.aggregateWeeks(weeks);
-check("history label", ytd.label, "Available history · Jun 15 – Sep 27, 2026");
+check("history label", ytd.label, "Available history · Jun 15 – Oct 11, 2026");
 check("history sort key", ytd.sortKey, "history");
 check("history id accepted", olo.isHistoryPeriod("history"), true);
 check("legacy ytd id accepted", olo.isHistoryPeriod("ytd"), true);
@@ -151,7 +151,11 @@ check(
   ytd.avgTicket.toFixed(2),
   (sumWeeks((week) => week.totals.SALES_VOLUME) / sumWeeks((week) => week.totals.ORDER_COUNT)).toFixed(2)
 );
-check("YTD auth format", olo.authPct(ytd.authRatePct), "96.79%");
+const approved = sumWeeks((week) => week.authorization.approved);
+const attempts = sumWeeks(
+  (week) => week.authorization.approved + week.authorization.declined + (week.authorization.failed || 0)
+);
+check("YTD auth format", olo.authPct(ytd.authRatePct), olo.authPct((approved / attempts) * 100));
 approx("YTD refunds", ytd.refunds, sumWeeks((week) => week.totals.REFUND_VOLUME));
 approx("YTD voids", ytd.voids, sumWeeks((week) => week.totals.VOID_VOLUME));
 check("YTD has no wow sales", ytd.wow.salesPct, null);

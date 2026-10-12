@@ -146,7 +146,11 @@ check(
   (sumOf((week) => week.totals.SALES_VOLUME) / sumOf((week) => week.totals.ORDER_COUNT)).toFixed(2)
 );
 check("YTD card dollars", Number(liveYtd.tenders[0].amount.toFixed(2)), sumOf((week) => week.tender_mix.Card.amount));
-check("YTD card share", pos.sharePct(liveYtd.tenders[0].pct), "69.0%");
+check(
+  "YTD card share",
+  pos.sharePct(liveYtd.tenders[0].pct),
+  pos.sharePct(sumOf((week) => week.tender_mix.Card.amount) / sumOf((week) => week.totals.SALES_VOLUME))
+);
 check("YTD cash dollars", Number(liveYtd.tenders[1].amount.toFixed(2)), sumOf((week) => week.tender_mix.Cash.amount));
 check(
   "YTD gift/Dutch Pass dollars",

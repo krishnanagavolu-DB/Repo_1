@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-29T08:39:07-07:00",
+  "generated_at": "2026-10-12T10:18:51-07:00",
   "week_cadence": "Monday-Sunday",
   "dashboard_tab": "Olo Pay",
   "environment": "prod",
@@ -1006,20 +1006,134 @@
         "TRANSACTION_COUNT_PCT": 1.6,
         "AUTH_RATE_PP": 0.06
       }
+    },
+    {
+      "week_start_date": "2026-09-28",
+      "week_end_date": "2026-10-04",
+      "totals": {
+        "SALES_VOLUME": 5707070.02,
+        "TIP_VOLUME": 415617.39,
+        "BILLED_VOLUME": 6122687.41,
+        "TRANSACTION_COUNT": 539449,
+        "ORDER_COUNT": 539449,
+        "TIPPED_ORDER_COUNT": 208587,
+        "AVG_TICKET": 10.58,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.99,
+        "REFUND_VOLUME": 1436.94,
+        "VOID_VOLUME": 274.7
+      },
+      "authorization": {
+        "approved": 539449,
+        "declined": 18557,
+        "failed": 0,
+        "auth_rate_pct": 96.67,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 4151194.98,
+          "pct_of_digital_sales": 72.7,
+          "TRANSACTION_COUNT": 390952
+        },
+        "Mastercard": {
+          "amount": 1238303.29,
+          "pct_of_digital_sales": 21.7,
+          "TRANSACTION_COUNT": 117978
+        },
+        "Amex": {
+          "amount": 103138.26,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 9632
+        },
+        "Discover": {
+          "amount": 214433.49,
+          "pct_of_digital_sales": 3.8,
+          "TRANSACTION_COUNT": 20887
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 5707070.02,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 0.1,
+        "TRANSACTION_COUNT_PCT": -1.8,
+        "AUTH_RATE_PP": -0.01
+      }
+    },
+    {
+      "week_start_date": "2026-10-05",
+      "week_end_date": "2026-10-11",
+      "totals": {
+        "SALES_VOLUME": 5804444.24,
+        "TIP_VOLUME": 420616.32,
+        "BILLED_VOLUME": 6225060.56,
+        "TRANSACTION_COUNT": 552136,
+        "ORDER_COUNT": 552136,
+        "TIPPED_ORDER_COUNT": 213121,
+        "AVG_TICKET": 10.51,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.97,
+        "REFUND_VOLUME": 1078.58,
+        "VOID_VOLUME": 226.56
+      },
+      "authorization": {
+        "approved": 552136,
+        "declined": 18386,
+        "failed": 2,
+        "auth_rate_pct": 96.78,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 4204523.04,
+          "pct_of_digital_sales": 72.4,
+          "TRANSACTION_COUNT": 398125
+        },
+        "Mastercard": {
+          "amount": 1270239.27,
+          "pct_of_digital_sales": 21.9,
+          "TRANSACTION_COUNT": 122298
+        },
+        "Amex": {
+          "amount": 104404.93,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 9658
+        },
+        "Discover": {
+          "amount": 225277.0,
+          "pct_of_digital_sales": 3.9,
+          "TRANSACTION_COUNT": 22055
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 5804444.24,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 1.7,
+        "TRANSACTION_COUNT_PCT": 2.4,
+        "AUTH_RATE_PP": 0.11
+      }
     }
   ],
   "shop_coverage": {
     "gold_store_ownership_counts": {
-      "Company Owned": 1016,
+      "Company Owned": 1017,
       "Franchised": 314
     }
   },
   "certification": {
     "status": "certified",
     "certified": true,
-    "week_count": 15,
-    "latest_week_start": "2026-09-21",
-    "certified_at": "2026-09-29T08:39:07-07:00",
+    "week_count": 17,
+    "latest_week_start": "2026-10-05",
+    "certified_at": "2026-10-12T10:18:51-07:00",
     "scope": "Company Owned only; processor Stripe"
   }
 }

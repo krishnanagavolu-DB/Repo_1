@@ -252,8 +252,8 @@ def test_run_rate_starts_after_latest_po_date():
         po_shops=[{"id": "AL0107", "opening_date": date(2026, 2, 8)}],
         today=date(2026, 2, 1),
     )
-    # 5,700 units at 55/week need 726 days after the latest PO date (Feb 8).
-    assert result["zero_date"] == date(2028, 2, 4)
+    # 5,700 units at 70/week are 10 devices a day, 570 days after the latest PO date (Feb 8).
+    assert result["zero_date"] == date(2027, 9, 1)
     assert result["projected"][-1]["inventory"] == 0
 
 

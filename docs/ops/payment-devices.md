@@ -42,5 +42,5 @@ Parsed JSON with the same names is also accepted. The importer always uses the n
 ## Chart
 
 - Solid black: firm booked/shipped burn from 5,700, stopping at today or the last formally booked order.
-- Dashed red: starts at that firm ending balance, burns 10 units per pending shop on projected opening minus 14 days, then 5.5 shops/week after the latest PO date.
+- Dashed red: starts at that firm ending balance, burns 10 units per pending shop on projected opening minus 14 days, then 7 shops/week after the latest PO date.
 - Thresholds at 3000 / 2500 / 2000 / 1500 / 1000; 1000 is both the e235 order trigger and the field-service safety buffer.

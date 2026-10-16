@@ -65,7 +65,7 @@ function shopsPerYear(value) {
   return Math.round(clampRunRate(value) * 52);
 }
 
-function clampRunRate(value, fallback = 5.5) {
+function clampRunRate(value, fallback = 7) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   const snapped = Math.round(n / RUN_RATE_STEP) * RUN_RATE_STEP;

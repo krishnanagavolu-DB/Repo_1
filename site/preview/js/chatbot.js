@@ -30,7 +30,7 @@ const PAYMENT_DEFINITIONS = [
   {
     terms: ["payment devices", "verifone", "e285", "burndown"],
     title: "Payment Devices",
-    body: "Projected remaining Verifone e285 handhelds from a 5,700-unit Feb 2026 baseline. The solid line burns actual booked/shipped qty for item M087-500-14-WWA (shipped shops win over booked). The dashed line continues with pending PO shops at opening minus 14 days, then 5.5 shops per week.",
+    body: "Projected remaining Verifone e285 handhelds from a 5,700-unit Feb 2026 baseline. The solid line burns actual booked/shipped qty for item M087-500-14-WWA (shipped shops win over booked). The dashed line continues with pending PO shops at opening minus 14 days, then 7 shops per week.",
   },
   {
     terms: ["auth rate", "authorization rate", "approval rate"],
@@ -850,7 +850,7 @@ function answerDataQuality() {
 }
 
 function wantsDevices(q) {
-  return /\b(payment devices?|verifone|e285|po pipeline|po extract|newco|unfulfilled|run-?rate|5\.5 shops|hardware order|starting inventory|shipped shops)\b/.test(
+  return /\b(payment devices?|verifone|e285|po pipeline|po extract|newco|unfulfilled|run-?rate|(?:5\.5|7(?:\.0)?) shops|hardware order|starting inventory|shipped shops)\b/.test(
     q
   );
 }
@@ -865,10 +865,10 @@ function answerDevicesQuestion(q) {
       "If it is booked only, those units come off the Verifone balance on the report extract date."
     );
   }
-  if (/\b5\.5|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {
+  if (/\b5\.5|7(?:\.0)? shops|run-?rate|after the last|projected opening|staging|14 days\b/.test(q)) {
     return (
       "Pending PO shops (not yet booked) burn **10 units** on projected opening **minus 14 days** (Stratix staging). " +
-      "After the latest PO extract date, remaining inventory burns at **5.5 shops per week** (**55 devices per week**)."
+      "After the latest PO extract date, remaining inventory burns at **7 shops per week** (**70 devices per week**)."
     );
   }
   if (/\b1,?000|2,?500|order threshold|order more hardware|safety buffer|e235\b/.test(q)) {
@@ -1826,7 +1826,7 @@ const TAB_PROMPTS = {
   devices: [
     { question: "How many Verifone e285 units do we still have?", label: "What’s the Verifone balance?" },
     { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
-    { question: "What happens after the last projected opening?", label: "What is the 5.5 shops/week run-rate?" },
+    { question: "What happens after the last projected opening?", label: "What is the 7 shops/week run-rate?" },
     { question: "When should we order more hardware?", label: "What’s the 1,000-unit e235 threshold?" },
   ],
 };
@@ -1839,7 +1839,7 @@ function tabBlurb(tabId) {
     return "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab";
   }
   if (tabId === "devices") {
-    return "Payment Devices: ask about Verifone e285 inventory, the PO pipeline, shipped shops, and the 5.5 shops/week run-rate";
+    return "Payment Devices: ask about Verifone e285 inventory, the PO pipeline, shipped shops, and the 7 shops/week run-rate";
   }
   return "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
 }

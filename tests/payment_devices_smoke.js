@@ -85,7 +85,7 @@ check(
 );
 
 // The dashed line is recomputed in the browser so the slider is instant. It
-// must still land exactly where the importer put it at the default 5.5.
+// must still land exactly where the importer put it at the default 7.0.
 const payload = JSON.parse(fs.readFileSync("data/processed/payment_devices.json", "utf8"));
 const baseline = api.projectSeries(payload, payload.assumptions.shops_per_week);
 check("default run rate reproduces the certified zero date", baseline.zeroDate, payload.summary.zero_date);
@@ -137,7 +137,7 @@ check("run rate is clamped to the control range", api.clampRunRate(99), 10);
 check("run rate snaps to half-shop steps", api.clampRunRate(5.7), 5.5);
 check("run rate always reads with one decimal", api.fmtRate(4), "4.0");
 check("annualized run rate is calculated dynamically", api.shopsPerYear(5.5), 286);
-check("depletion copy uses annualized shops", api.depletionNote(baseline), "286 shops/year");
+check("depletion copy uses annualized shops", api.depletionNote(baseline), "364 shops/year");
 check("Kimlie tab is named as a source", source.includes("Kimlie"), true);
 check("depot card names the 2025 receipts", source.includes("in 2025"), true);
 check(

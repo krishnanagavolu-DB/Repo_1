@@ -1,0 +1,61 @@
+# One run: take down the public github.io dashboard. GitLab Pages is the only host.
+name: Retire GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/retire-github-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  administration: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  retire:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete the Pages site
+        id: delete
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method DELETE "repos/${{ github.repository }}/pages"
+
+      - name: Write a closed page
+        if: steps.delete.outcome != 'success'
+        run: |
+          mkdir -p public
+          cat > public/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8" />
+              <meta name="robots" content="noindex, nofollow, noarchive" />
+              <title>Moved</title>
+            </head>
+            <body>
+              <p>This dashboard has moved to GitLab Pages.</p>
+              <p><a href="https://db-payments-space-8aef34.gitlab.io/">Open the dashboard</a></p>
+            </body>
+          </html>
+          EOF
+
+      - uses: actions/configure-pages@v5
+        if: steps.delete.outcome != 'success'
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.delete.outcome != 'success'
+        with:
+          path: public
+      - id: deployment
+        if: steps.delete.outcome != 'success'
+        uses: actions/deploy-pages@v4

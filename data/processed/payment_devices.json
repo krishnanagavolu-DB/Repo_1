@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-16T22:51:49+00:00",
+  "generated_at": "2026-10-19T18:32:08+00:00",
   "status": "certified",
   "certified": true,
   "assumptions": {
@@ -30,7 +30,7 @@
   "timeline": {
     "past": {
       "start": "2026-02-01",
-      "end": "2026-10-16",
+      "end": "2026-10-19",
       "opening_amount": 5700,
       "shops_opened": 121,
       "consumed_qty": 1210,
@@ -38,7 +38,7 @@
       "depot_qty_prior_contract": 1250
     },
     "present": {
-      "start": "2026-10-16",
+      "start": "2026-10-19",
       "end": "2027-04-07",
       "planned_shops": 126,
       "in_process_shops": 85,
@@ -56,8 +56,8 @@
   },
   "summary": {
     "baseline_inventory": 5700,
-    "as_of": "2026-10-16",
-    "extract_date": "2026-10-16",
+    "as_of": "2026-10-19",
+    "extract_date": "2026-10-19",
     "firm_inventory": 3640,
     "po_firm_inventory": 3640,
     "balance_now": 3630,
@@ -255,14 +255,14 @@
         "series": "firm"
       },
       {
-        "date": "2026-10-16",
+        "date": "2026-10-19",
         "inventory": 3640.0,
         "series": "firm"
       }
     ],
     "projected": [
       {
-        "date": "2026-10-16",
+        "date": "2026-10-19",
         "inventory": 3640.0,
         "series": "projected"
       },
@@ -706,7 +706,7 @@
     }
   ],
   "gap": {
-    "date": "2026-10-16",
+    "date": "2026-10-19",
     "inventory": 3640,
     "shops": 41,
     "units": 410,
@@ -714,8 +714,8 @@
   },
   "sources": {
     "po_extract": "PO_Extract_101626_1032.xlsx",
-    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-16-06-33-55.xlsx",
-    "orders_extract_date": "2026-10-16",
+    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-19-06-34-01.xlsx",
+    "orders_extract_date": "2026-10-19",
     "verifone_burndown": "Dutch Bro Burndown Chart.xlsx",
     "verifone_tab": "10-16-2026"
   },

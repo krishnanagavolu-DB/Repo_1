@@ -2,8 +2,8 @@
   "status": "passed_with_warnings",
   "certified": true,
   "error_count": 0,
-  "warning_count": 17,
-  "weeks_checked": 11,
+  "warning_count": 18,
+  "weeks_checked": 12,
   "checks": [
     {
       "severity": "warning",
@@ -126,6 +126,16 @@
     },
     {
       "severity": "warning",
+      "code": "unlabeled_declines",
+      "message": "10.2% of declined requests have blank/unspecified reason text",
+      "week": "2026-10-12",
+      "details": {
+        "unlabeled_count": 3171.0,
+        "decline_count": 30954.0
+      }
+    },
+    {
+      "severity": "warning",
       "code": "week_over_week_outlier",
       "message": "sales_cnt changed -15.4% week over week",
       "week": "2026-07-27",
@@ -157,11 +167,11 @@
     {
       "severity": "warning",
       "code": "multiweek_sales_trend",
-      "message": "Sales changed -27.2% from first to latest loaded week",
-      "week": "2026-10-05",
+      "message": "Sales changed -27.5% from first to latest loaded week",
+      "week": "2026-10-12",
       "details": {
         "first_week": "2026-07-20",
-        "change": -0.2716576665481439
+        "change": -0.27547383722588453
       }
     },
     {
@@ -181,7 +191,8 @@
           "2026-09-07",
           "2026-09-14",
           "2026-09-28",
-          "2026-10-05"
+          "2026-10-05",
+          "2026-10-12"
         ]
       }
     }
@@ -351,6 +362,21 @@
       "interchange_fee": 540485.99,
       "auth_to_sales_count_ratio": 1.0014465298546842,
       "auth_to_sales_amount_ratio": 1.001413155131545
+    },
+    {
+      "week_start": "2026-10-12",
+      "auth_rows": 284,
+      "interchange_rows": 540,
+      "auth_total_cnt": 2320489.0,
+      "auth_approved_cnt": 2289535.0,
+      "auth_rate": 0.9866605702504946,
+      "approved_auth_amt": 27526763.0,
+      "sales_cnt": 2281443.0,
+      "sales_amt": 27435029.400000002,
+      "return_amt": 25350.379999999997,
+      "interchange_fee": 537649.5700000001,
+      "auth_to_sales_count_ratio": 0.9964656578737604,
+      "auth_to_sales_amount_ratio": 0.9966674759396883
     }
   ]
 }

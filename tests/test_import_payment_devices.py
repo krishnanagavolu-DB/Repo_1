@@ -352,7 +352,7 @@ def test_newer_po_extract_wins_even_when_the_older_file_was_touched_later(tmp_pa
 
 
 def test_current_workbooks_count_pre_contract_po_matches_as_pending():
-    payload = devices.build_payload(devices.RAW_DIR, today=date(2026, 10, 16))
+    payload = devices.build_payload(devices.RAW_DIR, today=date(2026, 10, 19))
     if not payload["certified"]:
         return
     assert payload["summary"]["firm_inventory"] == 3640
@@ -362,7 +362,8 @@ def test_current_workbooks_count_pre_contract_po_matches_as_pending():
     assert payload["gap"]["units"] == 410
     timeline = payload["timeline"]
     past, present, future = timeline["past"], timeline["present"], timeline["future"]
-    assert past["start"] == "2026-02-01" and past["end"] == "2026-10-16"
+    assert past["start"] == "2026-02-01" and past["end"] == "2026-10-19"
+    assert payload["summary"]["extract_date"] == "2026-10-19"
     assert past["opening_amount"] == 5700
     assert past["shops_opened"] == 121 and past["consumed_qty"] == 1210
     assert past["depot_qty_since_baseline"] == 0 and past["depot_qty_prior_contract"] == 1250

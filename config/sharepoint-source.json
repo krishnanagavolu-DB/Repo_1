@@ -18,7 +18,7 @@
     "automation": "Cursor Automation (see docs/ops/monday-automation.md)"
   },
   "notes": [
-    "Raw Excels stay private; only site/ aggregates are published to GitHub Pages.",
+    "Raw Excels stay private; only site/ aggregates are published to GitLab Pages.",
     "Automation must authenticate to dutchbros.sharepoint.com (OAuth or app registration)."
   ]
 }

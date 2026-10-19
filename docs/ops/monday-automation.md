@@ -30,7 +30,7 @@ If reports land later than 11 AM, re-run the automation manually that day; do no
    - `site/data/dashboard.json` (leadership homepage)
    - `site/preview/data/dashboard.json` (preview page, if present)
 4. Certification checks the output copies and writes `data/processed/validation_report.json`.
-5. A certified data-only commit pushes directly to `main` on GitLab and GitHub. GitLab Pages is the primary host; GitHub Pages stays as backup. Both certify again in CI.
+5. A certified data-only commit pushes directly to `main` on GitLab. GitLab Pages is the only host. The `pages` job certifies again before it publishes.
 6. Leadership opens the **same GitLab Pages URL** — no new link needed.
    Preview UI work stays at `/preview/` until promoted (see `docs/ops/preview-workflow.md`).
 
@@ -46,11 +46,6 @@ If Microsoft blocks sign-in: forward [`it-sharepoint-access-request.md`](it-shar
 See [`gitlab-hosting.md`](gitlab-hosting.md). After the first green `pages` job, share
 the unique URL printed in the job log / **Deploy → Pages**. Do not use
 `https://krishna.nagavolu.gitlab.io/…` (the username contains a dot, so HTTPS fails).
-
-### GitHub Pages (backup)
-1. Repo **Settings → Pages → Source: GitHub Actions**
-2. Private repo Pages requires **GitHub Pro** (or org Team+)
-3. Backup URL: https://krishnanagavolu-db.github.io/Repo_1/
 
 ### Why your browser login is not enough
 Signing into SharePoint on your laptop only authenticates **your browser**.
@@ -130,8 +125,7 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
    explain the movement before publishing. Never suppress a check just to make CI green.
 
 6. This is a certified data-only refresh. Commit directly to main and push to
-   GitHub origin and the gitlab remote so GitLab Pages (primary) and GitHub Pages
-   (backup) deploy without requiring a person to merge a PR:
+   GitLab so GitLab Pages deploys without requiring a person to merge a PR:
    - data/raw/{week}/
    - data/processed/dashboard.json
    - site/data/dashboard.json
@@ -140,9 +134,9 @@ Also read config/sharepoint-source.json and docs/ops/monday-automation.md.
 
 Keep commit message like: "data: add Worldpay week YYYY-MM-DD and refresh dashboard"
 
-Before pushing, run `git pull --rebase origin main`. Then push with
-`git push origin main`. If the push is rejected because main changed, pull/rebase,
-rerun certification, and retry once. Never force-push.
+Before pushing, run `git pull --rebase origin main`. Then publish with
+`git push gitlab HEAD:main`. If the push is rejected because main changed, pull/rebase,
+rerun certification, and retry once. Never force-push. GitHub Pages must stay off.
 
 Do not open a PR for a certified weekly data-only refresh. PRs remain required for
 code, UI, formulas, validation rules, or automation configuration changes.

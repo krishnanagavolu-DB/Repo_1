@@ -20,9 +20,9 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
-WORKFLOW = ROOT / ".github" / "workflows" / "deploy-pages.yml"
 GITLAB_CI = ROOT / ".gitlab-ci.yml"
 RUNNER = ROOT / "scripts" / "run_ci_checks.sh"
+WORKFLOWS = ROOT / ".github" / "workflows"
 
 # `scripts/` holds standalone entrypoints and has no __init__.py, so a
 # `scripts.` import only resolves when something has put the repo root on
@@ -78,30 +78,18 @@ def test_no_test_module_imports_the_scripts_package():
     )
 
 
-def _workflow_check_step() -> str:
-    text = WORKFLOW.read_text(encoding="utf-8")
-    start = text.index("Certify Worldpay data before publish")
-    end = text.index("- uses: actions/configure-pages", start)
-    return text[start:end]
-
-
 def _node_smoke_commands(text: str) -> set[str]:
     return set(re.findall(r"node\s+(tests/[\w-]+\.js)", text))
-
-
-def _python_check_scripts(text: str) -> set[str]:
-    return set(re.findall(r"python3?\s+(scripts/[\w-]+\.py)", text))
 
 
 def test_every_smoke_test_is_wired_into_ci():
     """A smoke test nobody runs is not a test."""
     on_disk = {f"tests/{path.name}" for path in TESTS.glob("*_smoke.js")}
-    in_ci = _node_smoke_commands(_workflow_check_step())
+    in_ci = _node_smoke_commands(RUNNER.read_text(encoding="utf-8"))
     missing = sorted(on_disk - in_ci)
     assert not missing, (
-        "These smoke tests exist but never run in CI. Add them to the "
-        f"'Certify Worldpay data before publish' step in {WORKFLOW.relative_to(ROOT)}:\n  "
-        + "\n  ".join(missing)
+        "These smoke tests exist but never run in CI. Add them to "
+        f"{RUNNER.relative_to(ROOT)}:\n  " + "\n  ".join(missing)
     )
 
 
@@ -114,22 +102,23 @@ def test_local_runner_exists_and_is_executable():
     assert os.access(RUNNER, os.X_OK), f"{RUNNER.relative_to(ROOT)} must be executable."
 
 
-def test_local_runner_matches_ci_checks():
-    """Whatever CI gates on, the local runner must gate on too."""
-    ci = _workflow_check_step()
-    runner = RUNNER.read_text(encoding="utf-8")
+def test_github_pages_workflow_is_gone():
+    """GitHub Pages must not publish the dashboard. GitLab Pages is the only host."""
+    if WORKFLOWS.is_dir():
+        for path in WORKFLOWS.glob("*.yml"):
+            text = path.read_text(encoding="utf-8")
+            assert "actions/deploy-pages" not in text, f"{path.name} still deploys GitHub Pages"
+            assert "actions/upload-pages-artifact" not in text, f"{path.name} still uploads a Pages artifact"
+            assert "enablement: true" not in text, f"{path.name} would turn GitHub Pages back on"
+    assert not (WORKFLOWS / "deploy-pages.yml").exists()
 
-    missing_smoke = sorted(_node_smoke_commands(ci) - _node_smoke_commands(runner))
-    assert not missing_smoke, (
-        f"{RUNNER.relative_to(ROOT)} skips smoke tests that CI runs:\n  "
-        + "\n  ".join(missing_smoke)
-    )
 
-    missing_scripts = sorted(_python_check_scripts(ci) - _python_check_scripts(runner))
-    assert not missing_scripts, (
-        f"{RUNNER.relative_to(ROOT)} skips check scripts that CI runs:\n  "
-        + "\n  ".join(missing_scripts)
-    )
+def test_gitlab_ci_does_not_keep_a_second_check_list():
+    """Publish checks live in one script. GitLab must call it instead of a shorter copy."""
+    text = GITLAB_CI.read_text(encoding="utf-8")
+    assert "scripts/run_ci_checks.sh" in text
+    assert "node tests/" not in text
+    assert not re.search(r"^\s*pytest\b", text, re.MULTILINE)
 
 
 def _shell_invocations(script: str) -> list[str]:
@@ -163,7 +152,7 @@ def test_local_runner_uses_the_same_pytest_entrypoint_as_ci():
 
 
 def test_gitlab_pages_job_runs_the_same_local_runner():
-    """GitLab host must certify with the same script GitHub CI uses."""
+    """GitLab Pages is the only host, and it certifies with the local runner."""
     assert GITLAB_CI.is_file(), (
         f"{GITLAB_CI.relative_to(ROOT)} is missing. GitLab Pages will not publish."
     )
@@ -172,7 +161,7 @@ def test_gitlab_pages_job_runs_the_same_local_runner():
         "GitLab requires a job named `pages` to publish the dashboard."
     )
     assert "scripts/run_ci_checks.sh" in text, (
-        "GitLab CI must call scripts/run_ci_checks.sh so publish checks match GitHub."
+        "GitLab CI must call scripts/run_ci_checks.sh so the publish gate matches local checks."
     )
     assert re.search(r"cp\s+-a\s+site/\.\s+public/", text), (
         "GitLab Pages must copy site/ into public/ so raw data/ is not published."

@@ -6,10 +6,10 @@ A one-page note you can save locally: [`docs/ops/promote-cheat-sheet.md`](promot
 
 ## Links
 
-| Audience | GitLab (primary) | GitHub (backup) | Files in repo |
-| --- | --- | --- | --- |
-| **Leadership (live)** | Unique Pages URL from **Deploy → Pages** (see [`gitlab-hosting.md`](gitlab-hosting.md)) | https://krishnanagavolu-db.github.io/Repo_1/ | `site/index.html`, `site/css/`, `site/js/`, `site/data/` (root of `site/`) |
-| **Preview (safe to change)** | same unique URL + `/preview/` | https://krishnanagavolu-db.github.io/Repo_1/preview/ | `site/preview/` |
+| Audience | Link | Files in repo |
+| --- | --- | --- |
+| **Leadership (live)** | https://db-payments-space-8aef34.gitlab.io/ | `site/index.html`, `site/css/`, `site/js/`, `site/data/` (root of `site/`) |
+| **Preview (safe to change)** | https://db-payments-space-8aef34.gitlab.io/preview/ | `site/preview/` |
 
 Pushing to `main` deploys the whole `site/` folder. Editing only files under `site/preview/` updates the preview link and **does not** change the leadership homepage.
 

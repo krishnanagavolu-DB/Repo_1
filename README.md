@@ -6,12 +6,12 @@ Built from Worldpay **Auth Summary** + **Interchange** reports. Static site in `
 
 ## Share with leadership
 
-Primary host is **GitLab Pages**. GitHub Pages stays up as a backup until GitLab is proven.
+The dashboard is hosted only on **GitLab Pages**. GitHub Pages is retired. Do not turn it back on.
 
-| Audience | GitLab (primary) | GitHub (backup) |
-| --- | --- | --- |
-| Leadership | Unique `*.gitlab.io` URL from **Deploy → Pages** (site root) | https://krishnanagavolu-db.github.io/Repo_1/ |
-| Preview | same unique URL + `/preview/` | https://krishnanagavolu-db.github.io/Repo_1/preview/ |
+| Audience | Link |
+| --- | --- |
+| Leadership | https://db-payments-space-8aef34.gitlab.io/ |
+| Preview | https://db-payments-space-8aef34.gitlab.io/preview/ |
 
 The GitLab username contains a **dot**, so `https://krishna.nagavolu.gitlab.io/…` is **not** a working HTTPS link. Copy the unique Pages URL from the `pages` job (or Deploy → Pages). See [`docs/ops/gitlab-hosting.md`](docs/ops/gitlab-hosting.md).
 

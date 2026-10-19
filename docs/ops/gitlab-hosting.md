@@ -2,7 +2,7 @@
 
 The dashboard lives in GitLab at
 [gitlab.com/Krishna.Nagavolu/db-payments-space](https://gitlab.com/Krishna.Nagavolu/db-payments-space).
-GitHub (`krishnanagavolu-db/repo_1`) stays as a backup until GitLab Pages is confirmed.
+GitHub Pages is retired. Do not publish https://krishnanagavolu-db.github.io/Repo_1/ again.
 
 This is a **hosting move**, not a rebuild. `site/` is still the app. GitLab Pages
 publishes that folder as `public/`.
@@ -22,15 +22,10 @@ After the first green **pages** job:
    `https://db-payments-space-<id>.gitlab.io/` (GitLab assigns the id).
 3. Also check **Deploy → Pages** for the same URL.
 
-| Audience | Path on that Pages URL |
+| Audience | Link |
 | --- | --- |
-| Leadership | `/` (site root) |
-| Preview | `/preview/` |
-
-GitHub backup (still live):
-
-- https://krishnanagavolu-db.github.io/Repo_1/
-- https://krishnanagavolu-db.github.io/Repo_1/preview/
+| Leadership | https://db-payments-space-8aef34.gitlab.io/ |
+| Preview | https://db-payments-space-8aef34.gitlab.io/preview/ |
 
 ## Sharing the link with someone else
 

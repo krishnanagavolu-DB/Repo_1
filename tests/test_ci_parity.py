@@ -107,11 +107,10 @@ def test_github_pages_workflow_is_gone():
     if WORKFLOWS.is_dir():
         for path in WORKFLOWS.glob("*.yml"):
             text = path.read_text(encoding="utf-8")
+            assert "actions/deploy-pages" not in text, f"{path.name} still deploys GitHub Pages"
+            assert "actions/upload-pages-artifact" not in text, f"{path.name} still uploads a Pages artifact"
             assert "enablement: true" not in text, f"{path.name} would turn GitHub Pages back on"
             assert "path: site" not in text, f"{path.name} would publish the dashboard"
-            if path.name != "retire-github-pages.yml":
-                assert "actions/deploy-pages" not in text, f"{path.name} still deploys GitHub Pages"
-                assert "actions/upload-pages-artifact" not in text, f"{path.name} still uploads a Pages artifact"
     assert not (WORKFLOWS / "deploy-pages.yml").exists()
 
 

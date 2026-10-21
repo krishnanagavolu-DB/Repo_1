@@ -8,9 +8,9 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=a64d9bd584" />
+    <link rel="stylesheet" href="css/dashboard.css?v=6c39865508" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="js/auth-gate.js?v=ab0732ca41" defer></script>
+    <script src="js/auth-gate.js?v=c7fc15c5ec" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
     <script src="js/chart-labels.js?v=cd7105563a" defer></script>
@@ -19,6 +19,8 @@
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
     <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
     <script src="js/payment-devices.js?v=48e11d337e" defer></script>
+    <script src="js/e235-roadmap.js?v=7511465abb" defer></script>
+    <script src="js/db-payments.js?v=7a75d8fa0a" defer></script>
     <script src="js/tabs.js?v=835b13ae94" defer></script>
     <script src="js/chatbot.js?v=7d0bac56e7" defer></script>
   </head>
@@ -79,10 +81,10 @@
             <div class="tab-group-items">
               <button type="button" class="tab" data-tab="pos">In-Shop Sales</button>
               <button type="button" class="tab" data-tab="worldpay">Card Health</button>
+              <button type="button" class="tab" data-tab="devices">Payment Devices</button>
             </div>
           </div>
           <button type="button" class="tab" data-tab="olo">Order Ahead</button>
-          <button type="button" class="tab" data-tab="devices">Payment Devices</button>
           <button type="button" class="tab locked" disabled aria-disabled="true">
             Gift Cards
             <span class="tab-badge">
@@ -103,6 +105,17 @@
                 />
               </svg>
               Coming soon
+            </span>
+          </button>
+          <button type="button" class="tab tab-private" data-tab="dbpay">
+            DB Payments
+            <span class="tab-badge tab-badge-private">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V7a3 3 0 1 0-6 0v3Z"
+                />
+              </svg>
+              Private
             </span>
           </button>
         </nav>
@@ -402,6 +415,32 @@
         </section>
 
         <section id="panel-devices" class="tab-panel" data-panel="devices" hidden>
+          <div class="subtabs" role="tablist" aria-label="Payment Devices views">
+            <button type="button" class="subtab active" role="tab" id="subtab-e235-burndown" data-subtab="e235-burndown" aria-selected="true" aria-controls="subpanel-e235-burndown">E235 Burn Down</button>
+            <button type="button" class="subtab" role="tab" id="subtab-e285-burndown" data-subtab="e285-burndown" aria-selected="false" aria-controls="subpanel-e285-burndown" tabindex="-1">E285 Burn Down</button>
+            <button type="button" class="subtab" role="tab" id="subtab-e235-roadmap" data-subtab="e235-roadmap" aria-selected="false" aria-controls="subpanel-e235-roadmap" tabindex="-1">E235 Roadmap</button>
+          </div>
+
+          <div class="subpanel" id="subpanel-e235-burndown" role="tabpanel" data-subpanel="e235-burndown" aria-labelledby="subtab-e235-burndown">
+            <div class="slide devices-slide e235-burndown-slide">
+              <header class="slide-band">
+                <div>
+                  <h2>E235 Burn Down</h2>
+                  <span>Verifone E235 &middot; next device</span>
+                </div>
+              </header>
+              <div class="e235-burndown-empty">
+                <h3>Nothing to burn down yet</h3>
+                <p>The E235 burndown starts when there is an E235 order to count against. Until then, the current contract is on E285 Burn Down, and the path to rollout is on E235 Roadmap.</p>
+                <div class="e235-burndown-links">
+                  <button type="button" class="subtab-link" data-subtab-target="e285-burndown">Open E285 Burn Down</button>
+                  <button type="button" class="subtab-link" data-subtab-target="e235-roadmap">Open E235 Roadmap</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="subpanel" id="subpanel-e285-burndown" role="tabpanel" data-subpanel="e285-burndown" aria-labelledby="subtab-e285-burndown" hidden>
           <div id="devices-empty" class="pos-empty" hidden></div>
           <div id="devices-content" class="slide devices-slide" aria-label="Verifone e285 lifecycle burndown" hidden>
             <header class="slide-band">
@@ -480,6 +519,71 @@
               <h3>Assumptions</h3>
               <div class="devices-assumptions" id="devices-assumptions"></div>
             </section>
+          </div>
+          </div>
+
+          <div class="subpanel" id="subpanel-e235-roadmap" role="tabpanel" data-subpanel="e235-roadmap" aria-labelledby="subtab-e235-roadmap" hidden>
+            <div id="roadmap-empty" class="pos-empty" hidden></div>
+            <div id="roadmap-content" class="slide devices-slide roadmap-slide" hidden>
+              <header class="slide-band">
+                <div>
+                  <h2>E235 Roadmap</h2>
+                  <span id="roadmap-asof">—</span>
+                </div>
+              </header>
+              <section class="roadmap-block" aria-labelledby="roadmap-stages-title">
+                <h3 id="roadmap-stages-title">Stages</h3>
+                <div class="roadmap-stages" id="roadmap-stages"></div>
+              </section>
+              <section class="roadmap-block" aria-labelledby="roadmap-sequence-title">
+                <div class="roadmap-block-head">
+                  <h3 id="roadmap-sequence-title">Sequence</h3>
+                  <p id="roadmap-sequence-note"></p>
+                </div>
+                <div class="roadmap-sequence" id="roadmap-sequence"></div>
+              </section>
+              <section class="roadmap-block" aria-labelledby="roadmap-commitments-title">
+                <h3 id="roadmap-commitments-title">Dates and commitments</h3>
+                <ul class="roadmap-list" id="roadmap-commitments"></ul>
+              </section>
+              <div class="roadmap-columns">
+                <section class="roadmap-block" aria-labelledby="roadmap-assumptions-title">
+                  <h3 id="roadmap-assumptions-title">Assumptions</h3>
+                  <ol class="roadmap-list" id="roadmap-assumptions"></ol>
+                </section>
+                <section class="roadmap-block roadmap-questions" aria-labelledby="roadmap-questions-title">
+                  <h3 id="roadmap-questions-title">Open questions</h3>
+                  <ul class="roadmap-list" id="roadmap-questions"></ul>
+                </section>
+              </div>
+              <p class="devices-source-note" id="roadmap-source"></p>
+            </div>
+          </div>
+        </section>
+
+        <section id="panel-dbpay" class="tab-panel" data-panel="dbpay" hidden>
+          <div id="dbpay-lock" class="dbpay-lock">
+            <div class="dbpay-lock-card">
+              <p class="dbpay-eyebrow">DB Payments &middot; Private</p>
+              <h2>Weekly updates for Ravi</h2>
+              <p class="dbpay-lock-hint">This section has its own key. The dashboard key does not open it.</p>
+              <form id="dbpay-form" class="auth-form" autocomplete="off">
+                <label for="dbpay-password" class="visually-hidden">DB Payments key</label>
+                <input id="dbpay-password" name="dbpay-password" type="password" autocomplete="off" placeholder="DB Payments key" required />
+                <button type="submit">Open DB Payments</button>
+              </form>
+              <p id="dbpay-error" class="auth-error" hidden></p>
+            </div>
+          </div>
+          <div id="dbpay-content" class="slide dbpay-slide" hidden>
+            <header class="slide-band">
+              <div>
+                <h2>DB Payments</h2>
+                <span id="dbpay-subtitle">Weekly updates for Ravi</span>
+              </div>
+              <button type="button" id="dbpay-lock-again" class="dbpay-lock-again">Lock</button>
+            </header>
+            <div id="dbpay-updates" class="dbpay-updates"></div>
           </div>
         </section>
 

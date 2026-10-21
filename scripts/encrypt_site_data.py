@@ -21,6 +21,11 @@ def main() -> int:
         help="Gate password (or set DASHBOARD_PASSWORD). Required unless --check.",
     )
     parser.add_argument(
+        "--private-password",
+        default=os.environ.get("DB_PAYMENTS_PASSWORD", ""),
+        help="DB Payments password (or set DB_PAYMENTS_PASSWORD). Without it, the DB Payments envelope is left unchanged.",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Verify published envelopes match processed plaintext hashes (no password).",
@@ -40,7 +45,12 @@ def main() -> int:
     if not args.password:
         print("Pass --password or set DASHBOARD_PASSWORD.", file=sys.stderr)
         return 1
-    for line in encrypt_site_payloads(args.password):
+    try:
+        lines = encrypt_site_payloads(args.password, args.private_password or None)
+    except ValueError as err:
+        print(f"ERROR {err}", file=sys.stderr)
+        return 1
+    for line in lines:
         print(line)
     return 0
 

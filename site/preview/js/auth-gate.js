@@ -200,9 +200,24 @@ async function initAuthGate() {
   input.focus();
 }
 
+/* Opens an envelope with a key other than the dashboard key (DB Payments).
+   A wrong key fails AES-GCM authentication, so no password hash is published. */
+async function loadPrivateJson(url, password) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    const error = new Error(`Failed to load ${url} (${res.status})`);
+    error.status = res.status;
+    throw error;
+  }
+  const payload = await res.json();
+  if (!isEnvelope(payload)) throw new Error(`${url} is not encrypted`);
+  return decryptEnvelope(payload, password);
+}
+
 window.__dashboardAuth = {
   password: null,
   loadJson: loadPublishedJson,
+  loadPrivateJson,
   isEnvelope,
 };
 

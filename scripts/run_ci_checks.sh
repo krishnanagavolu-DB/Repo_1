@@ -36,6 +36,8 @@ node tests/pos_sales_smoke.js
 node tests/olo_pay_smoke.js
 node tests/executive_overview_smoke.js
 node tests/payment_devices_smoke.js
+node tests/payment_device_views_smoke.js
+node tests/db_payments_smoke.js
 node tests/notices_smoke.js
 node tests/ytd_banner_smoke.js
 node tests/tab_period_smoke.js
@@ -57,6 +59,8 @@ if ! cmp "$tmpdir/preview_olo_pay_data.json" data/processed/olo_pay_data.json; t
   echo "Olo Pay regen preview copy drifted from processed JSON." >&2
   exit 1
 fi
+python3 scripts/import_e235_roadmap.py --check
+python3 scripts/import_db_payments.py --check
 python3 scripts/encrypt_site_data.py --check
 python3 scripts/import_channel_sales.py --check
 

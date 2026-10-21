@@ -2146,6 +2146,501 @@ body[data-active-tab="devices"] .period {
   color: var(--blue);
 }
 
+/* Payment Devices views: E235 Burn Down, E285 Burn Down, E235 Roadmap */
+.subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 1500px;
+  margin: 0 auto 14px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #dbe4ec;
+  width: fit-content;
+}
+
+.subtab {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 8px 18px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.subtab:hover {
+  color: var(--blue);
+}
+
+.subtab.active {
+  background: var(--panel);
+  color: var(--blue);
+  box-shadow: 0 1px 3px rgba(21, 65, 103, 0.18);
+}
+
+.subtab:focus-visible,
+.subtab-link:focus-visible {
+  outline: 3px solid rgba(0, 96, 152, 0.35);
+  outline-offset: 2px;
+}
+
+.devices-slide .slide-band span,
+.dbpay-slide .slide-band span {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.e235-burndown-empty {
+  margin: 14px;
+  padding: 36px 28px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.e235-burndown-empty h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: var(--dark);
+}
+
+.e235-burndown-empty p {
+  max-width: 560px;
+  margin: 0 auto;
+  font-size: 15px;
+}
+
+.e235-burndown-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.subtab-link {
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+  background: #fff;
+  padding: 8px 16px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.subtab-link:hover {
+  background: var(--blue);
+  color: #fff;
+}
+
+/* E235 Roadmap */
+.roadmap-slide {
+  padding-bottom: 14px;
+}
+
+.roadmap-slide .devices-source-note {
+  margin: 0 14px;
+}
+
+.roadmap-block {
+  margin: 14px 14px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.roadmap-block h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.roadmap-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.roadmap-block-head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.roadmap-stages {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.roadmap-stage {
+  padding: 12px;
+  border-radius: 10px;
+  border-top: 4px solid var(--line);
+  background: #f4f7fa;
+}
+
+.roadmap-stage h4 {
+  margin: 2px 0 6px;
+  font-size: 15px;
+  color: var(--dark);
+}
+
+.roadmap-stage p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.roadmap-stage-phase {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.roadmap-aka {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.roadmap-stage.roadmap-done { border-top-color: var(--navy); }
+.roadmap-stage.roadmap-done .roadmap-stage-phase { color: var(--navy); }
+.roadmap-stage.roadmap-current {
+  border-top-color: var(--blue);
+  background: rgba(0, 96, 152, 0.1);
+  box-shadow: inset 0 0 0 2px var(--blue);
+}
+.roadmap-stage.roadmap-current .roadmap-stage-phase { color: var(--blue); }
+
+.roadmap-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roadmap-row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.roadmap-row-name {
+  padding-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.roadmap-heads,
+.roadmap-row-track {
+  display: grid;
+  grid-template-columns: repeat(var(--roadmap-cols, 5), minmax(0, 1fr));
+  gap: 6px;
+}
+
+.roadmap-heads span {
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--line);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.roadmap-row-head .roadmap-row-name {
+  padding-top: 0;
+}
+
+.roadmap-bar {
+  grid-column: var(--roadmap-col) / span var(--roadmap-span, 1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e6edf3;
+  color: var(--dark);
+}
+
+.roadmap-bar ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.roadmap-bar.roadmap-done {
+  background: var(--navy);
+  color: #fff;
+}
+
+.roadmap-bar.roadmap-current {
+  background: var(--blue);
+  color: #fff;
+}
+
+.roadmap-bar.roadmap-next {
+  background: rgba(0, 96, 152, 0.16);
+}
+
+.roadmap-list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dark);
+}
+
+.roadmap-list li + li {
+  margin-top: 6px;
+}
+
+.roadmap-columns {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 0 14px;
+  margin-right: 14px;
+}
+
+.roadmap-columns .roadmap-block {
+  margin-right: 0;
+}
+
+.roadmap-questions {
+  border-left: 4px solid var(--red);
+}
+
+/* DB Payments: private weekly updates */
+body[data-active-tab="dbpay"] .period,
+body[data-active-tab="dbpay"] .ask-data {
+  display: none;
+}
+
+.tab-badge-private {
+  background: #fdeced;
+  color: var(--red);
+}
+
+.tab-private.active .tab-badge-private {
+  background: var(--red);
+  color: #fff;
+}
+
+.dbpay-lock {
+  display: flex;
+  justify-content: center;
+  padding: 40px 16px 56px;
+}
+
+.dbpay-lock-card {
+  width: min(420px, 100%);
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--red);
+  border-radius: 14px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.dbpay-eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.dbpay-lock-card h2 {
+  margin: 6px 0 4px;
+  font-size: 22px;
+  color: var(--dark);
+}
+
+.dbpay-lock-hint {
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.dbpay-slide .slide-band {
+  align-items: center;
+}
+
+.dbpay-lock-again {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  padding: 5px 14px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+
+.dbpay-lock-again:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.dbpay-updates {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg);
+}
+
+.dbpay-update,
+.dbpay-empty {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.dbpay-update header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dbpay-update h3,
+.dbpay-empty h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--dark);
+}
+
+.dbpay-empty p {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.dbpay-sent {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dbpay-summary {
+  margin: 8px 0 12px;
+  font-size: 15px;
+  color: var(--dark);
+}
+
+.dbpay-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dbpay-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.dbpay-status {
+  flex: none;
+  min-width: 92px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.dbpay-status-done { background: #e3f3e8; color: var(--good); }
+.dbpay-status-in-progress { background: rgba(0, 96, 152, 0.12); color: var(--blue); }
+.dbpay-status-blocked { background: #fdeced; color: var(--red); }
+
+.dbpay-area {
+  flex: none;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.dbpay-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.dbpay-list h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.dbpay-list ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.dbpay-asks h4 {
+  color: var(--red);
+}
+
+@media (max-width: 900px) {
+  .roadmap-stages {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmap-columns,
+  .dbpay-lists {
+    grid-template-columns: 1fr;
+    margin-right: 0;
+  }
+
+  .roadmap-columns .roadmap-block {
+    margin-right: 14px;
+  }
+
+  .roadmap-row {
+    grid-template-columns: 1fr;
+  }
+
+  .roadmap-heads {
+    display: none;
+  }
+
+  .roadmap-bar {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 900px) {
   .devices-chart-wrap {
     height: 320px;

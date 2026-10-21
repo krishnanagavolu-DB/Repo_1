@@ -56,6 +56,18 @@ PAYLOAD_MAP: tuple[tuple[Path, tuple[Path, ...]], ...] = (
         ROOT / "data" / "processed" / "payment_devices.json",
         (ROOT / "site" / "preview" / "data" / "payment_devices.json",),
     ),
+    (
+        ROOT / "data" / "processed" / "e235_roadmap.json",
+        (ROOT / "site" / "preview" / "data" / "e235_roadmap.json",),
+    ),
+)
+
+# Opened with a second password (DB_PAYMENTS_PASSWORD), never the dashboard key.
+PRIVATE_PAYLOAD_MAP: tuple[tuple[Path, tuple[Path, ...]], ...] = (
+    (
+        ROOT / "data" / "processed" / "db_payments.json",
+        (ROOT / "site" / "preview" / "data" / "db_payments.json",),
+    ),
 )
 
 
@@ -65,11 +77,16 @@ OPTIONAL_PLAINTEXT = {
 }
 
 
-def _payload_pairs():
-    for source, destinations in PAYLOAD_MAP:
+def _pairs(mapping):
+    for source, destinations in mapping:
         if source in OPTIONAL_PLAINTEXT and not source.is_file():
             continue
         yield source, destinations
+
+
+def _payload_pairs():
+    yield from _pairs(PAYLOAD_MAP)
+    yield from _pairs(PRIVATE_PAYLOAD_MAP)
 
 
 def sha256_hex(data: bytes) -> str:
@@ -143,16 +160,31 @@ def envelope_sha256(envelope: dict) -> str | None:
     return str(value) if value else None
 
 
-def encrypt_site_payloads(password: str) -> list[str]:
-    log = []
-    for source, destinations in _payload_pairs():
-        plaintext = source.read_bytes()
-        envelope = encrypt_bytes(plaintext, password)
-        encoded = json.dumps(envelope, indent=2) + "\n"
-        for dest in destinations:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            dest.write_text(encoded, encoding="utf-8")
-            log.append(f"encrypted {dest.relative_to(ROOT)}")
+def _write_envelopes(source: Path, destinations: tuple[Path, ...], password: str, log: list[str]) -> None:
+    envelope = encrypt_bytes(source.read_bytes(), password)
+    encoded = json.dumps(envelope, indent=2) + "\n"
+    for dest in destinations:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(encoded, encoding="utf-8")
+        log.append(f"encrypted {dest.relative_to(ROOT)}")
+
+
+def encrypt_site_payloads(password: str, private_password: str | None = None) -> list[str]:
+    """Encrypt every published payload.
+
+    Private payloads need their own password. Without one they are left as-is,
+    so a routine data refresh never re-keys them with the dashboard password.
+    """
+    log: list[str] = []
+    for source, destinations in _pairs(PAYLOAD_MAP):
+        _write_envelopes(source, destinations, password, log)
+    for source, destinations in _pairs(PRIVATE_PAYLOAD_MAP):
+        if not private_password:
+            log.extend(f"skipped {dest.relative_to(ROOT)} (no private password)" for dest in destinations)
+            continue
+        if private_password == password:
+            raise ValueError("the private payload password must differ from the dashboard password")
+        _write_envelopes(source, destinations, private_password, log)
     return log
 
 

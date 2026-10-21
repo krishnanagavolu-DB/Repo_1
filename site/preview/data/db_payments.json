@@ -1,0 +1,10 @@
+{
+  "enc": "db-dash-v1",
+  "alg": "AES-GCM",
+  "kdf": "PBKDF2-SHA256",
+  "iterations": 210000,
+  "salt": "10FD4yjnpQISxoBtzGvUdw==",
+  "iv": "axK7BVjH8z2svQkZ",
+  "sha256": "4e3bf83b1dceba5045d5cf766dec58ef5f789c88a5c94471debb7749740e663f",
+  "ciphertext": "pLDewiwmGcGGSPa7wbeoPdPVrpLi9lmbExTvF3hVA9uciSsRp/LulKz1VZNXCGrYq69CpLQO4uZBrkTa1ALgRP+4XZTU/SdJsZr3mZ5lke1nxHDkuojuRTAVZBWCmpePWRkOQmtTbiupfV1mUgIIJLi5ZNWXpVA="
+}

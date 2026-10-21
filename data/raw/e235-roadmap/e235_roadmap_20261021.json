@@ -1,0 +1,86 @@
+{
+  "title": "E235 roadmap",
+  "as_of": "2026-10-21",
+  "source": "E235 roadmap PDF, 21 Oct 2026",
+  "sequence_note": "Bars show order, not duration.",
+  "stages": [
+    {
+      "id": "lab-dev",
+      "name": "Lab / Dev",
+      "phase": "Done",
+      "column": "Done",
+      "status": "done",
+      "definition": "Dev units on a Dev MID and TID in Dev PWC, Dev VHQ, and Dev Worldpay. Genius LAB015, LAB003, and LAB004 sit in the Genius production environment, but orders are filtered out downstream.",
+      "milestones": ["Dev MID and TID", "Dev build signed off"]
+    },
+    {
+      "id": "pre-prod",
+      "name": "Pre-prod",
+      "aka": "Golden units",
+      "phase": "Current",
+      "column": "Now",
+      "status": "current",
+      "definition": "The golden units. A production build on devices that stay in the lab at Dutch Bros HQ. The MIDs and TIDs are in production PWC, VHQ, and Worldpay. An auth is to be refunded the same day. Credits and refunds move and net out.",
+      "milestones": [
+        "Production build units stay in the HQ lab",
+        "Testing of units against existing test cases",
+        "Ensure flow of transactions through all systems",
+        "Prod build sign-off"
+      ]
+    },
+    {
+      "id": "field-test",
+      "name": "Field test",
+      "phase": "Next",
+      "column": "Next",
+      "status": "next",
+      "definition": "Devices go to one shop for testing and come back. Ops suggested one local shop, about two weeks, shipped from Verifone, maintain mixed environment, with the team nearby.",
+      "milestones": ["One local shop, devices come back. Ships from Verifone", "Field test sign-off"]
+    },
+    {
+      "id": "field-pilot",
+      "name": "Field pilot",
+      "phase": "Then",
+      "column": "Then",
+      "status": "then",
+      "definition": "The first shops run the E235 as a deployment. Ops described about a month, mixed first and then a full swap, and named Pacific Northwest and Texas as viable regions.",
+      "milestones": ["First shops running as a deployment", "Mixed first, then a full swap"]
+    },
+    {
+      "id": "rollout",
+      "name": "Rollout",
+      "phase": "Later",
+      "column": "Later",
+      "status": "later",
+      "definition": "After the pilot holds, the device goes out the same way an E285 does. E285 shipments from Verifone stop at the end of April.",
+      "milestones": ["Same path as an E285, after the pilot holds"]
+    }
+  ],
+  "commitments_title": "Dates and commitments from 21 Oct",
+  "commitments": [
+    "Golden-unit ship target is 29 Oct. Kim will ask to expedite only after the two production TIDs, the lease-or-purchase answer, and the boarding method are set.",
+    "PWC asked whether the E235 is boarded like the E285: pre-boarded serials, no DID. That answer is still open.",
+    "The E285 agreement is leased. The E235 agreement is not final. Patrick Hanks and Kimlie Warlick are taking lease versus purchase to the commercial conversation.",
+    "VHQ hierarchy for the E235 is later. Ryan, Sudheer, and Shawn at Stratix. Krishna schedules it. It does not block the golden-unit ship.",
+    "Whitney told Verifone: one Dutch Bros store in February, then two more. Kim outlined a purchase-order path for those devices.",
+    "E285 shipments stop at the end of April. Krishna parked the bulk E235 order. Kimlie is setting a forecast call with Whitney, Ravi, and Krishna. May 2027 is the horizon in her notes."
+  ],
+  "assumptions": [
+    "Pre-prod is our stage name. PWC, Worldpay, and VHQ are not getting a separate pre-prod environment.",
+    "The golden-unit MIDs stay on those devices. A shop uses the MID and TID it already has.",
+    "Genius LAB015, LAB003, and LAB004 are in the Genius production environment and are filtered out of downstream data.",
+    "Pre-prod sales are refunded the same day. The money moves, and the lab data is removed so the activity nets out.",
+    "Field test brings the devices back. Field pilot is the first shops running the E235 as a deployment.",
+    "Two weeks, one month, Pacific Northwest, and Texas are what Ops said on 21 Oct. February and the two follow-on stores are what Whitney told Verifone the same day. Neither list is Shubha's decision.",
+    "Success is the same or better ease of operations, and the money flows. This is not a business-case scorecard. Ops still owes the metric list: speed, battery, Wi-Fi distance, tips, and payroll cycles.",
+    "A device does not go to a shop before Cybersecurity signs off from a PCI and P2PE standpoint. That ask is with Alyssa Murray.",
+    "Whether rollout is new shops, existing shops, or both is still with Shubha."
+  ],
+  "open_questions": [
+    "Leased or purchased, and whether boarding matches the E285.",
+    "Ryan onsite the week of 2 Nov, or Teams.",
+    "Whether the February store and the two follow-on stores do a full switch to E235.",
+    "Which shops, and the written success criteria for E235 Field Testing.",
+    "The purchase-order date for E235, needs 45 days of advanced notice."
+  ]
+}

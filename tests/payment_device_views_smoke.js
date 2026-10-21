@@ -19,10 +19,13 @@ check("three device views in order", subtabs.join(","), "e235-burndown,e285-burn
 check("E235 Burn Down is selected by default", /class="subtab active"[^>]*data-subtab="e235-burndown"[^>]*aria-selected="true"/.test(html), true);
 check("view labels", [">E235 Burn Down<", ">E285 Burn Down<", ">E235 Roadmap<"].every((label) => html.includes(label)), true);
 
+const e235Start = html.indexOf('data-subpanel="e235-burndown"');
 const e285Start = html.indexOf('data-subpanel="e285-burndown"');
-const roadmapStart = html.indexOf('data-subpanel="e235-roadmap"');
-const e285Panel = html.slice(e285Start, roadmapStart);
-check("existing burndown chart lives under E285 Burn Down", e285Panel.includes('id="chart-devices-burndown"'), true);
+const e235Panel = html.slice(e235Start, e285Start);
+const e285Panel = html.slice(e285Start, html.indexOf('data-subpanel="e235-roadmap"'));
+check("burn down chart is the default E235 view", e235Panel.includes('id="chart-devices-burndown"'), true);
+check("E235 view is visible by default", /data-subpanel="e235-burndown"[^>]*hidden/.test(e235Panel), false);
+check("E285 view is in progress", e285Panel.includes(">In progress<") && e285Panel.includes("Coming soon"), true);
 check("E285 view starts hidden", /data-subpanel="e285-burndown"[^>]*hidden/.test(html), true);
 check("roadmap view starts hidden", /data-subpanel="e235-roadmap"[^>]*hidden/.test(html), true);
 check("roadmap script is loaded", html.includes('src="js/e235-roadmap.js'), true);

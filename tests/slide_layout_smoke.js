@@ -18,7 +18,7 @@ check("In-Shop Sales nav", html.includes(">In-Shop Sales</button>"), true);
 check("Card Health nav", html.includes(">Card Health</button>"), true);
 check("Order Ahead nav", html.includes(">Order Ahead</button>"), true);
 check("Payment Devices nav", html.includes(">Payment Devices</button>"), true);
-check("Payment Devices slide aria label", html.includes('aria-label="Verifone e285 lifecycle burndown"'), true);
+check("Payment Devices slide aria label", html.includes('aria-label="E235 burn down"'), true);
 check("lifecycle callout exists", html.includes('id="devices-gap-callout"'), true);
 
 const labelsRef = html.indexOf('src="js/chart-labels.js');

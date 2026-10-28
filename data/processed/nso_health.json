@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-19",
+  "as_of": "2026-10-28",
   "sources": {
     "po_extract": "PO_Extract_102826_1251.xlsx",
     "po_extracts": [
       "PO_Extract_101626_1032.xlsx",
       "PO_Extract_102826_1251.xlsx"
     ],
-    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-19-06-34-01.xlsx",
+    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-28-06-33-11.xlsx",
     "itraq": null
   },
   "notes": [
-    "iTraq is not in this drop. Verifone to Stratix uses the booked and shipped orders report: shipped is Delivered, booked only is In transit, and no order is Not delivered.",
+    "iTrac lists devices Stratix is holding. It does not say which shop a shipment is going to. Verifone to Stratix still uses the booked and shipped orders report: shipped is Delivered, booked only is In transit, and no order is Not delivered.",
     "Stratix to shop uses the PO scrape. No shipped date is Not shipped. A shipped date without a delivery by the report date is Shipped and in transit. A delivery date on or before that date is Delivered.",
     "First Tamper Check is the status on the PO scrape."
   ],
@@ -671,7 +671,7 @@
       "ownership": "Company Owned",
       "city": "Tehachapi",
       "state": "CA",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -741,7 +741,7 @@
       "ownership": "Company Owned",
       "city": "Greenville",
       "state": "NC",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -751,7 +751,7 @@
       "ownership": "Company Owned",
       "city": "Mason",
       "state": "OH",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -781,7 +781,7 @@
       "ownership": "Company Owned",
       "city": "Darien",
       "state": "IL",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -931,7 +931,7 @@
       "ownership": "Company Owned",
       "city": "Middletown",
       "state": "OH",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -971,7 +971,7 @@
       "ownership": "Company Owned",
       "city": "Melbourne",
       "state": "FL",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -981,7 +981,7 @@
       "ownership": "Company Owned",
       "city": "Webster",
       "state": "TX",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1021,7 +1021,7 @@
       "ownership": "Company Owned",
       "city": "Mobile",
       "state": "AL",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1091,7 +1091,7 @@
       "ownership": "Company Owned",
       "city": "Flowood",
       "state": "MS",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1111,7 +1111,7 @@
       "ownership": "Company Owned",
       "city": "Jerome",
       "state": "ID",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1131,7 +1131,7 @@
       "ownership": "Company Owned",
       "city": "La Puente",
       "state": "CA",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1151,7 +1151,7 @@
       "ownership": "Company Owned",
       "city": "Montebello",
       "state": "CA",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -1171,7 +1171,7 @@
       "ownership": "Company Owned",
       "city": "Marietta",
       "state": "GA",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },

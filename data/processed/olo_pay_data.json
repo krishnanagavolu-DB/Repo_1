@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-19T11:26:13-07:00",
+  "generated_at": "2026-10-28T14:39:38-07:00",
   "week_cadence": "Monday-Sunday",
   "dashboard_tab": "Olo Pay",
   "environment": "prod",
@@ -1177,6 +1177,63 @@
         "TRANSACTION_COUNT_PCT": -1.7,
         "AUTH_RATE_PP": 0.02
       }
+    },
+    {
+      "week_start_date": "2026-10-19",
+      "week_end_date": "2026-10-25",
+      "totals": {
+        "SALES_VOLUME": 5592080.85,
+        "TIP_VOLUME": 404421.5,
+        "BILLED_VOLUME": 5996502.35,
+        "TRANSACTION_COUNT": 534937,
+        "ORDER_COUNT": 534937,
+        "TIPPED_ORDER_COUNT": 205289,
+        "AVG_TICKET": 10.45,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.97,
+        "REFUND_VOLUME": 943.72,
+        "VOID_VOLUME": 316.86
+      },
+      "authorization": {
+        "approved": 534937,
+        "declined": 18059,
+        "failed": 0,
+        "auth_rate_pct": 96.73,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 4046751.28,
+          "pct_of_digital_sales": 72.4,
+          "TRANSACTION_COUNT": 385689
+        },
+        "Mastercard": {
+          "amount": 1226928.54,
+          "pct_of_digital_sales": 21.9,
+          "TRANSACTION_COUNT": 118433
+        },
+        "Amex": {
+          "amount": 101468.64,
+          "pct_of_digital_sales": 1.8,
+          "TRANSACTION_COUNT": 9471
+        },
+        "Discover": {
+          "amount": 216932.39,
+          "pct_of_digital_sales": 3.9,
+          "TRANSACTION_COUNT": 21344
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 5592080.85,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -2.0,
+        "TRANSACTION_COUNT_PCT": -1.4,
+        "AUTH_RATE_PP": -0.07
+      }
     }
   ],
   "shop_coverage": {
@@ -1188,9 +1245,9 @@
   "certification": {
     "status": "certified",
     "certified": true,
-    "week_count": 18,
-    "latest_week_start": "2026-10-12",
-    "certified_at": "2026-10-19T11:26:13-07:00",
+    "week_count": 19,
+    "latest_week_start": "2026-10-19",
+    "certified_at": "2026-10-28T14:39:38-07:00",
     "scope": "Company Owned only; processor Stripe"
   }
 }

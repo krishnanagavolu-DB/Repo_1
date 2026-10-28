@@ -3,6 +3,7 @@
 (function () {
 const NSO_URL = "data/nso_health.json";
 const DEVICES_URL = "data/payment_devices.json";
+const HEALTH_URL = "data/device_health.json";
 let nso = null;
 let devicesPayload = null;
 let burndownChart = null;
@@ -128,20 +129,20 @@ function syncScrollCue() {
   cue.hidden = !overflow || atEnd;
 }
 
-function renderTerminals(payload) {
+function renderTerminals(health) {
   const host = document.getElementById("e285-health");
   const asof = document.getElementById("device-health-asof");
-  if (!host || !payload?.summary) return;
-  const summary = payload.summary;
+  if (!host || !health?.e285) return;
   if (asof) asof.textContent = `As of ${currentDateLabel()}`;
+  const row = health.e285;
   host.innerHTML = `
-    <p class="health-kicker">${fmtInt(summary.baseline_inventory)} E285s on the Feb 1 contract</p>
+    <p class="health-kicker">VHQ ${fmtDate(health.vhq_as_of)} · iTrac ${fmtDate(health.itrac_as_of)}</p>
     <dl class="e285-split">
-      <div><dt>Shipped since Feb 1</dt><dd>${fmtInt(summary.shipped_qty)} units · ${fmtInt(summary.shipped_shops)} shops</dd></div>
-      <div><dt>Booked, not shipped</dt><dd>${fmtInt(summary.booked_qty)} units</dd></div>
-      <div><dt>Awaiting a Verifone order</dt><dd>${fmtInt(summary.pending_units)} units · ${fmtInt(summary.pending_shops)} openings</dd></div>
+      <div><dt>In shops</dt><dd>${fmtInt(row.in_shops)}<span>${fmtInt(row.in_shops_active)} active · ${fmtInt(row.in_shops_inactive)} inactive or pending</span></dd></div>
+      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)}<span>Spare pool ${fmtInt(row.spare_pool)} · Depot ${fmtInt(row.depot)} · Awaiting NSO ${fmtInt(row.awaiting_nso)}</span></dd></div>
+      <div><dt>Location not confirmed</dt><dd>${fmtInt(row.location_not_confirmed)}<span>Neither file shows a shop or Stratix</span></dd></div>
     </dl>
-    <p class="health-source">Depot, spare pool, and devices staged at Stratix for an opening are not in this drop. That split needs the iTraq report.</p>`;
+    <p class="health-source">${health.note || ""}</p>`;
 }
 
 function quarterTicks(minMs, maxMs) {
@@ -283,7 +284,7 @@ function renderSource() {
   const source = nso.sources || {};
   const poNames = source.po_extracts || [];
   const poLabel = poNames.length > 1 ? `PO scrapes through ${poNames[poNames.length - 1]}` : (source.po_extract || "PO scrape");
-  node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${poLabel}. iTraq was not in this drop.`;
+  node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${poLabel}. iTrac lists devices held at Stratix, not which shop a shipment is going to.`;
 }
 
 function showWeek(weekStart) {
@@ -304,8 +305,13 @@ async function load() {
   }
   try {
     devicesPayload = await loader(DEVICES_URL);
-    renderTerminals(devicesPayload);
     renderBurndown(devicesPayload);
+  } catch (error) {
+    const host = document.getElementById("e285-health");
+    if (host && !host.childElementCount) host.textContent = "E285 health could not load.";
+  }
+  try {
+    renderTerminals(await loader(HEALTH_URL));
   } catch (error) {
     const host = document.getElementById("e285-health");
     if (host) host.textContent = "E285 health could not load.";

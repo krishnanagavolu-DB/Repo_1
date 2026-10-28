@@ -27,7 +27,7 @@ def test_verifone_hop_uses_the_orders_report_until_itraq_arrives():
 def test_current_extracts_keep_tamper_status_and_name_the_itraq_gap():
     payload = nso.build_payload()
     assert payload["sources"]["itraq"] is None
-    assert any("iTraq" in note for note in payload["notes"])
+    assert any("iTrac" in note for note in payload["notes"])
     by_id = {shop["id"]: shop for shop in payload["shops"]}
     assert by_id["IL1504"]["opening_date"] == "2026-12-22"
     assert by_id["IL1504"]["stratix_to_shop"] == "Not shipped"

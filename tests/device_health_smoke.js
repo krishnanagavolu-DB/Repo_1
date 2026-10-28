@@ -18,6 +18,7 @@ const tabsJs = fs.readFileSync("site/preview/js/tabs.js", "utf8");
 check("logo click opens executive overview", tabsJs.includes('getElementById("brand-home")') && tabsJs.includes('activate("overview")'), true);
 const healthJs = fs.readFileSync("site/preview/js/device-health.js", "utf8");
 check("device header is as of the current date", healthJs.includes("As of ${currentDateLabel()}") && !healthJs.includes("Devices as of"), true);
+check("terminals card names the Stratix buckets", healthJs.includes("Spare pool") && healthJs.includes("Awaiting NSO") && healthJs.includes("Location not confirmed"), true);
 check("overview burn down labels months", healthJs.includes("monthTickLabel") && healthJs.includes('type: "linear"'), true);
 check(
   "overview burn down names the three inventory states",

@@ -355,27 +355,27 @@ def test_current_workbooks_count_pre_contract_po_matches_as_pending():
     payload = devices.build_payload(devices.RAW_DIR, today=date(2026, 10, 19))
     if not payload["certified"]:
         return
-    assert payload["summary"]["firm_inventory"] == 3640
-    assert payload["summary"]["pending_shops"] == 41
-    assert payload["summary"]["pending_units"] == 410
-    assert payload["gap"]["shops"] == 41
-    assert payload["gap"]["units"] == 410
+    assert payload["summary"]["firm_inventory"] == 3510
+    assert payload["summary"]["pending_shops"] == 28
+    assert payload["summary"]["pending_units"] == 280
+    assert payload["gap"]["shops"] == 28
+    assert payload["gap"]["units"] == 280
     timeline = payload["timeline"]
     past, present, future = timeline["past"], timeline["present"], timeline["future"]
-    assert past["start"] == "2026-02-01" and past["end"] == "2026-10-19"
-    assert payload["summary"]["extract_date"] == "2026-10-19"
+    assert past["start"] == "2026-02-01" and past["end"] == "2026-10-28"
+    assert payload["summary"]["extract_date"] == "2026-10-28"
     assert past["opening_amount"] == 5700
     assert past["shops_opened"] == 121 and past["consumed_qty"] == 1210
     assert past["depot_qty_since_baseline"] == 0 and past["depot_qty_prior_contract"] == 1250
     assert present["end"] == "2027-04-07"
-    assert present["planned_shops"] == 126 and present["in_process_shops"] == 85
-    assert present["pending_shops"] == 41 and present["set_aside_units"] == 1260
+    assert present["planned_shops"] == 126 and present["in_process_shops"] == 98
+    assert present["pending_shops"] == 28 and present["set_aside_units"] == 1260
     assert future["remaining_units"] == 3230
     assert payload["summary"]["firm_inventory"] - payload["summary"]["pending_units"] == future["remaining_units"]
     assert past["consumed_qty"] + present["set_aside_units"] + future["remaining_units"] == 5700
-    assert payload["summary"]["po_firm_inventory"] == 3640
+    assert payload["summary"]["po_firm_inventory"] == 3510
     assert payload["summary"]["balance_now"] == 3630
-    assert payload["summary"]["balance_gap"] == 10
+    assert payload["summary"]["balance_gap"] == -120
     assert payload["verifone"]["tab"] == "10-16-2026"
     assert payload["verifone"]["shipped_since_feb"] == 2070
     assert payload["verifone"]["picked_qty"] == 0

@@ -61,6 +61,7 @@ if ! cmp "$tmpdir/preview_olo_pay_data.json" data/processed/olo_pay_data.json; t
   exit 1
 fi
 python3 scripts/import_nso_health.py --check
+python3 scripts/import_device_health.py --check
 python3 scripts/import_e235_roadmap.py --check
 python3 scripts/import_db_payments.py --check
 python3 scripts/encrypt_site_data.py --check

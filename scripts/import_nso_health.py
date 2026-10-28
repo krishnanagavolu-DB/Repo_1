@@ -152,7 +152,7 @@ def build_payload(raw_dir: Path | None = None) -> dict:
             "itraq": None,
         },
         "notes": [
-            "iTraq is not in this drop. Verifone to Stratix uses the booked and shipped orders report: shipped is Delivered, booked only is In transit, and no order is Not delivered.",
+            "iTrac lists devices Stratix is holding. It does not say which shop a shipment is going to. Verifone to Stratix still uses the booked and shipped orders report: shipped is Delivered, booked only is In transit, and no order is Not delivered.",
             "Stratix to shop uses the PO scrape. No shipped date is Not shipped. A shipped date without a delivery by the report date is Shipped and in transit. A delivery date on or before that date is Delivered.",
             "First Tamper Check is the status on the PO scrape.",
         ],

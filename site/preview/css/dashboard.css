@@ -1918,6 +1918,14 @@ body.auth-unlocked .auth-gate {
   color: var(--dark);
 }
 
+.e285-split dd span {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .burndown-jump {
   display: block;
   width: 100%;

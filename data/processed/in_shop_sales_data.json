@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-19T11:25:54-07:00",
+  "generated_at": "2026-10-28T14:39:15-07:00",
   "week_cadence": "Monday-Sunday",
   "definitions": {
     "SALES_VOLUME": "Company Owned payment dollars from Gold Semantic Sales. Quarantine false, subtype payment, refunds as signed ORDER_PAYMENT_AMOUNT.",
@@ -406,12 +406,7 @@
           "sales": 7526588.67,
           "orders": 784745
         }
-      ],
-      "channel_reconciliation": {
-        "reason": "settlement drift between the POS extract and the channel query",
-        "sales_drift": 45.65,
-        "order_drift": 4
-      }
+      ]
     },
     {
       "week_start_date": "2026-07-27",
@@ -1091,12 +1086,7 @@
           "sales": 7934863.75,
           "orders": 850546
         }
-      ],
-      "channel_reconciliation": {
-        "reason": "settlement drift between the POS extract and the channel query",
-        "sales_drift": 106.09,
-        "order_drift": 11
-      }
+      ]
     },
     {
       "week_start_date": "2026-09-21",
@@ -1389,20 +1379,93 @@
         "SALES_VOLUME_PCT": -0.8,
         "TRANSACTION_COUNT_PCT": -0.9
       }
+    },
+    {
+      "week_start_date": "2026-10-19",
+      "week_end_date": "2026-10-25",
+      "totals": {
+        "SALES_VOLUME": 45074732.69,
+        "TRANSACTION_COUNT": 4257854,
+        "AVG_TICKET": 10.76,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4189714
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31564225.9,
+          "pct_of_total_sales": 70.0,
+          "TRANSACTION_COUNT": 2879330
+        },
+        "Cash": {
+          "amount": 6902104.58,
+          "pct_of_total_sales": 15.3,
+          "TRANSACTION_COUNT": 752564
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6608402.21,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 625960,
+          "components": {
+            "GIFT": {
+              "amount": 4332298.5,
+              "TRANSACTION_COUNT": 396115
+            },
+            "CUSTOM": {
+              "amount": 2276103.71,
+              "TRANSACTION_COUNT": 229845
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31564225.9,
+          "pct_of_total_sales": 70.0,
+          "TRANSACTION_COUNT": 2879330
+        },
+        {
+          "name": "Cash",
+          "amount": 6902104.58,
+          "pct_of_total_sales": 15.3,
+          "TRANSACTION_COUNT": 752564
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6608402.21,
+          "pct_of_total_sales": 14.7,
+          "TRANSACTION_COUNT": 625960,
+          "components": {
+            "GIFT": {
+              "amount": 4332298.5,
+              "TRANSACTION_COUNT": 396115
+            },
+            "CUSTOM": {
+              "amount": 2276103.71,
+              "TRANSACTION_COUNT": 229845
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -0.2,
+        "TRANSACTION_COUNT_PCT": -1.0
+      }
     }
   ],
   "shop_coverage": {
     "co_shops_in_gold_dim": 1018,
     "franchised_shops_in_gold_dim": 314,
-    "excluded_store_codes_csv_only": 314
+    "excluded_store_codes_csv_only": 313
   },
   "artifacts": {
-    "json": "in_shop_sales_data_20261019.json",
+    "json": "in_shop_sales_data_20261028.json",
     "granular": {
       "status": "skipped",
       "note": "Row-level Parquet is off by default."
     },
-    "methodology": "in_shop_sales_methodology_20261019.json"
+    "methodology": "in_shop_sales_methodology_20261028.json"
   },
   "error_log": [
     {
@@ -1476,6 +1539,20 @@
       "code": "unmapped_payment_type",
       "payment_type": "UNKNOWN",
       "amount": -11.12,
+      "rows": 7,
+      "action": "excluded_from_kpi_mix"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "UNKNOWN",
+      "amount": -12.81,
+      "rows": 7,
+      "action": "excluded_from_kpi_mix"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "UNKNOWN",
+      "amount": -12.81,
       "rows": 7,
       "action": "excluded_from_kpi_mix"
     }

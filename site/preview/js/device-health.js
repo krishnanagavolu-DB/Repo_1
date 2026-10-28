@@ -163,46 +163,63 @@ function monthTickLabel(value, firstMs) {
   return showYear ? `${month} '${String(date.getFullYear()).slice(2)}` : month;
 }
 
-/* The overview chart is the same firm-then-projected inventory, drawn on a
-   time axis so the slope has months. A category axis of every order date
-   hid the calendar and left a line with no scale. */
+function inventoryPoints(rows) {
+  return (rows || [])
+    .map((point) => ({ x: toMs(point.date), y: Number(point.inventory) }))
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+}
+
+/* Firm history is on hand. Published projection through the pipeline end is
+   orders already in the pipeline. The tail after that end is the run-rate
+   projection. Each segment starts where the previous one stops. */
+function burndownSeries(payload) {
+  const onHand = inventoryPoints(payload?.series?.firm);
+  const pipelineEnd = String(payload?.summary?.pipeline_end_date || "");
+  const published = payload?.series?.projected || [];
+  const inPipeline = inventoryPoints(
+    published.filter((point) => !pipelineEnd || String(point.date) <= pipelineEnd)
+  );
+  const projected = inventoryPoints(
+    published.filter((point) => pipelineEnd && String(point.date) > pipelineEnd)
+  );
+  if (onHand.length && inPipeline.length && inPipeline[0].x !== onHand.at(-1).x) {
+    inPipeline.unshift({ ...onHand.at(-1) });
+  }
+  if (inPipeline.length && projected.length && projected[0].x !== inPipeline.at(-1).x) {
+    projected.unshift({ ...inPipeline.at(-1) });
+  }
+  return { onHand, inPipeline, projected };
+}
+
+/* The overview chart is the same three inventory states as the E235 chart,
+   drawn on a time axis so the slope has months. */
 function renderBurndown(payload) {
   const canvas = document.getElementById("chart-overview-burndown");
   if (!canvas || typeof Chart === "undefined" || !payload?.series) return;
   if (burndownChart) burndownChart.destroy();
-  const firm = (payload.series.firm || [])
-    .map((point) => ({ x: toMs(point.date), y: Number(point.inventory) }))
-    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
-  const projected = (payload.series.projected || [])
-    .map((point) => ({ x: toMs(point.date), y: Number(point.inventory) }))
-    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
-  if (firm.length && projected.length && projected[0].x !== firm.at(-1).x) projected.unshift(firm.at(-1));
-  const xs = [...firm, ...projected].map((point) => point.x);
+  const series = burndownSeries(payload);
+  const xs = [...series.onHand, ...series.inPipeline, ...series.projected].map((point) => point.x);
   if (!xs.length) return;
   const minX = Math.min(...xs);
   const maxX = Math.max(...xs);
   const yMax = Number(payload.chart?.y_max) || 6000;
+  const lines = [
+    { label: "On hand", data: series.onHand, borderColor: "#111111" },
+    { label: "In pipeline", data: series.inPipeline, borderColor: "#006098" },
+    { label: "Projected", data: series.projected, borderColor: "#d9272d" },
+  ].filter((line) => line.data.length);
   burndownChart = new Chart(canvas, {
     type: "line",
     data: {
-      datasets: [
-        {
-          label: "On hand",
-          data: firm,
-          borderColor: "#154167",
-          borderWidth: 2.5,
-          pointRadius: 0,
-          tension: 0,
-        },
-        {
-          label: "Projected",
-          data: projected,
-          borderColor: "#d9272d",
-          borderWidth: 2.5,
-          pointRadius: 0,
-          tension: 0,
-        },
-      ],
+      datasets: lines.map((line) => ({
+        label: line.label,
+        data: line.data,
+        borderColor: line.borderColor,
+        borderWidth: 2.5,
+        pointRadius: 0,
+        tension: 0,
+        stepped: "after",
+      })),
     },
     options: {
       responsive: true,
@@ -317,7 +334,15 @@ function start() {
   else window.addEventListener("dashboard:unlocked", load, { once: true });
 }
 
-window.__deviceHealth = { shopsForWeek, openingsForPeriod, weekEnd, stratixLabel: null, openBurndown, showWeek };
+window.__deviceHealth = {
+  shopsForWeek,
+  openingsForPeriod,
+  weekEnd,
+  burndownSeries,
+  stratixLabel: null,
+  openBurndown,
+  showWeek,
+};
 
 document.addEventListener("DOMContentLoaded", start);
 })();

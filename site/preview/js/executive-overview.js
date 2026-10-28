@@ -560,7 +560,213 @@ const POS_DATA_URL = "data/in_shop_sales_data.json";
 const WORLDPAY_DATA_URL = "data/dashboard.json";
 const OLO_DATA_URL = "data/olo_pay_data.json";
 
-const SALES_LINE_COLORS = ["#006098", "#154167"];
+/* Total sales and order-ahead card sales differ by about 8×. One shared scale
+   pins both lines to opposite edges, and the two brand blues read as one
+   series. Each line keeps its own scale and a brand color that is not the
+   other line's blue. Red here is the series color, matching the mix charts,
+   not a warning. */
+const SALES_SERIES = [
+  { color: "#006098", axis: "y", title: "Total sales", labelOffset: 12 },
+  { color: "#d9272d", axis: "y1", title: "Order-ahead cards", labelOffset: 12 },
+];
+
+/* Click focuses that line. Clicking the focused line brings both back, so the
+   legend cannot end with every series hidden. */
+function salesSeriesVisibility(hiddenFlags, clickedIndex) {
+  const flags = hiddenFlags.map(Boolean);
+  const visibleCount = flags.filter((hidden) => !hidden).length;
+  const restoreBoth = flags[clickedIndex] === false && visibleCount === 1;
+  return flags.map((_, index) => (restoreBoth ? false : index !== clickedIndex));
+}
+
+function lastFiniteIndex(data) {
+  for (let index = data.length - 1; index >= 0; index -= 1) {
+    if (finiteNumber(data[index]) !== null) return index;
+  }
+  return -1;
+}
+
+/* Weeks worth annotating once a single line is focused: the latest week, the
+   high, and the low. The opening week is left to the axis — its label runs
+   into the next point. Neighbors lose the less important mark so two labels
+   never sit on adjacent points. */
+function salesLabelIndexes(data) {
+  const indexes = [];
+  (data || []).forEach((value, index) => {
+    if (finiteNumber(value) !== null) indexes.push(index);
+  });
+  if (!indexes.length) return new Set();
+  let minIndex = indexes[0];
+  let maxIndex = indexes[0];
+  for (const index of indexes) {
+    if (data[index] < data[minIndex]) minIndex = index;
+    if (data[index] > data[maxIndex]) maxIndex = index;
+  }
+  const chosen = [];
+  for (const index of [indexes[indexes.length - 1], maxIndex, minIndex]) {
+    if (chosen.some((kept) => Math.abs(kept - index) <= 1)) continue;
+    chosen.push(index);
+  }
+  return new Set(chosen);
+}
+
+/* Both lines: the axes and the legend carry the dollars. Point labels would
+   land on top of each other where the two shapes meet. One focused line:
+   label the latest week, the high, and the low, above the point. */
+function salesPointLabel(value, context) {
+  if (finiteNumber(value) === null) return "";
+  const chart = context?.chart;
+  if (!chart) return compactUsd(value);
+  let visible = 0;
+  for (let index = 0; index < chart.data.datasets.length; index += 1) {
+    if (!chart.getDatasetMeta(index).hidden) visible += 1;
+  }
+  if (visible > 1) return "";
+  if (!salesLabelIndexes(context?.dataset?.data).has(context.dataIndex)) return "";
+  return compactUsd(value);
+}
+
+function latestSalesText(dataset) {
+  const index = lastFiniteIndex(dataset.data || []);
+  if (index === -1) return dataset.label;
+  return `${dataset.label}  ${compactUsd(dataset.data[index])}`;
+}
+
+function salesMoneyScale(title, color, position) {
+  return {
+    type: "linear",
+    position,
+    display: true,
+    grace: "14%",
+    title: {
+      display: true,
+      text: title,
+      color,
+      font: { size: 10, weight: "700" },
+      padding: { top: 0, bottom: 4 },
+    },
+    grid: position === "left" ? { color: "#e6eef3", drawTicks: false } : { display: false },
+    border: { display: false },
+    ticks: {
+      color,
+      font: { size: 10, weight: "600" },
+      maxTicksLimit: 4,
+      padding: 6,
+      callback: (tick) => compactUsd(tick),
+    },
+  };
+}
+
+function applySalesSeriesVisibility(chart, hiddenFlags) {
+  hiddenFlags.forEach((hidden, index) => {
+    chart.setDatasetVisibility(index, !hidden);
+    const axisId = chart.data.datasets[index]?.yAxisID;
+    const scale = axisId ? chart.options.scales?.[axisId] : null;
+    if (scale) scale.display = !hidden;
+  });
+}
+
+function buildSalesChartConfig(labels, datasets) {
+  return {
+    type: "line",
+    data: {
+      labels,
+      datasets: datasets.map((dataset, idx) => {
+        const style = SALES_SERIES[idx % SALES_SERIES.length];
+        return {
+          label: dataset.label,
+          data: dataset.data,
+          yAxisID: style.axis,
+          valueFormatter: salesPointLabel,
+          labelColor: style.color,
+          labelOffset: style.labelOffset,
+          labelAnchor: "inward",
+          borderColor: style.color,
+          backgroundColor: "transparent",
+          borderWidth: 3,
+          spanGaps: true,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          pointHitRadius: 8,
+          pointBackgroundColor: style.color,
+          pointBorderColor: "#ffffff",
+          pointBorderWidth: 1.5,
+          tension: 0,
+        };
+      }),
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        inlineValueLabels: { display: true },
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+          onClick(_event, item, legend) {
+            if (item?.datasetIndex === undefined) return;
+            const chart = legend.chart;
+            const hidden = chart.data.datasets.map((_, index) =>
+              Boolean(chart.getDatasetMeta(index).hidden)
+            );
+            applySalesSeriesVisibility(chart, salesSeriesVisibility(hidden, item.datasetIndex));
+            chart.update();
+          },
+          onHover(_event, item, legend) {
+            legend.chart.canvas.style.cursor = item ? "pointer" : "default";
+          },
+          onLeave(_event, _item, legend) {
+            legend.chart.canvas.style.cursor = "default";
+          },
+          labels: {
+            usePointStyle: true,
+            pointStyle: "line",
+            boxWidth: 28,
+            boxHeight: 4,
+            padding: 14,
+            font: { size: 11, weight: "600" },
+            color: "#154167",
+            generateLabels(chart) {
+              return chart.data.datasets.map((dataset, index) => {
+                const hidden = Boolean(chart.getDatasetMeta(index).hidden);
+                const color = hidden ? "#b7c3ce" : dataset.borderColor;
+                return {
+                  text: latestSalesText(dataset),
+                  fillStyle: color,
+                  strokeStyle: color,
+                  fontColor: hidden ? "#8aa0b3" : "#154167",
+                  hidden: false,
+                  datasetIndex: index,
+                  pointStyle: "line",
+                  lineWidth: 3,
+                };
+              });
+            },
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${compactUsd(ctx.raw)}`,
+          },
+        },
+      },
+      layout: { padding: { top: 6, right: 4, left: 2 } },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: "#5a6f82", font: { size: 10 }, maxRotation: 0, autoSkip: true },
+        },
+        y: salesMoneyScale(SALES_SERIES[0].title, SALES_SERIES[0].color, "left"),
+        y1: salesMoneyScale(SALES_SERIES[1].title, SALES_SERIES[1].color, "right"),
+      },
+    },
+  };
+}
+
 const TENDER_COLORS = {
   Card: "#006098",
   Cash: "#154167",
@@ -696,50 +902,13 @@ function renderSalesChart(model, sources) {
   if (!canvas || typeof Chart === "undefined") return;
   if (overviewSalesChart) overviewSalesChart.destroy();
   const trend = model.salesTrend;
-  overviewSalesChart = new Chart(canvas, {
-    type: "line",
-    data: {
-      labels: trend.labels.map((id) => shortLabel(periodLabelFor(id, sources))),
-      datasets: trend.datasets.map((dataset, idx) => ({
-        label: dataset.label,
-        data: dataset.data,
-        valueFormatter: (value) => compactUsd(value),
-        borderColor: SALES_LINE_COLORS[idx % SALES_LINE_COLORS.length],
-        backgroundColor: "transparent",
-        borderWidth: 3,
-        spanGaps: true,
-        pointRadius: 3,
-        tension: 0.25,
-      })),
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        inlineValueLabels: { display: true },
-        legend: {
-          display: true,
-          position: "top",
-          align: "end",
-          labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
-        },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => `${ctx.dataset.label}: ${compactUsd(ctx.raw)}`,
-          },
-        },
-      },
-      layout: { padding: { top: 14 } },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: "#5a6f82", font: { size: 10 }, maxRotation: 0 },
-        },
-        y: { display: false, grace: "18%" },
-      },
-      elements: { point: { hoverRadius: 4 } },
-    },
-  });
+  overviewSalesChart = new Chart(
+    canvas,
+    buildSalesChartConfig(
+      trend.labels.map((id) => shortLabel(periodLabelFor(id, sources))),
+      trend.datasets
+    )
+  );
 }
 
 /* Legend dots use tenderInk, not the raw chart-slice color: brand yellow
@@ -958,6 +1127,10 @@ window.__executiveOverview = {
   normalizeChannelWeeks,
   tenderInk,
   formatSignedPct,
+  SALES_SERIES,
+  salesSeriesVisibility,
+  salesPointLabel,
+  buildSalesChartConfig,
   loadOverview,
   renderOverview,
   getSelectedPeriod() {

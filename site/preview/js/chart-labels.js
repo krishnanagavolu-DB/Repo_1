@@ -91,7 +91,19 @@
             return;
           }
 
-          drawLabel(ctx, text, point.x, point.y - (dataset.labelOffset || 9), {
+          let labelX = point.x;
+          let labelAlign = "center";
+          const pointCount = Array.isArray(dataset.data) ? dataset.data.length : 0;
+          if (dataset.labelAnchor === "inward" && pointCount > 1 && dataIndex === 0) {
+            labelAlign = "left";
+            labelX = point.x + 2;
+          } else if (dataset.labelAnchor === "inward" && pointCount > 1 && dataIndex === pointCount - 1) {
+            labelAlign = "right";
+            labelX = point.x - 2;
+          }
+
+          drawLabel(ctx, text, labelX, point.y - (dataset.labelOffset || 9), {
+            align: labelAlign,
             color: dataset.labelColor || "#154167",
             size: 9,
             shadow: true,

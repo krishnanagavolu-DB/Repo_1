@@ -454,6 +454,147 @@ check(
   "Order-ahead card sales"
 );
 check(
+  "sales chart explains the separate scales and how to focus a line",
+  html.includes('id="sales-chart-hint"') &&
+    /Separate scales\. Click a legend line to focus it, then click it again to show both\./.test(html),
+  true
+);
+
+const salesConfig = overview.buildSalesChartConfig(
+  ["Jul 27", "Oct 12"],
+  [
+    { label: "Total sales", data: [45700000, 45200000] },
+    { label: "Order-ahead card sales", data: [5200000, 5700000] },
+  ]
+);
+check("total sales line is brand blue", salesConfig.data.datasets[0].borderColor, "#006098");
+check("order-ahead line is brand red", salesConfig.data.datasets[1].borderColor, "#d9272d");
+check(
+  "sales lines do not share a color",
+  salesConfig.data.datasets[0].borderColor === salesConfig.data.datasets[1].borderColor,
+  false
+);
+check("total sales uses the left axis", salesConfig.data.datasets[0].yAxisID, "y");
+check("order-ahead uses the right axis", salesConfig.data.datasets[1].yAxisID, "y1");
+check("total sales axis starts visible", salesConfig.options.scales.y.display, true);
+check("order-ahead axis starts visible", salesConfig.options.scales.y1.display, true);
+check("left axis names total sales", salesConfig.options.scales.y.title.text, "Total sales");
+check("right axis names order-ahead cards", salesConfig.options.scales.y1.title.text, "Order-ahead cards");
+check("sales lines are straight week-to-week segments", salesConfig.data.datasets[0].tension, 0);
+check("sales chart focus does not animate", salesConfig.options.animation, false);
+check("sales legend swatch is a line", salesConfig.options.plugins.legend.labels.pointStyle, "line");
+const salesLegend = salesConfig.options.plugins.legend.labels.generateLabels({
+  data: salesConfig.data,
+  getDatasetMeta: () => ({ hidden: false }),
+});
+check("legend shows the latest total sales", salesLegend[0].text, "Total sales  $45.2M");
+check("legend shows the latest order-ahead sales", salesLegend[1].text, "Order-ahead card sales  $5.7M");
+
+const salesMetas = [{ hidden: false }, { hidden: false }];
+const salesChart = {
+  data: salesConfig.data,
+  options: salesConfig.options,
+  canvas: { style: {} },
+  getDatasetMeta: (index) => salesMetas[index],
+  setDatasetVisibility(index, visible) {
+    salesMetas[index].hidden = !visible;
+  },
+  update() {
+    salesChart.updates = (salesChart.updates || 0) + 1;
+  },
+};
+salesConfig.options.plugins.legend.onClick(null, { datasetIndex: 0 }, { chart: salesChart });
+check("focusing total sales keeps that line", salesMetas[0].hidden, false);
+check("focusing total sales hides order-ahead", salesMetas[1].hidden, true);
+check("focusing total sales hides the order-ahead axis", salesConfig.options.scales.y1.display, false);
+check("focusing total sales keeps the total axis", salesConfig.options.scales.y.display, true);
+check("focusing a line redraws the chart", salesChart.updates, 1);
+salesConfig.options.plugins.legend.onClick(null, { datasetIndex: 0 }, { chart: salesChart });
+check("clicking the focused line restores order-ahead", salesMetas[1].hidden, false);
+check("restoring both shows the order-ahead axis", salesConfig.options.scales.y1.display, true);
+salesConfig.options.plugins.legend.onClick(null, { datasetIndex: 1 }, { chart: salesChart });
+check("focusing order-ahead hides total sales", salesMetas[0].hidden, true);
+check("focusing order-ahead hides the total axis", salesConfig.options.scales.y.display, false);
+
+function salesLabelChart(hiddenFlags, series) {
+  return {
+    data: { datasets: series.map((data) => ({ data })) },
+    getDatasetMeta: (index) => ({ hidden: hiddenFlags[index] }),
+  };
+}
+const bothLines = salesLabelChart(
+  [false, false],
+  [
+    [45700000, 45200000],
+    [5200000, 5700000],
+  ]
+);
+check(
+  "both lines leave earlier weeks to the axis and tooltip",
+  overview.salesPointLabel(45700000, {
+    chart: bothLines,
+    dataset: bothLines.data.datasets[0],
+    dataIndex: 0,
+  }),
+  ""
+);
+check(
+  "both lines leave the latest week to the legend",
+  overview.salesPointLabel(45200000, {
+    chart: bothLines,
+    dataset: bothLines.data.datasets[0],
+    dataIndex: 1,
+  }),
+  ""
+);
+const focusedLine = salesLabelChart(
+  [true, false],
+  [
+    [45700000, 45200000],
+    [5200000, 5700000],
+  ]
+);
+const focusedSpan = salesLabelChart(
+  [true, false],
+  [[1], [5200000, 5400000, 5100000, 5800000, 5700000]]
+);
+check(
+  "a focused line labels the latest week",
+  overview.salesPointLabel(5700000, {
+    chart: focusedSpan,
+    dataset: focusedSpan.data.datasets[1],
+    dataIndex: 4,
+  }),
+  "$5.7M"
+);
+check(
+  "a focused line labels the low when it is not beside another label",
+  overview.salesPointLabel(5100000, {
+    chart: focusedSpan,
+    dataset: focusedSpan.data.datasets[1],
+    dataIndex: 2,
+  }),
+  "$5.1M"
+);
+check(
+  "a focused line skips a week that is neither an end nor an extreme",
+  overview.salesPointLabel(5400000, {
+    chart: focusedSpan,
+    dataset: focusedSpan.data.datasets[1],
+    dataIndex: 1,
+  }),
+  ""
+);
+check(
+  "a focused line skips the high when it sits next to the latest week",
+  overview.salesPointLabel(5800000, {
+    chart: focusedSpan,
+    dataset: focusedSpan.data.datasets[1],
+    dataIndex: 3,
+  }),
+  ""
+);
+check(
   "overview tender canvas has a grounded image label",
   /<canvas id="chart-overview-tender" role="img" aria-label="[^"]*Card[^"]*Cash[^"]*Gift Card[^"]*"><\/canvas>/.test(html),
   true

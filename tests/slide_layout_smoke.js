@@ -60,6 +60,48 @@ check("compact money label", labels.compactMoney(1372328), "$1.4M");
 check("compact count label", labels.compactCount(21913), "21.9K");
 check("percent label", labels.percent(0.9857966), "98.58%");
 
+const drawnLabels = [];
+const labelCtx = {
+  save() {},
+  restore() {},
+  fillText(text, x) {
+    drawnLabels.push({ text, x, align: this.textAlign });
+  },
+};
+const inwardChart = {
+  ctx: labelCtx,
+  config: { type: "line" },
+  data: {
+    datasets: [
+      {
+        data: [1, 2],
+        valueFormatter: (value) => String(value),
+        labelAnchor: "inward",
+        labelOffset: 9,
+        labelColor: "#006098",
+      },
+    ],
+  },
+  getDatasetMeta: () => ({
+    hidden: false,
+    type: "line",
+    data: [
+      { tooltipPosition: () => ({ x: 10, y: 40 }) },
+      { tooltipPosition: () => ({ x: 200, y: 30 }) },
+    ],
+  }),
+};
+labels.plugin.afterDatasetsDraw(inwardChart, null, { display: true });
+check("first inward label starts at the point", drawnLabels[0].align, "left");
+check("first inward label sits inside the plot", drawnLabels[0].x > 10, true);
+check("last inward label ends at the point", drawnLabels[1].align, "right");
+check("last inward label sits inside the plot", drawnLabels[1].x < 200, true);
+
+drawnLabels.length = 0;
+inwardChart.getDatasetMeta = () => ({ hidden: true, type: "line", data: [] });
+labels.plugin.afterDatasetsDraw(inwardChart, null, { display: true });
+check("a hidden series draws no point labels", drawnLabels.length, 0);
+
 const actionable = sandbox.window.__dashboardFormat.actionableDeclines([
   { label: "Decline", count: 21913 },
   { label: "Do not honor", count: 1407 },

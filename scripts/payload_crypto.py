@@ -60,6 +60,10 @@ PAYLOAD_MAP: tuple[tuple[Path, tuple[Path, ...]], ...] = (
         ROOT / "data" / "processed" / "e235_roadmap.json",
         (ROOT / "site" / "preview" / "data" / "e235_roadmap.json",),
     ),
+    (
+        ROOT / "data" / "processed" / "nso_health.json",
+        (ROOT / "site" / "preview" / "data" / "nso_health.json",),
+    ),
 )
 
 # Opened with a second password (DB_PAYMENTS_PASSWORD), never the dashboard key.

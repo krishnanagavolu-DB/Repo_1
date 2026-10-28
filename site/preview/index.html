@@ -8,7 +8,7 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=9a7b49ccad" />
+    <link rel="stylesheet" href="css/dashboard.css?v=ee15727cd2" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=c7fc15c5ec" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
@@ -18,6 +18,7 @@
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
     <script src="js/executive-overview.js?v=aef254e0d0" defer></script>
+    <script src="js/device-health.js?v=b97114ecfa" defer></script>
     <script src="js/payment-devices.js?v=48e11d337e" defer></script>
     <script src="js/e235-roadmap.js?v=7511465abb" defer></script>
     <script src="js/db-payments.js?v=458e49091b" defer></script>
@@ -128,9 +129,49 @@
         <section id="panel-overview" class="tab-panel" data-panel="overview">
           <div id="overview-empty" class="pos-empty" hidden></div>
           <section id="overview-content" class="slide executive-slide" aria-label="Payments Executive Overview">
+            <section class="health-band" aria-label="Payment device health">
+              <header class="slide-band">
+                <div>
+                  <h2>Payment device health</h2>
+                  <span>New shops this week and terminals already in the network</span>
+                </div>
+                <p id="device-health-asof">—</p>
+              </header>
+              <div class="health-split">
+                <article class="health-card">
+                  <h3>NSO health</h3>
+                  <p id="nso-health-week" class="health-kicker">Shops opening this week</p>
+                  <div class="health-table-wrap">
+                    <table class="health-table" id="nso-health-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Shop</th>
+                          <th scope="col">Opens</th>
+                          <th scope="col">Verifone to Stratix</th>
+                          <th scope="col">Stratix to shop</th>
+                          <th scope="col">First tamper check</th>
+                        </tr>
+                      </thead>
+                      <tbody id="nso-health-body"></tbody>
+                    </table>
+                  </div>
+                  <p id="nso-health-empty" class="health-empty" hidden>No shops are projected to open this week.</p>
+                  <p id="nso-health-source" class="health-source"></p>
+                </article>
+                <article class="health-card">
+                  <h3>Terminals in the network</h3>
+                  <div id="e285-health" class="e285-health"></div>
+                  <button type="button" id="burndown-jump" class="burndown-jump">
+                    <span class="burndown-jump-title">E285 purchase order burn down</span>
+                    <span class="chart-wrap burndown-jump-chart"><canvas id="chart-overview-burndown" aria-hidden="true"></canvas></span>
+                    <span class="burndown-jump-hint">Open the E235 burn down</span>
+                  </button>
+                </article>
+              </div>
+            </section>
             <header class="slide-band">
               <div>
-                <h2>Payments Executive Overview</h2>
+                <h2>Payment performance health</h2>
                 <span>Company-owned shops &middot; completed weeks</span>
               </div>
               <p id="overview-period-label">Most recent common week</p>

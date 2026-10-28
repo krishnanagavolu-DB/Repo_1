@@ -1587,6 +1587,153 @@ body.auth-unlocked .auth-gate {
   margin-bottom: 48px;
 }
 
+.health-band {
+  border-bottom: 8px solid var(--bg);
+}
+
+.health-split {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: 10px;
+  padding: 10px;
+  background: var(--bg);
+}
+
+.health-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+}
+
+.health-card h3,
+.burndown-jump-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--dark);
+}
+
+.health-kicker,
+.health-source,
+.health-empty {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.health-table-wrap {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.health-table th,
+.health-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.health-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f4f7fa;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.health-where {
+  display: block;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.health-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #eef2f6;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.health-delivered { background: #e3f3e8; color: var(--good); }
+.health-in-transit,
+.health-shipped-and-in-transit { background: #fff4d6; color: #7a5a00; }
+.health-not-delivered,
+.health-not-shipped { background: #fdeced; color: var(--red); }
+
+.e285-split {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.e285-split div {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f4f7fa;
+}
+
+.e285-split dt {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.e285-split dd {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.burndown-jump {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font);
+}
+
+.burndown-jump:hover {
+  border-color: var(--blue);
+}
+
+.burndown-jump-chart {
+  display: block;
+  height: 88px;
+  margin: 6px 0;
+}
+
+.burndown-jump-hint {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+@media (max-width: 900px) {
+  .health-split {
+    grid-template-columns: 1fr;
+  }
+}
+
 .executive-slide .slide-band span {
   font-size: 12px;
   font-weight: 600;

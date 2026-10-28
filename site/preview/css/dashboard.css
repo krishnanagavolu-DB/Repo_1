@@ -83,6 +83,23 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.brand:hover h1,
+.brand:focus-visible h1 {
+  color: var(--blue);
+}
+
+.brand:focus-visible {
+  outline: 3px solid rgba(0, 96, 152, 0.35);
+  outline-offset: 4px;
 }
 
 .brand img {

@@ -13,6 +13,9 @@ check("nso columns are present", ["Verifone to Stratix", "Stratix to shop", "Fir
 check("burn down opens the devices tab", html.includes('id="burndown-jump"') && html.includes("chart-overview-burndown"), true);
 check("device health script is loaded", html.includes('src="js/device-health.js'), true);
 check("landing tab is still executive overview", /class="tab active"[^>]*data-tab="overview"/.test(html), true);
+check("logo returns home", html.includes('id="brand-home"'), true);
+const tabsJs = fs.readFileSync("site/preview/js/tabs.js", "utf8");
+check("logo click opens executive overview", tabsJs.includes('getElementById("brand-home")') && tabsJs.includes('activate("overview")'), true);
 
 const sandbox = {
   console,

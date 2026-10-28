@@ -89,6 +89,10 @@ function initTabs() {
   }
   const active = document.querySelector(".tab[data-tab].active");
   activate(active ? active.dataset.tab : "overview");
+  document.getElementById("brand-home")?.addEventListener("click", () => {
+    activate("overview");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 }
 
 window.__dashboardTabs = { activate, getPeriods, registerPeriods };

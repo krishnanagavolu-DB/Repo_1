@@ -21,6 +21,14 @@ function fmtInt(value) {
   return Number.isFinite(n) ? Math.round(n).toLocaleString("en-US") : "—";
 }
 
+function currentDateLabel() {
+  return new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function fmtDate(iso) {
   const [year, month, day] = String(iso || "").slice(0, 10).split("-").map(Number);
   if (!year || !month) return iso || "—";
@@ -28,6 +36,12 @@ function fmtDate(iso) {
     month: "short",
     day: "numeric",
   });
+}
+
+function toMs(iso) {
+  const [year, month, day] = String(iso || "").slice(0, 10).split("-").map(Number);
+  if (!year || !month) return NaN;
+  return new Date(year, month - 1, day || 1).getTime();
 }
 
 function addDays(iso, days) {
@@ -89,16 +103,29 @@ function renderTable(weekStart) {
       </tr>`
     )
     .join("");
-  if (!empty) return;
-  if (rows.length || !weekStart || weekStart === "history") {
-    empty.hidden = true;
-    return;
+  if (empty) {
+    if (rows.length || !weekStart || weekStart === "history") empty.hidden = true;
+    else {
+      const next = (nso?.shops || []).find((shop) => shop.opening_date > weekEnd(weekStart));
+      empty.hidden = false;
+      empty.textContent = next
+        ? `No shops are projected to open this week. The next opening is ${next.id} on ${fmtDate(next.opening_date)}.`
+        : "No shops are projected to open this week.";
+    }
   }
-  const next = (nso?.shops || []).find((shop) => shop.opening_date > weekEnd(weekStart));
-  empty.hidden = false;
-  empty.textContent = next
-    ? `No shops are projected to open this week. The next opening is ${next.id} on ${fmtDate(next.opening_date)}.`
-    : "No shops are projected to open this week.";
+  requestAnimationFrame(syncScrollCue);
+}
+
+function syncScrollCue() {
+  const wrap = document.getElementById("nso-health-scroll");
+  const frame = document.getElementById("nso-health-frame");
+  const cue = document.getElementById("nso-health-scroll-cue");
+  if (!wrap || !frame || !cue) return;
+  const overflow = wrap.scrollHeight - wrap.clientHeight > 8;
+  const atEnd = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 8;
+  frame.classList.toggle("is-overflow", overflow);
+  frame.classList.toggle("at-end", !overflow || atEnd);
+  cue.hidden = !overflow || atEnd;
 }
 
 function renderTerminals(payload) {
@@ -106,7 +133,7 @@ function renderTerminals(payload) {
   const asof = document.getElementById("device-health-asof");
   if (!host || !payload?.summary) return;
   const summary = payload.summary;
-  if (asof) asof.textContent = `Devices as of ${fmtDate(summary.as_of)}`;
+  if (asof) asof.textContent = `As of ${currentDateLabel()}`;
   host.innerHTML = `
     <p class="health-kicker">${fmtInt(summary.baseline_inventory)} E285s on the Feb 1 contract</p>
     <dl class="e285-split">
@@ -117,29 +144,61 @@ function renderTerminals(payload) {
     <p class="health-source">Depot, spare pool, and devices staged at Stratix for an opening are not in this drop. That split needs the iTraq report.</p>`;
 }
 
+function quarterTicks(minMs, maxMs) {
+  const start = new Date(minMs);
+  let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+  const ticks = [];
+  while (cursor.getTime() <= maxMs) {
+    ticks.push(cursor.getTime());
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 3, 1);
+  }
+  return ticks;
+}
+
+function monthTickLabel(value, firstMs) {
+  const date = new Date(value);
+  const month = date.toLocaleDateString("en-US", { month: "short" });
+  const first = new Date(firstMs);
+  const showYear = date.getMonth() === first.getMonth() || date.getMonth() === 0;
+  return showYear ? `${month} '${String(date.getFullYear()).slice(2)}` : month;
+}
+
+/* The overview chart is the same firm-then-projected inventory, drawn on a
+   time axis so the slope has months. A category axis of every order date
+   hid the calendar and left a line with no scale. */
 function renderBurndown(payload) {
   const canvas = document.getElementById("chart-overview-burndown");
   if (!canvas || typeof Chart === "undefined" || !payload?.series) return;
   if (burndownChart) burndownChart.destroy();
-  const firm = payload.series.firm || [];
-  const projected = payload.series.projected || [];
-  const labels = [...firm, ...projected].map((point) => point.date);
+  const firm = (payload.series.firm || [])
+    .map((point) => ({ x: toMs(point.date), y: Number(point.inventory) }))
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+  const projected = (payload.series.projected || [])
+    .map((point) => ({ x: toMs(point.date), y: Number(point.inventory) }))
+    .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+  if (firm.length && projected.length && projected[0].x !== firm.at(-1).x) projected.unshift(firm.at(-1));
+  const xs = [...firm, ...projected].map((point) => point.x);
+  if (!xs.length) return;
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const yMax = Number(payload.chart?.y_max) || 6000;
   burndownChart = new Chart(canvas, {
     type: "line",
     data: {
-      labels,
       datasets: [
         {
-          data: [...firm.map((point) => point.inventory), ...projected.map(() => null)],
-          borderColor: "#111",
-          borderWidth: 2,
+          label: "On hand",
+          data: firm,
+          borderColor: "#154167",
+          borderWidth: 2.5,
           pointRadius: 0,
           tension: 0,
         },
         {
-          data: [...firm.map(() => null), ...projected.map((point) => point.inventory)],
+          label: "Projected",
+          data: projected,
           borderColor: "#d9272d",
-          borderWidth: 2,
+          borderWidth: 2.5,
           pointRadius: 0,
           tension: 0,
         },
@@ -150,8 +209,53 @@ function renderBurndown(payload) {
       maintainAspectRatio: false,
       animation: false,
       events: [],
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      scales: { x: { display: false }, y: { display: false, min: 0 } },
+      plugins: {
+        legend: {
+          display: true,
+          position: "top",
+          align: "end",
+          labels: {
+            boxWidth: 18,
+            boxHeight: 3,
+            usePointStyle: true,
+            pointStyle: "line",
+            font: { size: 10 },
+            color: "#154167",
+          },
+        },
+        tooltip: { enabled: false },
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: minX,
+          max: maxX,
+          afterBuildTicks(axis) {
+            axis.ticks = quarterTicks(axis.min, axis.max).map((value) => ({ value }));
+          },
+          ticks: {
+            maxRotation: 0,
+            autoSkip: true,
+            color: "#5a6f82",
+            font: { size: 10 },
+            callback: (value) => monthTickLabel(value, minX),
+          },
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          min: 0,
+          max: yMax,
+          ticks: {
+            maxTicksLimit: 4,
+            color: "#5a6f82",
+            font: { size: 10 },
+            callback: (value) => (value >= 1000 ? `${Math.round(value / 1000)}k` : `${value}`),
+          },
+          grid: { color: "#e6eef3" },
+          border: { display: false },
+        },
+      },
     },
   });
 }
@@ -198,6 +302,8 @@ function openBurndown() {
 
 function bind() {
   document.getElementById("burndown-jump")?.addEventListener("click", openBurndown);
+  document.getElementById("nso-health-scroll")?.addEventListener("scroll", syncScrollCue, { passive: true });
+  window.addEventListener("resize", syncScrollCue);
   window.addEventListener("dashboard:period", (event) => {
     const tab = event.detail?.tabId;
     if (tab && tab !== "overview") return;

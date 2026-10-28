@@ -16,6 +16,11 @@ check("landing tab is still executive overview", /class="tab active"[^>]*data-ta
 check("logo returns home", html.includes('id="brand-home"'), true);
 const tabsJs = fs.readFileSync("site/preview/js/tabs.js", "utf8");
 check("logo click opens executive overview", tabsJs.includes('getElementById("brand-home")') && tabsJs.includes('activate("overview")'), true);
+const healthJs = fs.readFileSync("site/preview/js/device-health.js", "utf8");
+check("device header is as of the current date", healthJs.includes("As of ${currentDateLabel()}") && !healthJs.includes("Devices as of"), true);
+check("overview burn down labels months", healthJs.includes("monthTickLabel") && healthJs.includes('type: "linear"'), true);
+check("shop table has a scroll cue", overview.includes('id="nso-health-scroll-cue"') && overview.includes("Scroll for more"), true);
+check("coming-next cards have a slot under the live charts", overview.includes('id="overview-later"'), true);
 
 const sandbox = {
   console,

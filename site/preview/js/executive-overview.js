@@ -856,6 +856,7 @@ function renderChannelBand(model) {
         In shop, order ahead, and delivery split publishes once the weekly
         extract carries the Gold <code>CHANNEL</code> field.
       </p>`;
+    placeChannelBand(true);
     return;
   }
 
@@ -895,6 +896,18 @@ function renderChannelBand(model) {
     </div>
     <div class="channel-bar" role="img" aria-label="Sales share by order channel">${bar}</div>
     <div class="channel-keys">${keys}</div>`;
+  placeChannelBand(false);
+}
+
+/* A "coming next" card sits under the live charts. A published split stays
+   with the KPIs, where the dollars it explains are. */
+function placeChannelBand(pending) {
+  const band = document.getElementById("overview-channel-band");
+  const later = document.getElementById("overview-later");
+  const sales = document.querySelector(".executive-sales-panel");
+  if (!band || !later || !sales?.before) return;
+  if (pending) later.appendChild(band);
+  else sales.before(band);
 }
 
 function renderSalesChart(model, sources) {

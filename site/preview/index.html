@@ -8,17 +8,17 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=fb90f662c6" />
+    <link rel="stylesheet" href="css/dashboard.css?v=6c47d63a9b" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=c7fc15c5ec" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
     <script src="js/chart-labels.js?v=2384962ef5" defer></script>
-    <script src="js/dashboard.js?v=1eb27efbf0" defer></script>
+    <script src="js/dashboard.js?v=81d0669186" defer></script>
     <script src="js/pos-sales.js?v=99245bb74b" defer></script>
     <script src="js/olo-pay.js?v=6d699caec1" defer></script>
-    <script src="js/executive-overview.js?v=c46a4273cb" defer></script>
-    <script src="js/device-health.js?v=2176ed181b" defer></script>
+    <script src="js/executive-overview.js?v=b2c6064a6f" defer></script>
+    <script src="js/device-health.js?v=bd6d51d490" defer></script>
     <script src="js/payment-devices.js?v=48e11d337e" defer></script>
     <script src="js/e235-roadmap.js?v=7511465abb" defer></script>
     <script src="js/db-payments.js?v=458e49091b" defer></script>
@@ -141,7 +141,8 @@
                 <article class="health-card">
                   <h3>NSO health</h3>
                   <p id="nso-health-week" class="health-kicker">Shops opening this week</p>
-                  <div class="health-table-wrap">
+                  <div class="health-table-frame" id="nso-health-frame">
+                  <div class="health-table-wrap" id="nso-health-scroll">
                     <table class="health-table" id="nso-health-table">
                       <thead>
                         <tr>
@@ -154,6 +155,8 @@
                       </thead>
                       <tbody id="nso-health-body"></tbody>
                     </table>
+                  </div>
+                  <p class="health-scroll-cue" id="nso-health-scroll-cue" hidden>Scroll for more</p>
                   </div>
                   <p id="nso-health-empty" class="health-empty" hidden>No shops are projected to open this week.</p>
                   <p id="nso-health-source" class="health-source"></p>
@@ -203,6 +206,7 @@
               Worldpay card dollars include tip and overlap POS card sales. Olo Pay is the
               processor for order-ahead card payments, not the order-ahead channel total.
             </p>
+            <div id="overview-later" class="overview-later"></div>
           </section>
         </section>
 
@@ -279,17 +283,19 @@
         </section>
 
         <section id="panel-worldpay" class="tab-panel" data-panel="worldpay" hidden>
-        <!-- Slide-shaped board: one screen, headline numbers first, detail folded below. -->
-        <section class="slide" aria-label="Card Health approval and cost">
+        <section class="slide card-health-slide" aria-label="Card Health approval and cost">
           <header class="slide-band">
-            <h2>Card Health · Approval &amp; cost</h2>
+            <div>
+              <h2>Card Health · Approval &amp; cost</h2>
+              <span>Card present · company-owned shops</span>
+            </div>
             <p id="slide-period">Most recent week</p>
           </header>
 
-          <div class="slide-grid">
-            <article class="slide-panel slide-kpis">
-              <div class="panel-band">Approval &amp; sales KPIs</div>
-              <div class="panel-body">
+          <div class="ch-board">
+            <section class="ch-score" aria-label="This week">
+              <div class="ch-group">
+                <h3>Protect revenue</h3>
                 <div class="hero-kpis" id="hero-kpis">
                   <div id="auth-skeleton" class="hero-kpi hero-skeleton" aria-hidden="true">
                     <div class="hero-value">••.••%</div>
@@ -297,96 +303,69 @@
                   </div>
                 </div>
                 <div class="bench-strip" id="bench-strip"></div>
-                <div class="aux-kpis" id="aux-kpis" aria-live="polite"></div>
               </div>
-            </article>
+              <div class="ch-group">
+                <h3>Cost and margin</h3>
+                <div class="cost-kpis" id="cost-kpis" aria-live="polite"></div>
+              </div>
+              <p class="ch-context" id="volume-context"></p>
+            </section>
 
-            <article class="slide-panel slide-trend">
-              <div class="panel-band">Auth rate over time</div>
-              <div class="panel-body trend-body">
-                <div class="cat-rail" id="trend-categories" role="group" aria-label="Entry method"></div>
-                <div class="trend-chart"><canvas id="chart-auth-trend"></canvas></div>
-              </div>
-            </article>
+            <div class="ch-diagnose">
+              <article class="slide-panel">
+                <div class="panel-band">Auth rate over time</div>
+                <div class="panel-body trend-body">
+                  <div class="trend-chart"><canvas id="chart-auth-trend" aria-label="Card present auth rate over time"></canvas></div>
+                </div>
+              </article>
+              <article class="slide-panel">
+                <div class="panel-band">Actionable decline reasons</div>
+                <div class="panel-body">
+                  <div class="chart-wrap bar-chart"><canvas id="chart-declines" aria-label="Actionable decline reasons"></canvas></div>
+                </div>
+              </article>
+              <article class="slide-panel ch-entry">
+                <div class="panel-band">Auth rate by entry method</div>
+                <div class="panel-body">
+                  <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry" aria-label="Auth rate by entry method"></canvas></div>
+                </div>
+              </article>
+            </div>
 
-            <article class="slide-panel slide-reasons">
-              <div class="panel-band">Actionable decline reasons</div>
-              <div class="panel-body">
-                <div class="chart-wrap bar-chart"><canvas id="chart-declines"></canvas></div>
+            <section class="ch-mix" aria-label="How guests paid">
+              <h3>How guests paid</h3>
+              <div class="ch-mix-grid">
+                <article class="slide-panel">
+                  <div class="panel-band">Entry method</div>
+                  <div class="panel-body ch-mix-body">
+                    <div class="chart-wrap"><canvas id="chart-entry" aria-label="Entry method mix"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-entry"></table>
+                  </div>
+                </article>
+                <article class="slide-panel">
+                  <div class="panel-band">Payment type</div>
+                  <div class="panel-body ch-mix-body">
+                    <div class="chart-wrap"><canvas id="chart-payment" aria-label="Payment type mix"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-payment"></table>
+                  </div>
+                </article>
+                <article class="slide-panel">
+                  <div class="panel-band">Wallet</div>
+                  <div class="panel-body ch-mix-body">
+                    <div class="chart-wrap"><canvas id="chart-wallet" aria-label="Wallet mix"></canvas></div>
+                    <table class="mix-legend compact-legend" id="legend-wallet"></table>
+                  </div>
+                </article>
               </div>
-            </article>
+            </section>
 
-            <article class="slide-panel">
-              <div class="panel-band">Declines by type</div>
-              <div class="panel-body">
-                <div class="chart-wrap"><canvas id="chart-decline-mix"></canvas></div>
-              </div>
-            </article>
-
-            <article class="slide-panel">
-              <div class="panel-band">Declines over time</div>
-              <div class="panel-body">
-                <div class="chart-wrap"><canvas id="chart-declines-time"></canvas></div>
-              </div>
-            </article>
+            <section class="coming" id="coming-soon">
+              <div class="coming-card">Coming soon · Auth latency</div>
+              <div class="coming-card">Coming soon · False decline / retry</div>
+              <div class="coming-card">Coming soon · Chargebacks</div>
+            </section>
           </div>
         </section>
-
-        <details class="slide-detail">
-          <summary>More detail — decline table, entry method, and mix</summary>
-
-          <section class="charts-2">
-            <article class="panel bar-panel">
-              <h3>Decline reasons</h3>
-              <table class="mix-legend decline-legend">
-                <thead>
-                  <tr>
-                    <th scope="col">Reason</th>
-                    <th scope="col">Requests</th>
-                    <th scope="col">Share</th>
-                  </tr>
-                </thead>
-                <tbody id="legend-declines"></tbody>
-              </table>
-              <p class="panel-note">Share of declines that carry a reason code from Worldpay.</p>
-            </article>
-            <article class="panel bar-panel">
-              <h3>Auth rate by entry method</h3>
-              <div class="chart-wrap bar-chart"><canvas id="chart-auth-entry"></canvas></div>
-            </article>
-          </section>
-
-          <section class="charts-2">
-            <article class="panel">
-              <h3>Entry method mix</h3>
-              <div class="mix-body">
-                <div class="chart-wrap"><canvas id="chart-entry"></canvas></div>
-                <table class="mix-legend" id="legend-entry"></table>
-              </div>
-            </article>
-            <article class="panel">
-              <h3>Payment type mix</h3>
-              <div class="mix-body">
-                <div class="chart-wrap"><canvas id="chart-payment"></canvas></div>
-                <table class="mix-legend" id="legend-payment"></table>
-              </div>
-            </article>
-          </section>
-
-          <section class="panel mix-panel">
-            <h3>Wallet mix</h3>
-            <div class="mix-body">
-              <div class="chart-wrap"><canvas id="chart-wallet"></canvas></div>
-              <table class="mix-legend" id="legend-wallet"></table>
-            </div>
-          </section>
-
-          <section class="coming" id="coming-soon">
-            <div class="coming-card">Coming soon · Auth latency</div>
-            <div class="coming-card">Coming soon · False decline / retry</div>
-            <div class="coming-card">Coming soon · Chargebacks</div>
-          </section>
-        </details>
         </section>
 
         <section id="panel-olo" class="tab-panel" data-panel="olo" hidden>

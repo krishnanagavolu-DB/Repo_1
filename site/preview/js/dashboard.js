@@ -117,18 +117,11 @@ const charts = {
   declinesTime: null,
 };
 
-/* The slide leads with the two numbers leadership acts on; everything else in
-   the priority order sits beneath them. See docs/ops/metric-priority.md. */
-const HERO_KEYS = ["auth_rate", "sales_volume"];
-const AUX_KEYS = [
-  "decline_volume",
-  "downgrade_rate",
-  "ic_fee",
-  "ic_rate",
-  "transaction_volume",
-  "aov",
-  "returns_pct_of_sales",
-];
+/* Revenue, then cost, then a single context line. The same metric is not
+   repeated as a second chart. See docs/ops/metric-priority.md. */
+const HERO_KEYS = ["auth_rate", "decline_volume", "sales_volume"];
+const COST_KEYS = ["downgrade_rate", "ic_rate", "ic_fee"];
+const CONTEXT_KEYS = ["transaction_volume", "aov", "returns_pct_of_sales"];
 
 const DECLINE_COLORS = ["#D9272D", "#006098", "#154167", "#4094A7", "#E99F41", "#D2DCE5"];
 
@@ -298,40 +291,39 @@ function metaFor(key) {
   return KPI_ORDER.find((item) => item.key === key);
 }
 
+function kpiCard(key, period, className) {
+  const meta = metaFor(key);
+  const kpi = period.kpis?.[key];
+  if (!meta || !kpi) return "";
+  const delta = deltaDisplay(meta, kpi);
+  const subValue = meta.subValue ? meta.subValue(period) : "";
+  return `
+    <div class="${className}" title="${meta.why || ""}">
+      <div class="hero-value">${meta.format(kpi.value)}</div>
+      <div class="hero-delta ${delta.className}">${delta.text}</div>
+      <div class="hero-label">${meta.label}</div>
+      ${subValue ? `<div class="hero-sub">${subValue}</div>` : ""}
+    </div>`;
+}
+
 function renderKpis(period) {
   const hero = document.getElementById("hero-kpis");
-  const aux = document.getElementById("aux-kpis");
-  if (!hero || !aux) return;
+  const cost = document.getElementById("cost-kpis");
+  if (!hero || !cost) return;
 
-  hero.innerHTML = HERO_KEYS.map((key) => {
-    const meta = metaFor(key);
-    const kpi = period.kpis?.[key];
-    if (!meta || !kpi) return "";
-    const delta = deltaDisplay(meta, kpi);
-    const subValue = meta.subValue ? meta.subValue(period) : "";
-    return `
-      <div class="hero-kpi" title="${meta.why || ""}">
-        <div class="hero-value">${meta.format(kpi.value)}</div>
-        <div class="hero-delta ${delta.className}">${delta.text}</div>
-        <div class="hero-label">${meta.label}</div>
-        ${subValue ? `<div class="hero-sub">${subValue}</div>` : ""}
-      </div>`;
-  }).join("");
+  hero.innerHTML = HERO_KEYS.map((key) => kpiCard(key, period, "hero-kpi")).join("");
+  cost.innerHTML = COST_KEYS.map((key) => kpiCard(key, period, "cost-kpi")).join("");
 
-  aux.innerHTML = AUX_KEYS.map((key) => {
-    const meta = metaFor(key);
-    const kpi = period.kpis?.[key];
-    if (!meta || !kpi) return "";
-    const delta = deltaDisplay(meta, kpi);
-    return `
-      <div class="aux-kpi" title="${meta.why || ""}">
-        <span class="aux-label">${meta.label}</span>
-        <span class="aux-figure">
-          <span class="aux-value">${meta.format(kpi.value)}</span>
-          <span class="aux-delta ${delta.className}">${delta.text}</span>
-        </span>
-      </div>`;
-  }).join("");
+  const context = document.getElementById("volume-context");
+  if (context) {
+    const bits = CONTEXT_KEYS.map((key) => {
+      const meta = metaFor(key);
+      const kpi = period.kpis?.[key];
+      if (!meta || !kpi) return "";
+      return `${meta.label} ${meta.format(kpi.value)}`;
+    }).filter(Boolean);
+    context.textContent = bits.join(" · ");
+  }
 
   renderBenchmarkStrip(period);
 }

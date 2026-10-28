@@ -11,6 +11,20 @@
 - **Where I'm Stuck / Need Your Help:**
   - 
 
+### Projects
+*The named payments projects. On Hold stays one line until the project is closed. In Progress gets the week, the next milestone, and a risk only when it is not green.*
+
+| Project | Status | This week |
+| --- | --- | --- |
+|  |  |  |
+
+### Side quests
+*Work that takes more than a couple of days and is not one of those projects. Shop-level device updates belong here.*
+
+| Side quest | Status | This week |
+| --- | --- | --- |
+|  |  |  |
+
 ## 2. Agenda (45 Minutes)
 
 ### 0:00 - 0:05 | Settle In
@@ -35,3 +49,11 @@
 ## 3. Action Items & Follow-ups
 - [ ] **Krishna:** 
 - [ ] **Ravi:**
+
+## 4. From the conversation with Ravi
+*Copilot does not see these conversations. Paste a transcript or summary after the meeting. Leave this blank until then.*
+
+## 5. Open detail
+*Every Copilot follow-up stays open until Krishna closes it. This list is the record. It is not what gets read in the 1-1.*
+
+- 

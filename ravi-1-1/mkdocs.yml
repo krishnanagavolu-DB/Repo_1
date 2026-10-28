@@ -24,6 +24,7 @@ markdown_extensions:
 
 nav:
   - Meetings: index.md
+  - October 28, 2026: 2026-10-28.md
   - Template: templates/1-1-weekly-template.md
 
 # MkDocs hides a docs/templates folder by default. This puts the weekly form back.

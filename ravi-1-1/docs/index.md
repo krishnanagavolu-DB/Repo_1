@@ -6,4 +6,4 @@ A week is filed only after the Copilot dump has been reviewed. The blank form is
 
 | Date | Pre-read | Top priority | Open asks | Record |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | No meeting filed yet |
+| October 28, 2026 | Filed from the Copilot summary. Ravi's side is still blank. | e235 golden-device sign-off | Verifone VHQ time. Existing shops stay on e285. | [Open](2026-10-28.md) |

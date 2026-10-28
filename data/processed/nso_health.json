@@ -1,7 +1,11 @@
 {
   "as_of": "2026-10-19",
   "sources": {
-    "po_extract": "PO_Extract_101626_1032.xlsx",
+    "po_extract": "PO_Extract_102826_1251.xlsx",
+    "po_extracts": [
+      "PO_Extract_101626_1032.xlsx",
+      "PO_Extract_102826_1251.xlsx"
+    ],
     "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-19-06-34-01.xlsx",
     "itraq": null
   },

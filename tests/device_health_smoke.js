@@ -29,6 +29,10 @@ const shops = [
 ];
 check("week is Monday through Sunday", api.shopsForWeek(shops, "2026-10-19").map((shop) => shop.id).join(","), "A,B");
 check("history is not a shop week", api.shopsForWeek(shops, "history").length, 0);
+const looked = api.openingsForPeriod(shops, "2026-10-12");
+check("an empty week looks ahead two weeks", looked.shops.map((shop) => shop.id).join(","), "A,B,C");
+check("the look-ahead is labeled as extended", looked.extended, true);
+check("a week that has openings stays on that week", api.openingsForPeriod(shops, "2026-10-19").extended, false);
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

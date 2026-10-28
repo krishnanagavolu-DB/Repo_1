@@ -29,6 +29,9 @@ def test_current_extracts_keep_tamper_status_and_name_the_itraq_gap():
     assert payload["sources"]["itraq"] is None
     assert any("iTraq" in note for note in payload["notes"])
     by_id = {shop["id"]: shop for shop in payload["shops"]}
+    assert by_id["IL1504"]["opening_date"] == "2026-12-22"
+    assert by_id["IL1504"]["stratix_to_shop"] == "Not shipped"
+    assert by_id["IL1504"]["first_tamper_check"] == "No Devices"
     assert by_id["FL2501"]["opening_date"] == "2026-10-19"
     assert by_id["FL2501"]["first_tamper_check"] == "Completed"
     assert by_id["FL2501"]["stratix_to_shop"] == "Delivered"

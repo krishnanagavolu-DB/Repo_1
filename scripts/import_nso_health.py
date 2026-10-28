@@ -104,12 +104,24 @@ def read_po_rows(path: Path) -> list[dict]:
 
 def build_payload(raw_dir: Path | None = None) -> dict:
     raw_dir = raw_dir or devices.RAW_DIR
-    po_path = devices.latest_file(raw_dir, devices.PO_NAME)
+    po_files = devices.matching_files(raw_dir, devices.PO_NAME)
     orders_path = devices.latest_file(raw_dir, devices.ORDERS_NAME)
-    if po_path is None or orders_path is None:
+    if not po_files or orders_path is None:
         raise ValueError("NSO health needs a PO scrape and a booked/shipped orders report")
-    as_of = devices.report_extract_date(orders_path) or devices.file_stamp(po_path)
-    po_rows = read_po_rows(po_path)
+    as_of = devices.report_extract_date(orders_path) or devices.file_stamp(po_files[-1])
+    counted = [(path, read_po_rows(path)) for path in po_files]
+    full = [(path, rows) for path, rows in counted if len(rows) >= devices.FULL_PO_MIN_SHOPS]
+    basis_path, basis_rows = full[-1] if full else counted[-1]
+    po_rows_by_id = {row["id"]: row for row in basis_rows}
+    used = [basis_path]
+    for path, rows in counted:
+        if path == basis_path or devices.file_stamp(path) < devices.file_stamp(basis_path):
+            continue
+        used.append(path)
+        for row in rows:
+            po_rows_by_id[row["id"]] = row
+    po_rows = list(po_rows_by_id.values())
+    po_files = used
     booked, shipped = devices.parse_orders_report(orders_path)
     events = devices.reconcile_order_lifecycle(booked, shipped, booked_date=as_of)
     shipped_ids = {event["id"] for event in events if event["source"] == "shipped"}
@@ -134,7 +146,8 @@ def build_payload(raw_dir: Path | None = None) -> dict:
     return {
         "as_of": as_of.isoformat(),
         "sources": {
-            "po_extract": po_path.name,
+            "po_extract": po_files[-1].name,
+            "po_extracts": [path.name for path in po_files],
             "orders_report": orders_path.name,
             "itraq": None,
         },

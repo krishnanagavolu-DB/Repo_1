@@ -48,6 +48,18 @@ function shopsForWeek(shops, weekStart) {
   return (shops || []).filter((shop) => shop.opening_date >= weekStart && shop.opening_date <= end);
 }
 
+/* An empty sales week looks forward two Monday–Sunday weeks before giving up. */
+function openingsForPeriod(shops, weekStart) {
+  const current = shopsForWeek(shops, weekStart);
+  if (!weekStart || weekStart === "history" || current.length) {
+    return { shops: current, extended: false, start: weekStart, end: weekStart ? weekEnd(weekStart) : null };
+  }
+  const start = addDays(weekStart, 7);
+  const end = addDays(weekStart, 20);
+  const extra = (shops || []).filter((shop) => shop.opening_date >= start && shop.opening_date <= end);
+  return { shops: extra, extended: extra.length > 0, start, end };
+}
+
 function pill(value) {
   const tone = String(value || "").toLowerCase().replace(/[^a-z]+/g, "-");
   return `<span class="health-pill health-${escapeHtml(tone)}">${escapeHtml(value || "—")}</span>`;
@@ -58,11 +70,13 @@ function renderTable(weekStart) {
   const empty = document.getElementById("nso-health-empty");
   const week = document.getElementById("nso-health-week");
   if (!body) return;
-  const rows = shopsForWeek(nso?.shops, weekStart);
+  const window = openingsForPeriod(nso?.shops, weekStart);
+  const rows = window.shops;
   if (week) {
-    week.textContent = weekStart && weekStart !== "history"
-      ? `Shops opening ${fmtDate(weekStart)} – ${fmtDate(weekEnd(weekStart))}`
-      : "Pick a week to see the shops opening then";
+    if (!weekStart || weekStart === "history") week.textContent = "Pick a week to see the shops opening then";
+    else if (window.extended) {
+      week.textContent = `No openings ${fmtDate(weekStart)} – ${fmtDate(weekEnd(weekStart))}. Showing the next two weeks, ${fmtDate(window.start)} – ${fmtDate(window.end)}.`;
+    } else week.textContent = `Shops opening ${fmtDate(weekStart)} – ${fmtDate(weekEnd(weekStart))}`;
   }
   body.innerHTML = rows
     .map(
@@ -146,7 +160,9 @@ function renderSource() {
   const node = document.getElementById("nso-health-source");
   if (!node || !nso) return;
   const source = nso.sources || {};
-  node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${source.po_extract || "PO scrape"}. iTraq was not in this drop.`;
+  const poNames = source.po_extracts || [];
+  const poLabel = poNames.length > 1 ? `PO scrapes through ${poNames[poNames.length - 1]}` : (source.po_extract || "PO scrape");
+  node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${poLabel}. iTraq was not in this drop.`;
 }
 
 function showWeek(weekStart) {
@@ -195,7 +211,7 @@ function start() {
   else window.addEventListener("dashboard:unlocked", load, { once: true });
 }
 
-window.__deviceHealth = { shopsForWeek, weekEnd, stratixLabel: null, openBurndown, showWeek };
+window.__deviceHealth = { shopsForWeek, openingsForPeriod, weekEnd, stratixLabel: null, openBurndown, showWeek };
 
 document.addEventListener("DOMContentLoaded", start);
 })();

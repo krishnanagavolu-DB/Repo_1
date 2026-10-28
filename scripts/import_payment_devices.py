@@ -178,6 +178,37 @@ def file_stamp(path: Path) -> date:
     return date.min
 
 
+def matching_files(directory: Path, pattern: re.Pattern[str]) -> list[Path]:
+    matches = [path for path in directory.glob("*") if path.is_file() and pattern.search(path.name)]
+    return sorted(matches, key=lambda path: (file_stamp(path), path.stat().st_mtime))
+
+
+# A full pipeline extract has far more than a handful of shops. A later file
+# with only a few rows updates those shops and does not replace the pipeline.
+FULL_PO_MIN_SHOPS = 20
+
+
+def merged_po_shops(directory: Path) -> tuple[list[dict], list[Path]]:
+    """Use the newest full PO extract, then overlay any later partial refreshes."""
+    files = matching_files(directory, PO_NAME)
+    parsed = [(path, parse_po_extract(path)) for path in files]
+    full = [(path, shops) for path, shops in parsed if len(shops) >= FULL_PO_MIN_SHOPS]
+    if not parsed:
+        return [], []
+    basis_path, basis_shops = full[-1] if full else parsed[-1]
+    combined = {shop["id"]: shop for shop in basis_shops}
+    used = [basis_path]
+    for path, shops in parsed:
+        if file_stamp(path) < file_stamp(basis_path) or path == basis_path:
+            continue
+        if file_stamp(path) == file_stamp(basis_path) and path.stat().st_mtime <= basis_path.stat().st_mtime:
+            continue
+        used.append(path)
+        for shop in shops:
+            combined[shop["id"]] = shop
+    return list(combined.values()), used
+
+
 def latest_file(directory: Path, pattern: re.Pattern[str]) -> Path | None:
     matches = [path for path in directory.glob("*") if path.is_file() and pattern.search(path.name)]
     if not matches:
@@ -549,7 +580,8 @@ def awaiting_payload(warnings: list[str] | None = None) -> dict:
 
 
 def build_payload(raw_dir: Path, today: date | None = None) -> dict:
-    po_path = latest_file(raw_dir, PO_NAME)
+    po_shops, po_files = merged_po_shops(raw_dir)
+    po_path = po_files[-1] if po_files else None
     orders_path = latest_file(raw_dir, ORDERS_NAME)
     missing = []
     if po_path is None:
@@ -565,7 +597,6 @@ def build_payload(raw_dir: Path, today: date | None = None) -> dict:
         return payload
 
     today = today or date.today()
-    po_shops = parse_po_extract(po_path)
     booked, shipped = parse_orders_report(orders_path)
     extract_date = report_extract_date(orders_path) or today
     events = reconcile_order_lifecycle(booked, shipped, booked_date=extract_date)

@@ -56,5 +56,49 @@ def test_item_status_is_checked(tmp_path: Path):
         raise AssertionError("unknown status was accepted")
 
 
+def test_project_status_is_checked(tmp_path: Path):
+    bad = _update("2026-10-19", projects=[{"name": "X", "status": "Maybe", "this_week": "y"}])
+    (tmp_path / "db_payments_update_20261019.json").write_text(json.dumps(bad))
+    try:
+        dbpay.build(tmp_path)
+    except ValueError as err:
+        assert "projects[0] status must be one of" in str(err)
+    else:
+        raise AssertionError("unknown project status was accepted")
+
+
+def test_top_priorities_are_capped_at_three(tmp_path: Path):
+    bad = _update("2026-10-19", top_priorities=["a", "b", "c", "d"])
+    (tmp_path / "db_payments_update_20261019.json").write_text(json.dumps(bad))
+    try:
+        dbpay.build(tmp_path)
+    except ValueError as err:
+        assert "top_priorities must be up to three" in str(err)
+    else:
+        raise AssertionError("four priorities were accepted")
+
+
+def test_closed_project_is_kept_in_the_record(tmp_path: Path):
+    good = _update(
+        "2026-10-19",
+        projects=[{"name": "Retired", "status": "Closed", "this_week": "Wrapped up."}],
+        action_items=[{"owner": "Ravi", "text": "Confirm the handoff."}],
+    )
+    (tmp_path / "db_payments_update_20261019.json").write_text(json.dumps(good))
+    payload = json.loads(dbpay.build(tmp_path))
+    assert payload["updates"][0]["projects"][0]["status"] == "Closed"
+
+
+def test_action_owner_is_limited_to_krishna_or_ravi(tmp_path: Path):
+    bad = _update("2026-10-19", action_items=[{"owner": "Shubha", "text": "Decide."}])
+    (tmp_path / "db_payments_update_20261019.json").write_text(json.dumps(bad))
+    try:
+        dbpay.build(tmp_path)
+    except ValueError as err:
+        assert "owner must be one of" in str(err)
+    else:
+        raise AssertionError("an unknown owner was accepted")
+
+
 def test_published_updates_match_raw_folder():
     assert dbpay.main(["--check"]) == 0

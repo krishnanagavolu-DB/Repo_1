@@ -54,6 +54,30 @@ check("status chip is labelled", card.includes(">In progress<"), true);
 check("status chip class has no spaces", card.includes("dbpay-status-in-progress"), true);
 check("asks are listed", card.includes("Ravi to confirm lease"), true);
 
+const board = api.updateCard({
+  week_start: "2026-10-26",
+  summary: "Board",
+  top_priorities: ["One", "Two", "Three"],
+  projects: [
+    { name: "OloPay Processing Transition", status: "On Hold", this_week: "No change." },
+    { name: "e235 Stop Gap Validation", status: "In Progress", this_week: "Lab sign-off done." },
+    { name: "Retired project", status: "Closed", this_week: "Gone." },
+  ],
+  side_quests: [{ name: "Stratix reporting", status: "In progress", this_week: "Cadence." }],
+  wins: ["Visa closed"],
+  stuck: ["VHQ time"],
+  action_items: [{ owner: "Ravi", text: "Ask Verifone for the VHQ session." }],
+  ravi_notes: [],
+  open_detail: ["Ken Chambless: reply on iTrac."],
+});
+check("in-progress project is listed before on-hold", board.indexOf("e235 Stop Gap") < board.indexOf("OloPay Processing"), true);
+check("closed project leaves the board", board.includes("Retired project"), false);
+check("side quest table renders", board.includes("Stratix reporting") && board.includes("dbpay-table"), true);
+check("empty Ravi section says nothing is filed", board.includes("Nothing filed yet"), true);
+check("open detail collapses", board.includes('<details class="dbpay-detail">') && board.includes("Open detail (1)"), true);
+check("action owner is shown", board.includes("dbpay-owner"), true);
+check("on-hold status has its own style", board.includes("dbpay-status-on-hold"), true);
+
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));
   process.exit(1);

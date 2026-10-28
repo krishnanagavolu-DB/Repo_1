@@ -1,4 +1,4 @@
-/* DB Payments: Ravi's weekly updates, opened with a second key separate from the dashboard key. */
+/* DB Payments: Ravi's weekly board, opened with a second key separate from the dashboard key. */
 
 (function () {
 const DATA_URL = "data/db_payments.json";
@@ -9,6 +9,7 @@ const STATUS_LABEL = {
   blocked: "Blocked",
   next: "Next",
 };
+const PROJECT_RANK = { "In Progress": 0, "On Hold": 1 };
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -27,13 +28,72 @@ function weekLabel(iso) {
   return `Week of ${short(start)} – ${short(end)}, ${end.getFullYear()}`;
 }
 
+function pill(status) {
+  const text = String(status ?? "");
+  const cls = text.toLowerCase().replace(/\s+/g, "-");
+  return `<span class="dbpay-status dbpay-status-${escapeHtml(cls)}">${escapeHtml(text)}</span>`;
+}
+
+function bullets(items) {
+  return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+}
+
+function block(title, body, className = "") {
+  return `<section class="dbpay-block ${className}"><h4>${escapeHtml(title)}</h4>${body}</section>`;
+}
+
 function list(title, items, className) {
   if (!items?.length) return "";
   return `
     <div class="dbpay-list ${className}">
       <h4>${escapeHtml(title)}</h4>
-      <ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+      ${bullets(items)}
     </div>`;
+}
+
+function projectTable(projects) {
+  const open = projects
+    .filter((project) => String(project.status).toLowerCase() !== "closed")
+    .sort((a, b) => (PROJECT_RANK[a.status] ?? 2) - (PROJECT_RANK[b.status] ?? 2));
+  if (!open.length) return "";
+  const rows = open
+    .map(
+      (project) => `
+        <tr>
+          <th scope="row">${escapeHtml(project.name)}</th>
+          <td>${pill(project.status)}</td>
+          <td>${escapeHtml(project.this_week)}</td>
+        </tr>`
+    )
+    .join("");
+  return `<table class="dbpay-table">
+    <thead><tr><th scope="col">Project</th><th scope="col">Status</th><th scope="col">This week</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function sideQuestTable(quests) {
+  if (!quests.length) return "";
+  const rows = quests
+    .map(
+      (quest) => `
+        <tr>
+          <th scope="row">${escapeHtml(quest.name)}</th>
+          <td>${pill(quest.status)}</td>
+          <td>${escapeHtml(quest.this_week)}</td>
+        </tr>`
+    )
+    .join("");
+  return `<table class="dbpay-table">
+    <thead><tr><th scope="col">Side quest</th><th scope="col">Status</th><th scope="col">This week</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function actionList(actions) {
+  return `<ul class="dbpay-actions">${actions
+    .map((action) => `<li><span class="dbpay-owner">${escapeHtml(action.owner)}</span> ${escapeHtml(action.text)}</li>`)
+    .join("")}</ul>`;
 }
 
 function itemRow(item) {
@@ -49,19 +109,41 @@ function itemRow(item) {
 
 function updateCard(update) {
   const sent = update.sent_on ? `<span class="dbpay-sent">Sent ${escapeHtml(update.sent_on)}</span>` : "";
-  const items = update.items?.length ? `<ul class="dbpay-items">${update.items.map(itemRow).join("")}</ul>` : "";
+  const parts = [];
+  if (update.summary) parts.push(`<p class="dbpay-summary">${escapeHtml(update.summary)}</p>`);
+  if (update.top_priorities?.length) {
+    parts.push(block("Top 3 this week", `<ol>${update.top_priorities.map((p) => `<li>${escapeHtml(p)}</li>`).join("")}</ol>`, "dbpay-priorities"));
+  }
+  const projects = projectTable(update.projects || []);
+  if (projects) parts.push(block("Projects", projects));
+  const quests = sideQuestTable(update.side_quests || []);
+  if (quests) parts.push(block("Side quests", quests));
+
+  const columns = [];
+  if (update.wins?.length) columns.push(block("Wins", bullets(update.wins), "dbpay-wins"));
+  if (update.stuck?.length) columns.push(block("Where I'm stuck", bullets(update.stuck), "dbpay-stuck"));
+  if (columns.length) parts.push(`<div class="dbpay-two">${columns.join("")}</div>`);
+
+  if (update.action_items?.length) parts.push(block("Action items", actionList(update.action_items)));
+
+  const ravi = update.ravi_notes?.length
+    ? bullets(update.ravi_notes)
+    : `<p class="dbpay-empty-note">Nothing filed yet. Paste a transcript or summary to fill this in.</p>`;
+  parts.push(block("From the conversation with Ravi", ravi, "dbpay-ravi"));
+
+  if (update.open_detail?.length) {
+    parts.push(`<details class="dbpay-detail"><summary>Open detail (${update.open_detail.length})</summary>${bullets(update.open_detail)}</details>`);
+  }
+  if (update.items?.length) parts.push(`<ul class="dbpay-items">${update.items.map(itemRow).join("")}</ul>`);
+  parts.push(`<div class="dbpay-lists">${list("Next week", update.next, "dbpay-next")}${list("Asks", update.asks, "dbpay-asks")}</div>`);
+
   return `
     <article class="dbpay-update">
       <header>
         <h3>${escapeHtml(weekLabel(update.week_start))}</h3>
         ${sent}
       </header>
-      <p class="dbpay-summary">${escapeHtml(update.summary)}</p>
-      ${items}
-      <div class="dbpay-lists">
-        ${list("Next week", update.next, "dbpay-next")}
-        ${list("Asks", update.asks, "dbpay-asks")}
-      </div>
+      ${parts.join("")}
     </article>`;
 }
 
@@ -161,7 +243,7 @@ function start() {
   else window.addEventListener("dashboard:unlocked", resume, { once: true });
 }
 
-window.__dbPayments = { renderUpdates, updateCard, weekLabel, escapeHtml, lockAgain };
+window.__dbPayments = { renderUpdates, updateCard, weekLabel, escapeHtml, lockAgain, projectTable, sideQuestTable };
 
 document.addEventListener("DOMContentLoaded", start);
 })();

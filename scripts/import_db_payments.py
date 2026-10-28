@@ -25,6 +25,13 @@ PROCESSED = ROOT / "data" / "processed" / "db_payments.json"
 
 FILE_RE = re.compile(r"^db_payments_update_(20\d{2})(\d{2})(\d{2})\.json$")
 STATUSES = ("done", "in progress", "blocked", "next")
+PROJECT_STATUSES = ("In Progress", "On Hold", "Closed")
+OWNERS = ("Krishna", "Ravi")
+STRING_LISTS = ("wins", "stuck", "open_detail", "ravi_notes", "next", "asks")
+
+
+def _strings(value) -> bool:
+    return isinstance(value, list) and all(isinstance(entry, str) and entry.strip() for entry in value)
 
 
 def validate(update: dict, week: date, name: str) -> list[str]:
@@ -35,7 +42,7 @@ def validate(update: dict, week: date, name: str) -> list[str]:
         errors.append(f"{name}: the filename date must be a Monday")
     if not str(update.get("summary") or "").strip():
         errors.append(f"{name}: summary is required")
-    items = update.get("items")
+    items = update.get("items", [])
     if not isinstance(items, list):
         errors.append(f"{name}: items must be a list")
         items = []
@@ -44,10 +51,37 @@ def validate(update: dict, week: date, name: str) -> list[str]:
             errors.append(f"{name}: items[{index}] needs text")
         if item.get("status") not in STATUSES:
             errors.append(f"{name}: items[{index}] status must be one of {', '.join(STATUSES)}")
-    for key in ("next", "asks"):
-        value = update.get(key, [])
-        if not isinstance(value, list) or not all(isinstance(entry, str) for entry in value):
+    for key in STRING_LISTS:
+        if not _strings(update.get(key, [])):
             errors.append(f"{name}: {key} must be a list of sentences")
+    if not _strings(update.get("top_priorities", [])) or len(update.get("top_priorities", [])) > 3:
+        errors.append(f"{name}: top_priorities must be up to three sentences")
+    for key in ("projects", "side_quests"):
+        rows = update.get(key, [])
+        if not isinstance(rows, list):
+            errors.append(f"{name}: {key} must be a list")
+            continue
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                errors.append(f"{name}: {key}[{index}] must be an object")
+                continue
+            if not str(row.get("name") or "").strip():
+                errors.append(f"{name}: {key}[{index}] needs a name")
+            if not str(row.get("this_week") or "").strip():
+                errors.append(f"{name}: {key}[{index}] needs this_week")
+            if key == "projects" and row.get("status") not in PROJECT_STATUSES:
+                errors.append(f"{name}: projects[{index}] status must be one of {', '.join(PROJECT_STATUSES)}")
+            if key == "side_quests" and not str(row.get("status") or "").strip():
+                errors.append(f"{name}: side_quests[{index}] needs a status")
+    actions = update.get("action_items", [])
+    if not isinstance(actions, list):
+        errors.append(f"{name}: action_items must be a list")
+        actions = []
+    for index, action in enumerate(actions):
+        if not isinstance(action, dict) or action.get("owner") not in OWNERS:
+            errors.append(f"{name}: action_items[{index}] owner must be one of {', '.join(OWNERS)}")
+        elif not str(action.get("text") or "").strip():
+            errors.append(f"{name}: action_items[{index}] needs text")
     return errors
 
 

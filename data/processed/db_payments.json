@@ -1,6 +1,118 @@
 {
   "title": "DB Payments",
   "audience": "Ravi and Krishna",
-  "latest_week": null,
-  "updates": []
+  "latest_week": "2026-10-26",
+  "updates": [
+    {
+      "week_start": "2026-10-26",
+      "summary": "e235 lab sign-off is done and the golden device is next. The Visa incident is closed. Four projects stay on hold.",
+      "top_priorities": [
+        "e235 Stop Gap: golden-device sign-off and the pilot plan (local shop, then Pacific Northwest, then Texas).",
+        "Stratix installed-base reporting: weekly bridge, removals, and the start date.",
+        "New-shop Verifone test transaction: keep the $1 test from being skipped."
+      ],
+      "projects": [
+        {
+          "name": "e235 Stop Gap Validation",
+          "status": "In Progress",
+          "this_week": "Lab sign-off is done. Next gate is the golden device and the pilot."
+        },
+        {
+          "name": "Executive Dashboard Creation",
+          "status": "In Progress",
+          "this_week": "Visa alerting gap is closed. Dashboard work continues."
+        },
+        {
+          "name": "Payment Strategy Discovery",
+          "status": "On Hold",
+          "this_week": "No change."
+        },
+        {
+          "name": "All-in-one Payment Device",
+          "status": "On Hold",
+          "this_week": "No change. Shop software updates are a side quest, not this project."
+        },
+        {
+          "name": "Pinless Debit Transition",
+          "status": "On Hold",
+          "this_week": "No change."
+        },
+        {
+          "name": "OloPay Processing Transition",
+          "status": "On Hold",
+          "this_week": "No change. The sandbox and test-card work is a different effort."
+        }
+      ],
+      "side_quests": [
+        {
+          "name": "E285 software updates at open shops",
+          "status": "Done",
+          "this_week": "IL1301 and SC0212 updated and returned to service."
+        },
+        {
+          "name": "New-shop Verifone test transaction",
+          "status": "In progress",
+          "this_week": "IL1302 closed. Opening instructions are being tightened with Jordan Marlatt."
+        },
+        {
+          "name": "Stratix installed-base reporting",
+          "status": "In progress",
+          "this_week": "Weekly bridge, removals, and install-base definitions requested. Stratix committed to more reporting."
+        },
+        {
+          "name": "DSP payment testing",
+          "status": "In progress",
+          "this_week": "Sandbox versus production tests, test shops, and how a production test gets refunded. Not the OloPay transition."
+        },
+        {
+          "name": "Worldpay / Visa incident",
+          "status": "Done",
+          "this_week": "No business impact. Payments added to the alert list. Investigation closed."
+        }
+      ],
+      "wins": [
+        "E285 software updates finished at IL1301 and SC0212. Devices are back in service.",
+        "IL1302's missing $1 test transaction is closed.",
+        "Visa incident is closed. Dutch Bros did not see a rise in declines, and Payments is on the Worldpay alert list.",
+        "Jordan Marlatt agreed to tighten new-shop opening instructions so the Verifone test happens.",
+        "e235 lab validation is signed off. The pilot shape is set with Ops. New shops move after validation. Existing shops stay on e285 unless cost or durability justifies a swap.",
+        "Stratix committed to more installed-base reporting."
+      ],
+      "stuck": [
+        "Golden-device quantity and sign-off, plus the pilot training doc, metrics, and production transaction rules.",
+        "Verifone time for the VHQ hierarchy session, production TIDs, and whether someone is onsite during validation week.",
+        "A shared answer with Shubha: existing shops stay on e285 unless there is a cost or durability reason to convert."
+      ],
+      "action_items": [
+        {
+          "owner": "Krishna",
+          "text": "Close golden-device quantity and sign-off, and send the pilot metrics."
+        },
+        {
+          "owner": "Krishna",
+          "text": "Confirm Stratix's weekly installed-base cadence."
+        },
+        {
+          "owner": "Krishna",
+          "text": "Settle the DSP test path: sandbox or production, and who refunds a production test."
+        },
+        {
+          "owner": "Ravi",
+          "text": "Ask Verifone for the VHQ hierarchy session."
+        },
+        {
+          "owner": "Ravi",
+          "text": "Align with Shubha that existing shops stay on e285 unless cost or durability says otherwise."
+        }
+      ],
+      "ravi_notes": [],
+      "open_detail": [
+        "Ken Chambless: review the iTrac Due Back Reminder notes and reply. Email. Medium urgency. Copilot could not confirm a reply.",
+        "DSP payment testing: confirm whether an Olo Pay sandbox exists, verify the test shop, define the production test, and coordinate the refund with Eric. Copilot could not confirm these are closed.",
+        "e235: obtain golden-device sign-off, confirm quantity with Verifone, review Ops training material, validate MID visibility, define production transaction controls, and write the pilot acceptance criteria.",
+        "e235 with Verifone: set the VHQ management session, update the boarding spreadsheet, confirm production TIDs, and decide whether onsite support is needed during validation week.",
+        "Pilot: send the training doc, share the metrics, and set up error tracking."
+      ]
+    }
+  ]
 }

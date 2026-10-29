@@ -29,14 +29,16 @@ The three sections use three different counting piles. Do not add them together 
 
 **Stratix / iTrac** `[CONFIRMED]`: Stratix is the depot and logistics vendor; iTrac is its tool. `Assets at Stratix.csv` lists only devices Stratix holds. A device in a shop or in transit is not in that file. Statuses: In Inventory, In Repair, Picked, RMA Received. Task numbers used for the split:
 
-| iTrac Task Number | Name in workbook | Meaning |
-|---|---|---|
-| 1.1 SPARE POOL | Spare pool | Stock held for replacements |
-| 2.1 CUST OWNED (Task name "Depot Devices") | Depot | Depot devices |
-| 1.2 CUST OWNED | Awaiting NSO / deployment | `[CONFIRMED]` Krishna's definition (10/28): devices held for new shop openings. Not validated against the NSO tracking sheet. |
-| 1.7 CUST OWNED (CA4505) | Other (CA4505) | 9 devices; bucket not known `[TBD]` |
+| iTrac Task Number | Name in workbook | Meaning (Ken, Stratix, 10/29/2026) `[CONFIRMED by Stratix]` | In Stratix install base? |
+|---|---|---|---|
+| 1.1 SPARE POOL | Spare pool | Replacement stock for service orders (RMAs). The pool also counts devices in repair, picked, received, and devices due back and pending return after a replacement was sent. | Per the scorecard definition, yes `[ASSUMED]`. Ken did not say. |
+| 2.1 CUST OWNED (Task name "Depot Devices") | Depot | Can move into the spare pool, add devices to shops, or ship to a new shop if its permanent devices arrive late. | No |
+| 1.2 CUST OWNED | Awaiting NSO / deployment | Devices Verifone shipped for specific shops. Orders are placed from the NSO sheet. | No |
+| 1.7 CUST OWNED (CA4505) | Held for pushed opening (CA4505) | Shipped to the shop on schedule; the opening was pushed. Held until 11/10, the current requested ship date. | Yes, a special case |
 
-`[TBD]` what "customer owned" means for billing. The tag suggests Dutch Bros owns them; the contract says devices stay Verifone property.
+**Available vs not available.** Ken: iTrac numbers are live and change as items ship or are received. "Available to Order" is what Stratix can send out now. The task a device sits in decides how it can be used. The workbook uses iTrac status `In Inventory` as "available to ship" and `In Repair`, `Picked`, `RMA Received` as "not available". Ken's live "Available to Order" figures are a separate hand-typed table with its own date.
+
+`[TBD]` what "customer owned" means for billing. The tag suggests Dutch Bros owns them; the contract says devices stay Verifone property. Verifone's rental term starts at shipment `[CONFIRMED earlier]`, so devices in 1.2 and 2.1 may be billed by Verifone even though they are outside the Stratix install base. Not verified.
 
 **NSO** = new shop opening. Devices are shipped to a new shop before opening; shops are ordered when they publish in Portal.
 
@@ -66,9 +68,21 @@ Stratix wins when a serial is both in a shop path and in the Stratix file (320 o
 | VHQ total / Active / Inactive / Pending | 17,851 / 9,061 / 8,722 / 68 |
 | E285 in the system | 18,085 |
 | In shops (Active / Inactive or pending) | 13,114 (8,987 / 4,127) |
-| At Stratix | 3,202 (Spare pool 1,774 · Depot 347 · Awaiting NSO 1,072 · Other 9) |
+| At Stratix | 3,202 (Spare pool 1,774 · Depot 347 · Awaiting NSO 1,072 · Held for pushed opening 9) |
 | Location not confirmed | 1,769 |
 | PO: original / shipped / picked / remaining | 5,700 / 1,930 / 120 / 3,650 |
+
+At Stratix, available vs not available (iTrac export 10/26):
+
+| Bucket | Total | Available (In Inventory) | Not available | In Repair | Picked | RMA Received |
+|---|---|---|---|---|---|---|
+| Spare pool | 1,774 | 401 | 1,373 | 1,273 | 87 | 13 |
+| Depot | 347 | 335 | 12 | 1 | 11 | 0 |
+| Awaiting NSO | 1,072 | 955 | 117 | 15 | 102 | 0 |
+| Held for pushed opening | 9 | 9 | 0 | 0 | 0 | 0 |
+| **Total** | **3,202** | **1,700** | **1,502** | **1,289** | **200** | **13** |
+
+Of the 1,273 spare pool devices In Repair: 719 are Return to OEM and 503 are Repair In Process. Stratix's own live view on 10/29 showed "Available to Order" of 452 (spare pool), 899 (1.2), 9 (1.7) and 332 (depot), 1,692 in total. The difference from the table above is timing.
 
 ---
 
@@ -82,7 +96,9 @@ Stratix wins when a serial is both in a shop path and in the Stratix file (320 o
 ## 6. Open conflicts
 
 - `[CONFLICT]` Remaining E285 balance: Krishna's chart 3,250, Verifone's burn down tab 3,650, Dennis (Verifone) about 3,650, another source 3,600. Unreconciled.
-- `[CONFLICT]` Whether depot devices count in Stratix's install base: a 10/19 note says yes, the 10/27 definition omits them.
+- `[CONFIRMED by Stratix 10/29]` Depot devices (2.1) and 1.2 devices are not in the Stratix install base; only 1.7 is. This resolves the earlier conflict (10/19 note said depot was included).
+- `[TBD]` Whether the spare pool (1,774, including 1,273 in repair) is inside the install base. The scorecard definition says "Spare Pool" is; Ken did not answer.
+- `[TBD]` Ken says the spare pool also counts devices "due back and pending return". The iTrac export only has In Inventory, In Repair, Picked and RMA Received. Unclear whether due-back devices are in the export or counted elsewhere.
 - `[TBD]` Whether any E285 was removed from the Stratix install base for lost/stolen or replaced devices (Removals tab requested in the 10/27 email draft to Stratix; not confirmed sent).
 - `[ASSUMED]` The Verifone burn down is the PO balance Dutch Bros should use; its latest tab is 10/01.
 

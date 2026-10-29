@@ -1,8 +1,8 @@
 {
-  "as_of": "2026-10-28",
   "vhq_as_of": "2026-10-26",
   "itrac_as_of": "2026-10-28",
-  "source": "Device_Health_2026-10-28.xlsx",
+  "as_of": "2026-10-29",
+  "source": "Device_Health_2026-10-29.xlsx",
   "e285": {
     "in_shops_active": 8987,
     "in_shops": 13114,
@@ -11,9 +11,19 @@
     "spare_pool": 1774,
     "depot": 347,
     "awaiting_nso": 1072,
-    "other": 9,
+    "held_for_opening": 9,
     "location_not_confirmed": 1769,
-    "total": 18085
+    "total": 18085,
+    "spare_pool_available": 401,
+    "spare_pool_not_available": 1373,
+    "depot_available": 335,
+    "depot_not_available": 12,
+    "awaiting_nso_available": 955,
+    "awaiting_nso_not_available": 117,
+    "held_for_opening_available": 9,
+    "held_for_opening_not_available": 0,
+    "available_to_ship": 1700,
+    "not_available": 1502
   },
-  "note": "VHQ and iTrac place each E285 once. Location not confirmed means neither file shows a shop or Stratix; it is not a lost-device count. These counts are not the purchase order."
+  "note": "VHQ and iTrac place each E285 once. Available to ship means iTrac status In Inventory. Not available means In Repair, Picked, or RMA Received. Location not confirmed is not a lost-device count. These counts are not the purchase order."
 }

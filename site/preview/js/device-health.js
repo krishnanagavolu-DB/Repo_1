@@ -126,7 +126,7 @@ function renderTerminals(health) {
     <p class="health-kicker">VHQ ${fmtDate(health.vhq_as_of)} · iTrac ${fmtDate(health.itrac_as_of)}</p>
     <dl class="e285-split">
       <div><dt>In shops</dt><dd>${fmtInt(row.in_shops)}<span>${fmtInt(row.in_shops_active)} active · ${fmtInt(row.in_shops_inactive)} inactive or pending</span></dd></div>
-      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)}<span>Spare pool ${fmtInt(row.spare_pool)} · Depot ${fmtInt(row.depot)} · Awaiting NSO ${fmtInt(row.awaiting_nso)}</span></dd></div>
+      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)}<span>Spare pool ${fmtInt(row.spare_pool)} · Depot ${fmtInt(row.depot)} · Awaiting NSO ${fmtInt(row.awaiting_nso)} · Held for opening ${fmtInt(row.held_for_opening)}</span><span>${fmtInt(row.available_to_ship)} available to ship · ${fmtInt(row.not_available)} not available</span></dd></div>
       <div><dt>Location not confirmed</dt><dd>${fmtInt(row.location_not_confirmed)}<span>Neither file shows a shop or Stratix</span></dd></div>
     </dl>
     <p class="health-source">${health.note || ""}</p>`;

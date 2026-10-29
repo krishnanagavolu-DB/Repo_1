@@ -74,8 +74,8 @@ body {
 .topbar-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+  align-items: center;
+  gap: 32px;
   padding-bottom: 18px;
 }
 
@@ -156,7 +156,13 @@ body {
 }
 
 .period {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  flex: none;
+  width: 280px;
+  text-align: left;
 }
 
 .period-label {
@@ -165,37 +171,41 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 6px;
+  margin: 0;
 }
 
 .period-control {
-  display: inline-flex;
+  display: flex;
   align-items: stretch;
   border: 1px solid #b8c7d6;
-  border-radius: 8px;
-  overflow: hidden;
+  border-radius: 10px;
   background: #fff;
-  min-height: 42px;
+  min-height: 44px;
 }
 
 .period-control select {
+  appearance: none;
+  width: 100%;
   border: 0;
-  background: transparent;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23154167' d='M1.4.6 6 5.2 10.6.6 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
   font-family: var(--font);
   font-size: 14px;
   font-weight: 700;
   color: var(--dark);
-  padding: 0 14px;
-  min-width: 210px;
+  padding: 0 40px 0 16px;
   outline: none;
   cursor: pointer;
 }
 
 .scope {
-  font-size: 11px;
-  color: var(--muted-2);
-  margin-top: 7px;
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0;
+  letter-spacing: 0;
 }
 
 .tabs {
@@ -3162,7 +3172,8 @@ body[data-active-tab="dbpay"] .ask-data {
   }
 
   .period {
-    text-align: left;
+    width: 100%;
+    max-width: 320px;
   }
 
   .brand h1 {

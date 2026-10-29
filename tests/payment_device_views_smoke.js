@@ -25,7 +25,7 @@ const e235Panel = html.slice(e235Start, e285Start);
 const e285Panel = html.slice(e285Start, html.indexOf('data-subpanel="e235-roadmap"'));
 check("burn down chart is the default E235 view", e235Panel.includes('id="chart-devices-burndown"'), true);
 check("E235 view is visible by default", /data-subpanel="e235-burndown"[^>]*hidden/.test(e235Panel), false);
-check("E285 view is in progress", e285Panel.includes(">In progress<") && e285Panel.includes("Coming soon"), true);
+check("E285 view says coming soon", e285Panel.includes(">Coming soon<") && !e285Panel.includes(">In progress<"), true);
 check("E285 view starts hidden", /data-subpanel="e285-burndown"[^>]*hidden/.test(html), true);
 check("roadmap view starts hidden", /data-subpanel="e235-roadmap"[^>]*hidden/.test(html), true);
 check("roadmap script is loaded", html.includes('src="js/e235-roadmap.js'), true);

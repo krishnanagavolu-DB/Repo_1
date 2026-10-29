@@ -30,6 +30,11 @@ check("olo-period-label id", html.includes('id="olo-period-label"'), true);
 check("olo-summary-grid id", html.includes('id="olo-summary-grid"'), true);
 check("olo coming next wallet placeholder", /Coming next[\s\S]*Wallet mix/i.test(html), true);
 check("olo coming next decline placeholder", /Coming next[\s\S]*Decline reasons/i.test(html), true);
+check(
+  "olo coming next sits under more detail",
+  html.indexOf('class="coming olo-coming"') > html.indexOf("More detail — brand values"),
+  true
+);
 check("olo-support id", html.includes('id="olo-support"'), true);
 check("chart-olo-sales-trend id", html.includes('id="chart-olo-sales-trend"'), true);
 check("chart-olo-auth-trend id", html.includes('id="chart-olo-auth-trend"'), true);

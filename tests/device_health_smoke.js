@@ -61,10 +61,19 @@ const shops = [
 ];
 check("week is Monday through Sunday", api.shopsForWeek(shops, "2026-10-19").map((shop) => shop.id).join(","), "A,B");
 check("history is not a shop week", api.shopsForWeek(shops, "history").length, 0);
-const looked = api.openingsForPeriod(shops, "2026-10-12");
-check("an empty week looks ahead two weeks", looked.shops.map((shop) => shop.id).join(","), "A,B,C");
-check("the look-ahead is labeled as extended", looked.extended, true);
-check("a week that has openings stays on that week", api.openingsForPeriod(shops, "2026-10-19").extended, false);
+check("Thursday uses this week's Monday", api.mondayOf(new Date(2026, 9, 29)), "2026-10-26");
+check("Sunday stays in the week that started Monday", api.mondayOf(new Date(2026, 9, 25)), "2026-10-19");
+const forward = [
+  { id: "old", opening_date: "2026-10-25" },
+  { id: "mon", opening_date: "2026-10-26" },
+  { id: "mid", opening_date: "2026-11-04" },
+  { id: "sun", opening_date: "2026-11-15" },
+  { id: "after", opening_date: "2026-11-16" },
+];
+const ahead = api.openingsAhead(forward, new Date(2026, 9, 29));
+check("three-week window starts Monday", ahead.start, "2026-10-26");
+check("three-week window ends the third Sunday", ahead.end, "2026-11-15");
+check("window keeps openings inside those three weeks", ahead.shops.map((shop) => shop.id).join(","), "mon,mid,sun");
 
 if (failures.length) {
   console.error(JSON.stringify(failures, null, 2));

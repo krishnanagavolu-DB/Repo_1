@@ -7,7 +7,6 @@ const HEALTH_URL = "data/device_health.json";
 let nso = null;
 let devicesPayload = null;
 let burndownChart = null;
-let activeWeek = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -63,16 +62,32 @@ function shopsForWeek(shops, weekStart) {
   return (shops || []).filter((shop) => shop.opening_date >= weekStart && shop.opening_date <= end);
 }
 
-/* An empty sales week looks forward two Monday–Sunday weeks before giving up. */
-function openingsForPeriod(shops, weekStart) {
-  const current = shopsForWeek(shops, weekStart);
-  if (!weekStart || weekStart === "history" || current.length) {
-    return { shops: current, extended: false, start: weekStart, end: weekStart ? weekEnd(weekStart) : null };
-  }
-  const start = addDays(weekStart, 7);
-  const end = addDays(weekStart, 20);
-  const extra = (shops || []).filter((shop) => shop.opening_date >= start && shop.opening_date <= end);
-  return { shops: extra, extended: extra.length > 0, start, end };
+function isoDate(date) {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
+
+/* Monday of the week that contains `today`. Sunday belongs to the week that
+   started the previous Monday. */
+function mondayOf(today) {
+  const date = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const weekday = date.getDay();
+  const offset = weekday === 0 ? -6 : 1 - weekday;
+  date.setDate(date.getDate() + offset);
+  return isoDate(date);
+}
+
+/* New shop openings look forward from this Monday through the Sunday three
+   weeks later. Sales weeks stay on the period picker. */
+function openingsAhead(shops, today = new Date()) {
+  const start = mondayOf(today);
+  const end = addDays(start, 20);
+  const rows = (shops || [])
+    .filter((shop) => shop.opening_date >= start && shop.opening_date <= end)
+    .slice()
+    .sort((a, b) => a.opening_date.localeCompare(b.opening_date) || String(a.id).localeCompare(String(b.id)));
+  return { shops: rows, start, end };
 }
 
 function pill(value) {
@@ -80,18 +95,15 @@ function pill(value) {
   return `<span class="health-pill health-${escapeHtml(tone)}">${escapeHtml(value || "—")}</span>`;
 }
 
-function renderTable(weekStart) {
+function renderTable() {
   const body = document.getElementById("nso-health-body");
   const empty = document.getElementById("nso-health-empty");
   const week = document.getElementById("nso-health-week");
   if (!body) return;
-  const window = openingsForPeriod(nso?.shops, weekStart);
+  const window = openingsAhead(nso?.shops);
   const rows = window.shops;
   if (week) {
-    if (!weekStart || weekStart === "history") week.textContent = "Pick a week to see the shops opening then";
-    else if (window.extended) {
-      week.textContent = `No openings ${fmtDate(weekStart)} – ${fmtDate(weekEnd(weekStart))}. Showing the next two weeks, ${fmtDate(window.start)} – ${fmtDate(window.end)}.`;
-    } else week.textContent = `Shops opening ${fmtDate(weekStart)} – ${fmtDate(weekEnd(weekStart))}`;
+    week.textContent = `Shops opening ${fmtDate(window.start)} – ${fmtDate(window.end)}`;
   }
   body.innerHTML = rows
     .map(
@@ -105,13 +117,9 @@ function renderTable(weekStart) {
     )
     .join("");
   if (empty) {
-    if (rows.length || !weekStart || weekStart === "history") empty.hidden = true;
-    else {
-      const next = (nso?.shops || []).find((shop) => shop.opening_date > weekEnd(weekStart));
-      empty.hidden = false;
-      empty.textContent = next
-        ? `No shops are projected to open this week. The next opening is ${next.id} on ${fmtDate(next.opening_date)}.`
-        : "No shops are projected to open this week.";
+    empty.hidden = rows.length > 0;
+    if (!rows.length) {
+      empty.textContent = `No shops are projected to open ${fmtDate(window.start)} – ${fmtDate(window.end)}.`;
     }
   }
 }
@@ -274,9 +282,8 @@ function renderSource() {
   node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${poLabel}. iTrac lists devices held at Stratix, not which shop a shipment is going to.`;
 }
 
-function showWeek(weekStart) {
-  activeWeek = weekStart;
-  renderTable(weekStart);
+function showWeek() {
+  renderTable();
 }
 
 async function load() {
@@ -285,7 +292,7 @@ async function load() {
   try {
     nso = await loader(NSO_URL);
     renderSource();
-    renderTable(activeWeek);
+    renderTable();
   } catch (error) {
     const node = document.getElementById("nso-health-source");
     if (node) node.textContent = error?.message || "NSO health could not load.";
@@ -327,7 +334,8 @@ function start() {
 
 window.__deviceHealth = {
   shopsForWeek,
-  openingsForPeriod,
+  openingsAhead,
+  mondayOf,
   weekEnd,
   burndownSeries,
   stratixLabel: null,

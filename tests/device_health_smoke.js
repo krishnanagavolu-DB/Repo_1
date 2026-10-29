@@ -25,7 +25,7 @@ check(
   ["On hand", "In pipeline", "Projected"].every((label) => healthJs.includes(`label: "${label}"`)),
   true
 );
-check("shop table has a scroll cue", overview.includes('id="nso-health-scroll-cue"') && overview.includes("Scroll for more"), true);
+check("shop table scrolls in its own frame", overview.includes('id="nso-health-scroll"') && !overview.includes("Scroll for more"), true);
 check("coming-next cards have a slot under the live charts", overview.includes('id="overview-later"'), true);
 
 const sandbox = {

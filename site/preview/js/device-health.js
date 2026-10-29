@@ -114,19 +114,6 @@ function renderTable(weekStart) {
         : "No shops are projected to open this week.";
     }
   }
-  requestAnimationFrame(syncScrollCue);
-}
-
-function syncScrollCue() {
-  const wrap = document.getElementById("nso-health-scroll");
-  const frame = document.getElementById("nso-health-frame");
-  const cue = document.getElementById("nso-health-scroll-cue");
-  if (!wrap || !frame || !cue) return;
-  const overflow = wrap.scrollHeight - wrap.clientHeight > 8;
-  const atEnd = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 8;
-  frame.classList.toggle("is-overflow", overflow);
-  frame.classList.toggle("at-end", !overflow || atEnd);
-  cue.hidden = !overflow || atEnd;
 }
 
 function renderTerminals(health) {
@@ -325,8 +312,6 @@ function openBurndown() {
 
 function bind() {
   document.getElementById("burndown-jump")?.addEventListener("click", openBurndown);
-  document.getElementById("nso-health-scroll")?.addEventListener("scroll", syncScrollCue, { passive: true });
-  window.addEventListener("resize", syncScrollCue);
   window.addEventListener("dashboard:period", (event) => {
     const tab = event.detail?.tabId;
     if (tab && tab !== "overview") return;

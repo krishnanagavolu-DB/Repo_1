@@ -8,17 +8,17 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=47edf7727a" />
+    <link rel="stylesheet" href="css/dashboard.css?v=8728e3e6a7" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=c7fc15c5ec" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
     <script src="js/chart-labels.js?v=2384962ef5" defer></script>
     <script src="js/dashboard.js?v=81d0669186" defer></script>
-    <script src="js/pos-sales.js?v=99245bb74b" defer></script>
-    <script src="js/olo-pay.js?v=6d699caec1" defer></script>
+    <script src="js/pos-sales.js?v=0c71f1ebe9" defer></script>
+    <script src="js/olo-pay.js?v=5e4ef3419c" defer></script>
     <script src="js/executive-overview.js?v=b2c6064a6f" defer></script>
-    <script src="js/device-health.js?v=e70b40d301" defer></script>
+    <script src="js/device-health.js?v=33691739be" defer></script>
     <script src="js/payment-devices.js?v=48e11d337e" defer></script>
     <script src="js/e235-roadmap.js?v=7511465abb" defer></script>
     <script src="js/db-payments.js?v=458e49091b" defer></script>
@@ -156,7 +156,6 @@
                       <tbody id="nso-health-body"></tbody>
                     </table>
                   </div>
-                  <p class="health-scroll-cue" id="nso-health-scroll-cue" hidden>Scroll for more</p>
                   </div>
                   <p id="nso-health-empty" class="health-empty" hidden>No shops are projected to open this week.</p>
                   <p id="nso-health-source" class="health-source"></p>
@@ -165,9 +164,9 @@
                   <h3>Terminals in the network</h3>
                   <div id="e285-health" class="e285-health"></div>
                   <button type="button" id="burndown-jump" class="burndown-jump">
-                    <span class="burndown-jump-title">E285 purchase order burn down</span>
+                    <span class="burndown-jump-title">E285 PO Burn down</span>
                     <span class="chart-wrap burndown-jump-chart"><canvas id="chart-overview-burndown" aria-hidden="true"></canvas></span>
-                    <span class="burndown-jump-hint">Open the E235 burn down</span>
+                    <span class="burndown-jump-hint">Open the E285 PO Burn down</span>
                   </button>
                 </article>
               </div>
@@ -437,17 +436,17 @@
 
         <section id="panel-devices" class="tab-panel" data-panel="devices" hidden>
           <div class="subtabs" role="tablist" aria-label="Payment Devices views">
-            <button type="button" class="subtab active" role="tab" id="subtab-e235-burndown" data-subtab="e235-burndown" aria-selected="true" aria-controls="subpanel-e235-burndown">E235 Burn Down</button>
+            <button type="button" class="subtab active" role="tab" id="subtab-e235-burndown" data-subtab="e235-burndown" aria-selected="true" aria-controls="subpanel-e235-burndown">E285 PO Burn down</button>
             <button type="button" class="subtab" role="tab" id="subtab-e285-burndown" data-subtab="e285-burndown" aria-selected="false" aria-controls="subpanel-e285-burndown" tabindex="-1">E285 Burn Down</button>
             <button type="button" class="subtab" role="tab" id="subtab-e235-roadmap" data-subtab="e235-roadmap" aria-selected="false" aria-controls="subpanel-e235-roadmap" tabindex="-1">E235 Roadmap</button>
           </div>
 
           <div class="subpanel" id="subpanel-e235-burndown" role="tabpanel" data-subpanel="e235-burndown" aria-labelledby="subtab-e235-burndown">
           <div id="devices-empty" class="pos-empty" hidden></div>
-          <div id="devices-content" class="slide devices-slide" aria-label="E235 burn down" hidden>
+          <div id="devices-content" class="slide devices-slide" aria-label="E285 PO Burn down" hidden>
             <header class="slide-band">
               <div>
-                <h2>E235 Burn Down</h2>
+                <h2>E285 PO Burn down</h2>
                 <span>5,700-unit contract</span>
               </div>
             </header>
@@ -494,7 +493,7 @@
             </section>
             <article class="panel devices-chart-panel">
               <div class="devices-chart-head">
-                <h3>Verifone E285 Burndown Chart</h3>
+                <h3>E285 PO Burn down</h3>
                 <div class="devices-runrate" role="group" aria-label="PO run rate">
                   <span class="devices-runrate-label">PO Run-Rate</span>
                   <button type="button" id="devices-runrate-down" aria-label="Decrease run rate by half a shop">−</button>
@@ -534,9 +533,9 @@
               </header>
               <div class="e235-burndown-empty">
                 <h3>In progress</h3>
-                <p>Coming soon. The burn down on this page is the E235 view.</p>
+                <p>Coming soon. The burn down on this page is the E285 PO Burn down.</p>
                 <div class="e235-burndown-links">
-                  <button type="button" class="subtab-link" data-subtab-target="e235-burndown">Open E235 Burn Down</button>
+                  <button type="button" class="subtab-link" data-subtab-target="e235-burndown">Open E285 PO Burn down</button>
                   <button type="button" class="subtab-link" data-subtab-target="e235-roadmap">Open E235 Roadmap</button>
                 </div>
               </div>

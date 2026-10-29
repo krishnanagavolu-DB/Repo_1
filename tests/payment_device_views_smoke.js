@@ -16,8 +16,8 @@ check("Payment Devices appears once in the nav", (html.match(/data-tab="devices"
 
 const subtabs = [...html.matchAll(/data-subtab="([\w-]+)"/g)].map((match) => match[1]);
 check("three device views in order", subtabs.join(","), "e235-burndown,e285-burndown,e235-roadmap");
-check("E235 Burn Down is selected by default", /class="subtab active"[^>]*data-subtab="e235-burndown"[^>]*aria-selected="true"/.test(html), true);
-check("view labels", [">E235 Burn Down<", ">E285 Burn Down<", ">E235 Roadmap<"].every((label) => html.includes(label)), true);
+check("E285 PO Burn down is selected by default", /class="subtab active"[^>]*data-subtab="e235-burndown"[^>]*aria-selected="true"/.test(html), true);
+check("view labels", [">E285 PO Burn down<", ">E285 Burn Down<", ">E235 Roadmap<"].every((label) => html.includes(label)), true);
 
 const e235Start = html.indexOf('data-subpanel="e235-burndown"');
 const e285Start = html.indexOf('data-subpanel="e285-burndown"');
@@ -78,7 +78,7 @@ check("roadmap tab is selected", tabs[2].attrs["aria-selected"], "true");
 check("burn down tab is deselected", tabs[0].attrs["aria-selected"], "false");
 check("only the roadmap panel shows", panels.map((panel) => panel.hidden).join(","), "true,true,false");
 api.activateSubtab("not-a-view");
-check("unknown view falls back to E235 Burn Down", panels.map((panel) => panel.hidden).join(","), "false,true,true");
+check("unknown view falls back to E285 PO Burn down", panels.map((panel) => panel.hidden).join(","), "false,true,true");
 
 const roadmap = JSON.parse(fs.readFileSync("data/processed/e235_roadmap.json", "utf8"));
 const columns = api.sequenceColumns(roadmap.stages);

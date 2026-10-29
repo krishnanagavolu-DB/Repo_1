@@ -1783,66 +1783,20 @@ body.auth-unlocked .auth-gate {
   overflow-y: auto;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #154167 #d5e2ec;
+  scrollbar-color: #154167 #e6eef3;
 }
 
 .health-table-wrap::-webkit-scrollbar {
-  width: 12px;
+  width: 8px;
 }
 
 .health-table-wrap::-webkit-scrollbar-track {
-  background: #d5e2ec;
-  border-radius: 999px;
+  background: transparent;
 }
 
 .health-table-wrap::-webkit-scrollbar-thumb {
   background: #154167;
-  border: 2px solid #d5e2ec;
   border-radius: 999px;
-}
-
-.health-table-frame.is-overflow::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 16px;
-  bottom: 0;
-  height: 36px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff 70%);
-  pointer-events: none;
-}
-
-.health-table-frame.at-end::after {
-  display: none;
-}
-
-.health-scroll-cue {
-  position: absolute;
-  right: 20px;
-  bottom: 8px;
-  z-index: 2;
-  margin: 0;
-  padding: 4px 10px 4px 8px;
-  border-radius: 999px;
-  background: var(--navy);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  box-shadow: 0 2px 8px rgba(21, 65, 103, 0.28);
-  pointer-events: none;
-}
-
-.health-scroll-cue::before {
-  content: "";
-  display: inline-block;
-  width: 0;
-  height: 0;
-  margin-right: 6px;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid #fff;
-  vertical-align: 1px;
 }
 
 .health-table {
@@ -1857,7 +1811,6 @@ body.auth-unlocked .auth-gate {
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
-  white-space: nowrap;
 }
 
 .health-table thead th {
@@ -1868,6 +1821,7 @@ body.auth-unlocked .auth-gate {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+  white-space: normal;
 }
 
 .health-where {

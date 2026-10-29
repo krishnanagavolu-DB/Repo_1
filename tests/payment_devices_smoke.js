@@ -28,7 +28,7 @@ check("run-rate range ceiling is ten shops", html.includes('max="10"'), true);
 check("run-rate steps by half a shop", html.includes('step="0.5"'), true);
 check("run-rate has decrement and increment", html.includes('id="devices-runrate-down"') && html.includes('id="devices-runrate-up"'), true);
 check("card uses requested projected exhaustion label", html.includes(">Proj Exhaution<"), true);
-check("chart uses requested title", html.includes(">Verifone E285 Burndown Chart<"), true);
+check("chart uses requested title", html.includes(">E285 PO Burn down<"), true);
 check("control is labelled PO run rate", html.includes(">PO Run-Rate<"), true);
 
 const source = fs.readFileSync("site/preview/js/payment-devices.js", "utf8");

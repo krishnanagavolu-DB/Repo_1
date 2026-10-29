@@ -503,7 +503,6 @@ function renderTrend(metric, series, activeWeek) {
   const last = values[values.length - 1];
   const prev = values.length > 1 ? values[values.length - 2] : last;
   const endColor = last < prev ? "#D9272D" : "#006098";
-  const average = values.reduce((sum, value) => sum + value, 0) / values.length;
   // In available history every week feeds the aggregate, so no point is highlighted.
   const currentIndex = series.findIndex((point) => point.label === activeWeek?.label);
   const format = (value) =>
@@ -528,31 +527,15 @@ function renderTrend(metric, series, activeWeek) {
           ),
           tension: 0.25,
         },
-        {
-          label: `Average · ${format(average)}`,
-          data: values.map(() => average),
-          inlineLabels: false,
-          borderColor: "#c3d0dd",
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          fill: false,
-          tension: 0,
-        },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      devicePixelRatio: Math.max(window.devicePixelRatio || 1, 2),
       plugins: {
         inlineValueLabels: { display: true },
-        legend: {
-          display: true,
-          position: "top",
-          align: "end",
-          labels: { boxWidth: 10, font: { size: 10 }, color: "#154167" },
-        },
+        legend: { display: false },
         tooltip: {
           filter: (item) => item.datasetIndex === 0,
           callbacks: {

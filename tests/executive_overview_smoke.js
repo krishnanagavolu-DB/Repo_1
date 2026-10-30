@@ -647,6 +647,15 @@ function contrastAgainstWhite(hex) {
   const luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
   return 1.05 / (luminance + 0.05);
 }
+/* Canvases default to the display ratio, so pies and labels render soft on a
+   1x screen unless every chart on the page gets a 2x floor. */
+const chartLabelsJs = fs.readFileSync("site/preview/js/chart-labels.js", "utf8");
+check(
+  "every chart gets a 2x backing store by default",
+  /Chart\.defaults\.devicePixelRatio\s*=\s*Math\.max\(window\.devicePixelRatio \|\| 1, 2\)/.test(chartLabelsJs),
+  true
+);
+
 const askDataRef = html.indexOf('<section class="ask-data"');
 const lastTabPanelRef = html.lastIndexOf('class="tab-panel"');
 check(

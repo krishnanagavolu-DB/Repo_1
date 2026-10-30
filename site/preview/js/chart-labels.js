@@ -117,5 +117,12 @@
     Chart.register(plugin);
   }
 
+  /* Canvases default to the display ratio, which renders pie slices, legends,
+     and on-canvas labels soft on 1x screens and in exported slides. Two is the
+     floor for every chart on the page; a 2x display keeps its own ratio. */
+  if (typeof Chart !== "undefined" && Chart.defaults) {
+    Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+  }
+
   window.__chartLabels = { plugin, compactMoney, compactCount, percent };
 })();

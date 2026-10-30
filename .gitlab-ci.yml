@@ -24,6 +24,21 @@ certify:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
 
+# Builds the private 1-1 notes. The artifact is not copied into public/.
+ravi-notes:
+  image: python:3.12-bookworm
+  stage: certify
+  script:
+    - pip install -r ravi-1-1/requirements.txt
+    - cd ravi-1-1 && mkdocs build --strict
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - ravi-1-1/**/*
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - ravi-1-1/**/*
+
 pages:
   extends: .certify
   stage: deploy

@@ -1,0 +1,35 @@
+site_name: Krishna / Ravi 1-1
+site_description: Historical record of 1-1 conversations, progress, and action items.
+docs_dir: docs
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: red
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Meetings: index.md
+  - October 28, 2026: 2026-10-28.md
+  - Template: templates/1-1-weekly-template.md
+
+# MkDocs hides a docs/templates folder by default. This puts the weekly form back.
+exclude_docs: |
+  !templates/**
+
+plugins:
+  - search

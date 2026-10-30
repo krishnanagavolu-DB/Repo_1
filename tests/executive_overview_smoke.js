@@ -430,6 +430,23 @@ check(
   /every channel|all channels/i.test(html),
   true
 );
+/* Definitions belong with the chat that explains them, not stacked under the
+   charts a leader reads at a glance. */
+check(
+  "reconciliation note sits inside the Ask about this data definitions",
+  html.indexOf('<section class="ask-data"') < html.indexOf('id="overview-reconciliation"'),
+  true
+);
+check(
+  "Ask about this data carries a device health definitions slot",
+  html.includes('id="ask-data-definitions"') && html.includes('id="ask-device-health"'),
+  true
+);
+check(
+  "Ask about this data offers a terminal question",
+  /data-question="How many E285 terminals do we have\?"/.test(html),
+  true
+);
 check("sales chart exists", html.includes('id="chart-overview-sales"'), true);
 check("tender chart exists", html.includes('id="chart-overview-tender"'), true);
 check("watchlist exists", html.includes('id="overview-watchlist"'), true);

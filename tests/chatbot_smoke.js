@@ -3,6 +3,8 @@ const vm = require("vm");
 
 const dashboard = JSON.parse(fs.readFileSync("data/processed/dashboard.json", "utf8"));
 const benchmarks = JSON.parse(fs.readFileSync("data/processed/benchmarks.json", "utf8"));
+const deviceHealth = JSON.parse(fs.readFileSync("data/processed/device_health.json", "utf8"));
+const paymentDevices = JSON.parse(fs.readFileSync("data/processed/payment_devices.json", "utf8"));
 
 const sandbox = {
   console,
@@ -15,7 +17,11 @@ const sandbox = {
   RegExp,
   Date,
   setTimeout: (callback) => callback(),
-  window: { __benchmarkData: benchmarks },
+  window: {
+    __benchmarkData: benchmarks,
+    __deviceHealthState: deviceHealth,
+    __paymentDevicesState: paymentDevices,
+  },
   document: {
     addEventListener() {},
     querySelectorAll() {
@@ -47,6 +53,7 @@ const icFeePerTransaction = latest.kpis.ic_fee.value / latest.kpis.transaction_v
 const formattedIcFeePerTransaction = `$${icFeePerTransaction.toFixed(2)}`;
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const terminalCount = (value) => Math.round(Number(value)).toLocaleString("en-US");
 
 // The tab coordinator emits "history"; chatbot answers must use the aggregate.
 sandbox.window.__dashboardState.periodId = "history";
@@ -79,6 +86,24 @@ const checks = [
   ["Show the POS tender mix", /All payments data isn’t published yet|All payments tender mix/],
   ["What is All payments?", /In-Shop Sales.*Company-owned POS sales.*Gold Semantic Sales/i],
   ["help", /every channel tab/i],
+  // The terminals card hides the unconfirmed bucket, so the chat has to answer
+  // for it, and the installed base must not be served as the purchase order.
+  [
+    "How many E285 terminals do we have?",
+    new RegExp(`${escapeRegExp(terminalCount(deviceHealth.e285.total))} E285 terminals`),
+  ],
+  [
+    "What does location not confirmed mean?",
+    new RegExp(`not a lost-device count[\\s\\S]*${escapeRegExp(terminalCount(deviceHealth.e285.total))} total`),
+  ],
+  [
+    "How many terminals are available to ship?",
+    new RegExp(`\\*\\*${escapeRegExp(terminalCount(deviceHealth.e285.available_to_ship))} available to ship\\*\\*`),
+  ],
+  [
+    "How many Verifone e285 units do we still have?",
+    new RegExp(`${escapeRegExp(terminalCount(paymentDevices.summary.firm_inventory))}`),
+  ],
 ];
 
 const failures = [];

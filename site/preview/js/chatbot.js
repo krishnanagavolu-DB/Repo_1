@@ -849,6 +849,60 @@ function answerDataQuality() {
   return `**Data certification**\n• Status: **${quality.status}**\n• Certified for publish: **${quality.certified ? "Yes" : "No"}**\n• Weeks checked: **${quality.weeks_checked}**\n• Warnings requiring review: **${quality.warning_count}**\n\nA failed hard check blocks GitLab Pages deployment. The gate checks required columns, numeric types, missing/negative/fractional measures, exact duplicates, Monday week dates, file pairing, auth-to-sales reconciliation, unusual weekly movement, KPI tests, and identical published JSON copies. Warnings do not alter data; they force review of unusual but potentially legitimate movement.`;
 }
 
+/* The installed base (VHQ + iTrac) and the purchase order are different piles.
+   Terminal-location wording routes here; PO wording stays on the PO answer. */
+function wantsTerminalHealth(q) {
+  return /\b(terminals?|device health|in shops?|at stratix|stratix|itrac|vhq|location not confirmed|unconfirmed|available to ship|spare pool|depot|awaiting nso|installed base)\b/.test(
+    q
+  );
+}
+
+function terminalCount(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n).toLocaleString("en-US") : "—";
+}
+
+function answerTerminalHealth(q) {
+  const health = window.__deviceHealthState || window.__deviceHealth?.getTerminals?.();
+  chatContext.topic = "terminals";
+  if (!health?.e285) {
+    return "The Device Health workbook has not loaded yet. It publishes the E285 installed base from the VHQ and iTrac exports — refresh and ask again.";
+  }
+  const row = health.e285;
+  if (/\b(location not confirmed|unconfirmed|not confirmed|missing|lost|don'?t add up|do not add up|doesn'?t add up|gap)\b/.test(q)) {
+    return (
+      `**Location not confirmed: ${terminalCount(row.location_not_confirmed)} E285s.** ` +
+      "Neither file places them: the VHQ hierarchy path is not a shop group, and the serial is not in the Stratix asset file. " +
+      "**It is not a lost-device count** — it is the label for a serial with no confirmed location. " +
+      `That is why In shops (${terminalCount(row.in_shops)}) and At Stratix (${terminalCount(row.at_stratix)}) do not sum to the ${terminalCount(row.total)} total. ` +
+      "The card shows the two placed buckets; this bucket sits here in the definitions."
+    );
+  }
+  if (/\b(available to ship|available|in repair|picked|rma|not available)\b/.test(q)) {
+    return (
+      `**At Stratix: ${terminalCount(row.at_stratix)} E285s.** ` +
+      `**${terminalCount(row.available_to_ship)} available to ship** (iTrac status *In Inventory*) and ` +
+      `**${terminalCount(row.not_available)} not available** (*In Repair*, *Picked*, or *RMA Received*). ` +
+      `Buckets: spare pool ${terminalCount(row.spare_pool)}, depot ${terminalCount(row.depot)}, awaiting NSO ${terminalCount(row.awaiting_nso)}, held for a pushed opening ${terminalCount(row.held_for_opening)}. ` +
+      "iTrac is live, so these move as units ship and come back."
+    );
+  }
+  if (/\b(in shops?|active|inactive|pending)\b/.test(q)) {
+    return (
+      `**In shops: ${terminalCount(row.in_shops)} E285s** — ${terminalCount(row.in_shops_active)} **active** and ${terminalCount(row.in_shops_inactive)} **inactive or pending**. ` +
+      "Active means registered and in use. Inactive means registered and not in use right now — not lost, broken, or unbilled. " +
+      "VHQ hierarchy can be stale, so a device can show a shop path while it sits elsewhere."
+    );
+  }
+  return (
+    `**${terminalCount(row.total)} E285 terminals** across VHQ and iTrac as of VHQ ${health.vhq_as_of} / iTrac ${health.itrac_as_of}.\n` +
+    `• **In shops:** ${terminalCount(row.in_shops)} (${terminalCount(row.in_shops_active)} active · ${terminalCount(row.in_shops_inactive)} inactive or pending)\n` +
+    `• **At Stratix:** ${terminalCount(row.at_stratix)} (${terminalCount(row.available_to_ship)} available to ship · ${terminalCount(row.not_available)} not available)\n` +
+    `• **Location not confirmed:** ${terminalCount(row.location_not_confirmed)} — no shop or Stratix record, not a lost-device count\n\n` +
+    "Each serial is placed once: Stratix first, then a shop, then unconfirmed. This installed base is **not** the 5,700-unit purchase order — ask about the PO burn down for that."
+  );
+}
+
 function wantsDevices(q) {
   return /\b(payment devices?|verifone|e285|po pipeline|po extract|newco|unfulfilled|run-?rate|(?:5\.5|7(?:\.0)?) shops|hardware order|starting inventory|shipped shops)\b/.test(
     q
@@ -1547,6 +1601,9 @@ function answerQuestion(raw) {
   const oloAnswer = answerOloQuestion(q, raw);
   if (oloAnswer) return oloAnswer;
 
+  // The installed base answers before the PO, so "terminals at Stratix" does
+  // not come back as a purchase-order balance.
+  if (wantsTerminalHealth(q)) return answerTerminalHealth(q);
   if (wantsDevices(q)) return answerDevicesQuestion(q);
 
   const ambiguous = ambiguousChannelMetric(q, raw);
@@ -1804,7 +1861,8 @@ const TAB_PROMPTS = {
   overview: [
     { question: "What is In-Shop Sales?", label: "What does In-Shop Sales include?" },
     { question: "What is Card Health?", label: "What does Card Health measure?" },
-    { question: "What is Order Ahead?", label: "What does Order Ahead include?" },
+    { question: "How many E285 terminals do we have?", label: "How many terminals are out there?" },
+    { question: "What does location not confirmed mean?", label: "Why don’t the terminal buckets add up?" },
     { question: "Can I add POS and Worldpay sales?", label: "How do the channels overlap?" },
     { question: "Which metrics need attention?", label: "What needs executive attention?" },
   ],
@@ -1825,6 +1883,7 @@ const TAB_PROMPTS = {
   ],
   devices: [
     { question: "How many Verifone e285 units do we still have?", label: "What’s the Verifone balance?" },
+    { question: "How many terminals are available to ship?", label: "What can Stratix ship today?" },
     { question: "How are shipped shops matched to the PO pipeline?", label: "How do booked vs shipped shops match?" },
     { question: "What happens after the last projected opening?", label: "What is the 7 shops/week run-rate?" },
     { question: "When should we order more hardware?", label: "What’s the 1,000-unit e235 threshold?" },
@@ -1833,13 +1892,13 @@ const TAB_PROMPTS = {
 
 function tabBlurb(tabId) {
   if (tabId === "overview") {
-    return "Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention";
+    return "Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, terminal counts and device health definitions, channel overlap, and leadership attention";
   }
   if (tabId === "pos") {
     return "Ask about All payments tender mix, AVG_TICKET basis, tips/change, and why Worldpay differs — available on every tab";
   }
   if (tabId === "devices") {
-    return "Payment Devices: ask about Verifone e285 inventory, the PO pipeline, shipped shops, and the 7 shops/week run-rate";
+    return "Payment Devices: ask about Verifone e285 inventory, terminals in shops and at Stratix, the PO pipeline, shipped shops, and the 7 shops/week run-rate";
   }
   return "Ask about Card present trends, All payments definitions, industry benchmarks, and competitor research — available on every tab";
 }

@@ -8,22 +8,22 @@
     <title>PREVIEW · Dutch Bros Payments Executive KPI Dashboard</title>
     <link rel="stylesheet" href="https://use.typekit.net/fmk0nrx.css" />
     <link rel="stylesheet" href="https://use.typekit.net/amy4xba.css" />
-    <link rel="stylesheet" href="css/dashboard.css?v=9534b1114f" />
+    <link rel="stylesheet" href="css/dashboard.css?v=cb9eb06c52" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="js/auth-gate.js?v=c7fc15c5ec" defer></script>
     <script src="js/notices.js?v=5306b66e42" defer></script>
     <script src="js/ytd-banner.js?v=d2098345a9" defer></script>
-    <script src="js/chart-labels.js?v=2384962ef5" defer></script>
+    <script src="js/chart-labels.js?v=f785467b25" defer></script>
     <script src="js/dashboard.js?v=81d0669186" defer></script>
     <script src="js/pos-sales.js?v=0c71f1ebe9" defer></script>
     <script src="js/olo-pay.js?v=5e4ef3419c" defer></script>
     <script src="js/executive-overview.js?v=b2c6064a6f" defer></script>
-    <script src="js/device-health.js?v=f61fea71fe" defer></script>
+    <script src="js/device-health.js?v=533a92988a" defer></script>
     <script src="js/payment-devices.js?v=48e11d337e" defer></script>
     <script src="js/e235-roadmap.js?v=7511465abb" defer></script>
     <script src="js/db-payments.js?v=458e49091b" defer></script>
     <script src="js/tabs.js?v=9311d7771d" defer></script>
-    <script src="js/chatbot.js?v=7d0bac56e7" defer></script>
+    <script src="js/chatbot.js?v=db3910db18" defer></script>
   </head>
   <body class="auth-locked">
     <div id="auth-gate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-phrase">
@@ -200,11 +200,6 @@
                 <ol id="overview-watchlist" class="executive-watchlist" aria-live="polite"></ol>
               </article>
             </div>
-            <p id="overview-reconciliation" class="executive-reconciliation">
-              Total sales are POS ex-tip and cover every channel, order ahead included.
-              Worldpay card dollars include tip and overlap POS card sales. Olo Pay is the
-              processor for order-ahead card payments, not the order-ahead channel total.
-            </p>
             <div id="overview-later" class="overview-later"></div>
           </section>
         </section>
@@ -609,15 +604,34 @@
         <section class="ask-data" aria-label="Ask about this data">
           <div class="ask-data-head">
             <h2>Ask about this data</h2>
-            <p id="ask-data-blurb">Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, channel overlap, and leadership attention</p>
+            <p id="ask-data-blurb">Executive Overview: ask about In-Shop Sales, Card Health, Order Ahead, terminal counts and device health definitions, channel overlap, and leadership attention</p>
             <div class="ask-data-prompts" aria-label="Suggested questions">
               <button type="button" data-question="What is In-Shop Sales?">What does In-Shop Sales include?</button>
               <button type="button" data-question="What is Card Health?">What does Card Health measure?</button>
-              <button type="button" data-question="What is Order Ahead?">What does Order Ahead include?</button>
+              <button type="button" data-question="How many E285 terminals do we have?">How many terminals are out there?</button>
               <button type="button" data-question="Can I add POS and Worldpay sales?">How do the channels overlap?</button>
               <button type="button" data-question="Which metrics need attention?">What needs executive attention?</button>
             </div>
           </div>
+          <details class="ask-data-notes" id="ask-data-definitions">
+            <summary>Definitions — how the channels reconcile and how terminals are counted</summary>
+            <div class="ask-data-notes-body">
+              <section aria-label="Channel reconciliation">
+                <h3>How the channels reconcile</h3>
+                <p id="overview-reconciliation" class="executive-reconciliation">
+                  Total sales are POS ex-tip and cover every channel, order ahead included.
+                  Worldpay card dollars include tip and overlap POS card sales. Olo Pay is the
+                  processor for order-ahead card payments, not the order-ahead channel total.
+                </p>
+              </section>
+              <section aria-label="Device health definitions">
+                <h3>Terminals in the network</h3>
+                <div id="ask-device-health">
+                  <p>Device health definitions load with the dashboard.</p>
+                </div>
+              </section>
+            </div>
+          </details>
           <div id="chat-log" class="ask-data-log" aria-live="polite"></div>
           <form id="chat-form" class="ask-data-form">
             <label for="chat-input" class="visually-hidden">Your question</label>

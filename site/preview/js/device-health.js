@@ -6,6 +6,7 @@ const DEVICES_URL = "data/payment_devices.json";
 const HEALTH_URL = "data/device_health.json";
 let nso = null;
 let devicesPayload = null;
+let terminalHealth = null;
 let burndownChart = null;
 
 function escapeHtml(value) {
@@ -124,6 +125,9 @@ function renderTable() {
   }
 }
 
+/* Total leads, then the two placed buckets side by side. Serials without a
+   confirmed location stay out of the card; the definitions under Ask about
+   this data explain why the two buckets do not sum to the total. */
 function renderTerminals(health) {
   const host = document.getElementById("e285-health");
   const asof = document.getElementById("device-health-asof");
@@ -133,11 +137,28 @@ function renderTerminals(health) {
   host.innerHTML = `
     <p class="health-kicker">VHQ ${fmtDate(health.vhq_as_of)} · iTrac ${fmtDate(health.itrac_as_of)}</p>
     <dl class="e285-split">
-      <div><dt>In shops</dt><dd>${fmtInt(row.in_shops)}<span>${fmtInt(row.in_shops_active)} active · ${fmtInt(row.in_shops_inactive)} inactive or pending</span></dd></div>
-      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)}<span>Spare pool ${fmtInt(row.spare_pool)} · Depot ${fmtInt(row.depot)} · Awaiting NSO ${fmtInt(row.awaiting_nso)} · Held for opening ${fmtInt(row.held_for_opening)}</span><span>${fmtInt(row.available_to_ship)} available to ship · ${fmtInt(row.not_available)} not available</span></dd></div>
-      <div><dt>Location not confirmed</dt><dd>${fmtInt(row.location_not_confirmed)}<span>Neither file shows a shop or Stratix</span></dd></div>
+      <div class="e285-total"><dt>Total terminals</dt><dd>${fmtInt(row.total)}<span>Every E285 across VHQ and iTrac</span></dd></div>
+      <div><dt>In shops</dt><dd>${fmtInt(row.in_shops)}<span>${fmtInt(row.in_shops_active)} active</span><span>${fmtInt(row.in_shops_inactive)} inactive or pending</span></dd></div>
+      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)}<span>${fmtInt(row.available_to_ship)} available to ship</span><span>${fmtInt(row.not_available)} not available</span></dd></div>
+    </dl>`;
+}
+
+/* The workbook note and the bucket splits belong with the other definitions,
+   under Ask about this data, not in the card a leader reads at a glance. */
+function renderTerminalDefinitions(health) {
+  const host = document.getElementById("ask-device-health");
+  if (!host || !health?.e285) return;
+  const row = health.e285;
+  host.innerHTML = `
+    <p>${escapeHtml(health.note || "")}</p>
+    <dl class="ask-data-defs">
+      <div><dt>Total terminals</dt><dd>${fmtInt(row.total)} — every E285 in VHQ plus serials only Stratix holds.</dd></div>
+      <div><dt>In shops</dt><dd>${fmtInt(row.in_shops)} — the VHQ hierarchy path is a shop. Inactive means registered and not in use now, not lost or broken.</dd></div>
+      <div><dt>At Stratix</dt><dd>${fmtInt(row.at_stratix)} — spare pool ${fmtInt(row.spare_pool)}, depot ${fmtInt(row.depot)}, awaiting NSO ${fmtInt(row.awaiting_nso)}, held for a pushed opening ${fmtInt(row.held_for_opening)}.</dd></div>
+      <div><dt>Available to ship</dt><dd>${fmtInt(row.available_to_ship)} — iTrac status In Inventory. The other ${fmtInt(row.not_available)} are In Repair, Picked, or RMA Received.</dd></div>
+      <div><dt>Location not confirmed</dt><dd>${fmtInt(row.location_not_confirmed)} — neither file shows a shop or Stratix, so the card leaves them out of the two buckets. This is not a lost-device count.</dd></div>
     </dl>
-    <p class="health-source">${health.note || ""}</p>`;
+    <p class="ask-data-note">VHQ ${fmtDate(health.vhq_as_of)} · iTrac ${fmtDate(health.itrac_as_of)} · Source: ${escapeHtml(health.source || "Device Health workbook")}</p>`;
 }
 
 function quarterTicks(minMs, maxMs) {
@@ -305,7 +326,11 @@ async function load() {
     if (host && !host.childElementCount) host.textContent = "E285 health could not load.";
   }
   try {
-    renderTerminals(await loader(HEALTH_URL));
+    const health = await loader(HEALTH_URL);
+    terminalHealth = health;
+    window.__deviceHealthState = health;
+    renderTerminals(health);
+    renderTerminalDefinitions(health);
   } catch (error) {
     const host = document.getElementById("e285-health");
     if (host) host.textContent = "E285 health could not load.";
@@ -338,6 +363,7 @@ window.__deviceHealth = {
   mondayOf,
   weekEnd,
   burndownSeries,
+  getTerminals: () => terminalHealth,
   stratixLabel: null,
   openBurndown,
   showWeek,

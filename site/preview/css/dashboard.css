@@ -1488,6 +1488,71 @@ main {
   outline: none;
 }
 
+.ask-data-notes {
+  border-top: 1px solid var(--line);
+  padding: 0 22px;
+  background: #fff;
+}
+
+.ask-data-notes > summary {
+  padding: 12px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  cursor: pointer;
+}
+
+.ask-data-notes > summary:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.ask-data-notes-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  padding: 0 0 16px;
+}
+
+.ask-data-notes-body h3 {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ask-data-notes-body p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.ask-data-defs {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+
+.ask-data-defs dt {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.ask-data-defs dd {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.ask-data-note {
+  margin-top: 8px;
+}
+
 .ask-data-log {
   flex: 1;
   min-height: 200px;
@@ -1788,6 +1853,14 @@ body.auth-unlocked .auth-gate {
   position: relative;
 }
 
+/* The table clips mid-row at its scroll height, so the source note needs a
+   rule and air under it or the cut row reads as part of the sentence. */
+#nso-health-source {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
 .health-table-wrap {
   max-height: 320px;
   overflow-y: auto;
@@ -1857,6 +1930,7 @@ body.auth-unlocked .auth-gate {
 
 .e285-split {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 8px 0;
 }
@@ -1865,6 +1939,24 @@ body.auth-unlocked .auth-gate {
   padding: 8px 10px;
   border-radius: 8px;
   background: #f4f7fa;
+}
+
+/* Total leads the card full width; the two placed buckets share a row so they
+   stay the same height however many sub-lines each one carries. */
+.e285-split .e285-total {
+  grid-column: 1 / -1;
+  background: var(--blue);
+}
+
+.e285-split .e285-total dt,
+.e285-split .e285-total dd,
+.e285-split .e285-total dd span {
+  color: #fff;
+}
+
+.e285-split .e285-total dd {
+  font-size: 26px;
+  letter-spacing: -0.01em;
 }
 
 .e285-split dt {
@@ -1920,7 +2012,8 @@ body.auth-unlocked .auth-gate {
 }
 
 @media (max-width: 900px) {
-  .health-split {
+  .health-split,
+  .e285-split {
     grid-template-columns: 1fr;
   }
 }
@@ -2245,8 +2338,9 @@ body.auth-unlocked .auth-gate {
 
 .executive-reconciliation {
   margin: 0;
-  padding: 6px 16px;
+  padding: 0;
   font-size: 11px;
+  line-height: 1.5;
   color: var(--muted);
 }
 

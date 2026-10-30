@@ -299,7 +299,12 @@ function renderSource() {
   if (!node || !nso) return;
   const source = nso.sources || {};
   const poNames = source.po_extracts || [];
-  const poLabel = poNames.length > 1 ? `PO scrapes through ${poNames[poNames.length - 1]}` : (source.po_extract || "PO scrape");
+  /* Name the scrape that carries the whole pipeline, not the newest file. A
+     later partial scrape refreshes only the shops it lists, so naming it would
+     say the rest of the table is more current than it is. */
+  const basis = source.po_basis || poNames[0] || source.po_extract || "PO scrape";
+  const later = poNames.filter((name) => name !== basis).length;
+  const poLabel = later ? `${basis}, plus ${later} later partial scrape${later === 1 ? "" : "s"}` : basis;
   node.textContent = `Verifone to Stratix: ${source.orders_report || "orders report"}. Stratix to shop and First Tamper Check: ${poLabel}. iTrac lists devices held at Stratix, not which shop a shipment is going to.`;
 }
 

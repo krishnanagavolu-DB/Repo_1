@@ -148,6 +148,11 @@ def build_payload(raw_dir: Path | None = None) -> dict:
         "sources": {
             "po_extract": po_files[-1].name,
             "po_extracts": [path.name for path in po_files],
+            # The basis is the newest extract that carries the whole pipeline.
+            # A later partial scrape only refreshes the shops it lists, so
+            # naming the newest file would overstate how current the rest is.
+            "po_basis": basis_path.name,
+            "po_basis_date": devices.file_stamp(basis_path).isoformat(),
             "orders_report": orders_path.name,
             "itraq": None,
         },
@@ -177,6 +182,15 @@ def main(argv=None) -> int:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(rendered, encoding="utf-8")
     print(f"Wrote {args.out} ({len(payload['shops'])} shops as of {payload['as_of']})")
+    sources = payload["sources"]
+    newest = sources["po_extracts"][-1]
+    if sources["po_basis"] != newest:
+        # A one-shop scrape once let 12-day-old shipment dates publish unnoticed.
+        print(
+            f"WARNING: {newest} is a partial scrape. Shipment dates for every shop it "
+            f"does not list come from {sources['po_basis']} ({sources['po_basis_date']}).",
+            file=sys.stderr,
+        )
     return 0
 
 

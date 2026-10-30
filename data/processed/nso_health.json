@@ -1,11 +1,12 @@
 {
   "as_of": "2026-10-28",
   "sources": {
-    "po_extract": "PO_Extract_102826_1251.xlsx",
+    "po_extract": "PO_Extract_102926_1549.xlsx",
     "po_extracts": [
-      "PO_Extract_101626_1032.xlsx",
-      "PO_Extract_102826_1251.xlsx"
+      "PO_Extract_102926_1549.xlsx"
     ],
+    "po_basis": "PO_Extract_102926_1549.xlsx",
+    "po_basis_date": "2026-10-29",
     "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-28-06-33-11.xlsx",
     "itraq": null
   },
@@ -16,84 +17,14 @@
   ],
   "shops": [
     {
-      "id": "FL2501",
-      "opening_date": "2026-10-19",
-      "ownership": "Company Owned",
-      "city": "Deltona",
-      "state": "FL",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Completed"
-    },
-    {
-      "id": "UT0805",
-      "opening_date": "2026-10-19",
-      "ownership": "Company Owned",
-      "city": "Logan",
-      "state": "UT",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Completed"
-    },
-    {
-      "id": "FL1703",
-      "opening_date": "2026-10-21",
-      "ownership": "Company Owned",
-      "city": "Pensacola",
-      "state": "FL",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Seal Verification"
-    },
-    {
-      "id": "IL1701",
-      "opening_date": "2026-10-23",
-      "ownership": "Company Owned",
-      "city": "Bourbonnais",
-      "state": "IL",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Seal Verification"
-    },
-    {
-      "id": "IL1302",
-      "opening_date": "2026-10-24",
-      "ownership": "Company Owned",
-      "city": "Peoria",
-      "state": "IL",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Seal Verification"
-    },
-    {
-      "id": "OH0104",
-      "opening_date": "2026-10-25",
-      "ownership": "Company Owned",
-      "city": "Amelia",
-      "state": "OH",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Completed"
-    },
-    {
-      "id": "TX2005",
-      "opening_date": "2026-10-29",
-      "ownership": "Company Owned",
-      "city": "Kingwood",
-      "state": "TX",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Shipped and in transit",
-      "first_tamper_check": "Seal Verification"
-    },
-    {
       "id": "AZ0104",
       "opening_date": "2026-10-30",
       "ownership": "Company Owned",
       "city": "Camp Verde",
       "state": "AZ",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "AZ0906",
@@ -102,8 +33,8 @@
       "city": "Tucson",
       "state": "AZ",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "CA7504",
@@ -112,8 +43,8 @@
       "city": "Chino",
       "state": "CA",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "IN0202",
@@ -123,7 +54,17 @@
       "state": "IN",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Seal Verification"
+      "first_tamper_check": "Completed"
+    },
+    {
+      "id": "IN0706",
+      "opening_date": "2026-10-30",
+      "ownership": "Company Owned",
+      "city": "St John",
+      "state": "IN",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "OH0606",
@@ -132,8 +73,8 @@
       "city": "Columbus",
       "state": "OH",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "GA0104",
@@ -146,44 +87,14 @@
       "first_tamper_check": "Completed"
     },
     {
-      "id": "IN0109",
+      "id": "TX2005",
       "opening_date": "2026-11-05",
       "ownership": "Company Owned",
-      "city": "Terre Haute",
-      "state": "IN",
-      "verifone_to_stratix": "Not delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "AL0503",
-      "opening_date": "2026-11-06",
-      "ownership": "Company Owned",
-      "city": "Montgomery",
-      "state": "AL",
+      "city": "Kingwood",
+      "state": "TX",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "CA2909",
-      "opening_date": "2026-11-06",
-      "ownership": "Franchise",
-      "city": "Suisun City",
-      "state": "CA",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "IN0706",
-      "opening_date": "2026-11-06",
-      "ownership": "Company Owned",
-      "city": "St John",
-      "state": "IN",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Completed"
     },
     {
       "id": "LA0303",
@@ -196,34 +107,14 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "TX5302",
-      "opening_date": "2026-11-06",
+      "id": "IN0109",
+      "opening_date": "2026-11-09",
       "ownership": "Company Owned",
-      "city": "Houston",
-      "state": "TX",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "AZ0703",
-      "opening_date": "2026-11-07",
-      "ownership": "Company Owned",
-      "city": "San Tan Valley",
-      "state": "AZ",
+      "city": "Terre Haute",
+      "state": "IN",
       "verifone_to_stratix": "Not delivered",
       "stratix_to_shop": "Delivered",
       "first_tamper_check": "Seal Verification"
-    },
-    {
-      "id": "NC0304",
-      "opening_date": "2026-11-09",
-      "ownership": "Company Owned",
-      "city": "Winston-Salem",
-      "state": "NC",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
     },
     {
       "id": "WA1608",
@@ -236,8 +127,18 @@
       "first_tamper_check": "Pending"
     },
     {
+      "id": "AL0503",
+      "opening_date": "2026-11-10",
+      "ownership": "Company Owned",
+      "city": "Montgomery",
+      "state": "AL",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Seal Verification"
+    },
+    {
       "id": "FL0805",
-      "opening_date": "2026-11-11",
+      "opening_date": "2026-11-12",
       "ownership": "Company Owned",
       "city": "Ormond Beach",
       "state": "FL",
@@ -246,14 +147,14 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "IL0702",
-      "opening_date": "2026-11-11",
+      "id": "NC0304",
+      "opening_date": "2026-11-15",
       "ownership": "Company Owned",
-      "city": "Alsip",
-      "state": "IL",
+      "city": "Winston-Salem",
+      "state": "NC",
       "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Delivered",
-      "first_tamper_check": "Seal Verification"
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
     },
     {
       "id": "MO1201",
@@ -316,6 +217,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "IL0702",
+      "opening_date": "2026-11-20",
+      "ownership": "Company Owned",
+      "city": "Alsip",
+      "state": "IL",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Seal Verification"
+    },
+    {
       "id": "CA4505",
       "opening_date": "2026-11-21",
       "ownership": "Company Owned",
@@ -326,31 +237,11 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "NC0303",
-      "opening_date": "2026-11-22",
-      "ownership": "Company Owned",
-      "city": "Kernersville",
-      "state": "NC",
-      "verifone_to_stratix": "Not delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
       "id": "UT0407",
       "opening_date": "2026-11-23",
       "ownership": "Company Owned",
       "city": "South Jordan",
       "state": "UT",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "FL2805",
-      "opening_date": "2026-11-24",
-      "ownership": "Company Owned",
-      "city": "Belleview",
-      "state": "FL",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -386,12 +277,42 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "GA0301",
+      "opening_date": "2026-11-27",
+      "ownership": "Company Owned",
+      "city": "Columbus",
+      "state": "GA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "SC0803",
       "opening_date": "2026-11-27",
       "ownership": "Company Owned",
       "city": "Indian Land",
       "state": "SC",
       "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Seal Verification"
+    },
+    {
+      "id": "AL0107",
+      "opening_date": "2026-11-28",
+      "ownership": "Company Owned",
+      "city": "Madison",
+      "state": "AL",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "AZ0703",
+      "opening_date": "2026-11-28",
+      "ownership": "Company Owned",
+      "city": "San Tan Valley",
+      "state": "AZ",
+      "verifone_to_stratix": "Not delivered",
       "stratix_to_shop": "Delivered",
       "first_tamper_check": "Seal Verification"
     },
@@ -406,22 +327,12 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "GA1002",
+      "id": "NC0303",
       "opening_date": "2026-11-28",
       "ownership": "Company Owned",
-      "city": "Augusta",
-      "state": "GA",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "VA0501",
-      "opening_date": "2026-11-29",
-      "ownership": "Company Owned",
-      "city": "Lynchburg",
-      "state": "VA",
-      "verifone_to_stratix": "Delivered",
+      "city": "Kernersville",
+      "state": "NC",
+      "verifone_to_stratix": "Not delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -476,11 +387,31 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "FL2805",
+      "opening_date": "2026-12-02",
+      "ownership": "Company Owned",
+      "city": "Belleview",
+      "state": "FL",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "TN0909",
       "opening_date": "2026-12-02",
       "ownership": "Company Owned",
       "city": "East Ridge",
       "state": "TN",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "TX5302",
+      "opening_date": "2026-12-02",
+      "ownership": "Company Owned",
+      "city": "Houston",
+      "state": "TX",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -496,6 +427,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "VA0202",
+      "opening_date": "2026-12-02",
+      "ownership": "Company Owned",
+      "city": "Yorktown",
+      "state": "VA",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "OH0403",
       "opening_date": "2026-12-04",
       "ownership": "Company Owned",
@@ -506,12 +447,32 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "CA2909",
+      "opening_date": "2026-12-06",
+      "ownership": "Franchise",
+      "city": "Suisun City",
+      "state": "CA",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Delivered",
+      "first_tamper_check": "Seal Verification"
+    },
+    {
       "id": "TN1105",
       "opening_date": "2026-12-07",
       "ownership": "Company Owned",
       "city": "Bartlett",
       "state": "TN",
       "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "CA4309",
+      "opening_date": "2026-12-08",
+      "ownership": "Company Owned",
+      "city": "Tehachapi",
+      "state": "CA",
+      "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -532,6 +493,16 @@
       "city": "North Augusta",
       "state": "SC",
       "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "CO0608",
+      "opening_date": "2026-12-11",
+      "ownership": "Company Owned",
+      "city": "Ca\u00f1on City",
+      "state": "CO",
+      "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -557,20 +528,10 @@
     },
     {
       "id": "CA3711",
-      "opening_date": "2026-12-12",
+      "opening_date": "2026-12-15",
       "ownership": "Company Owned",
       "city": "Palm Desert",
       "state": "CA",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "CO0608",
-      "opening_date": "2026-12-13",
-      "ownership": "Company Owned",
-      "city": "Ca\u00f1on City",
-      "state": "CO",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -596,16 +557,6 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "NC0203",
-      "opening_date": "2026-12-15",
-      "ownership": "Company Owned",
-      "city": "Charlotte",
-      "state": "NC",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
       "id": "OH0502",
       "opening_date": "2026-12-16",
       "ownership": "Company Owned",
@@ -616,18 +567,8 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "VA0202",
-      "opening_date": "2026-12-16",
-      "ownership": "Company Owned",
-      "city": "Yorktown",
-      "state": "VA",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
       "id": "TN0704",
-      "opening_date": "2026-12-17",
+      "opening_date": "2026-12-16",
       "ownership": "Company Owned",
       "city": "Morristown",
       "state": "TN",
@@ -636,22 +577,12 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "AL0107",
+      "id": "GA1002",
       "opening_date": "2026-12-18",
       "ownership": "Company Owned",
-      "city": "Madison",
-      "state": "AL",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "GA0301",
-      "opening_date": "2026-12-18",
-      "ownership": "Company Owned",
-      "city": "Columbus",
+      "city": "Augusta",
       "state": "GA",
-      "verifone_to_stratix": "Not delivered",
+      "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -666,12 +597,12 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "CA4309",
+      "id": "AZ1645",
       "opening_date": "2026-12-22",
       "ownership": "Company Owned",
-      "city": "Tehachapi",
-      "state": "CA",
-      "verifone_to_stratix": "In transit",
+      "city": "Mesa",
+      "state": "AZ",
+      "verifone_to_stratix": "Not delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -776,22 +707,32 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "TX4105",
+      "opening_date": "2026-12-22",
+      "ownership": "Company Owned",
+      "city": "Webster",
+      "state": "TX",
+      "verifone_to_stratix": "In transit",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "TX6602",
+      "opening_date": "2026-12-22",
+      "ownership": "Company Owned",
+      "city": "Corpus Christi",
+      "state": "TX",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "IL1103",
       "opening_date": "2026-12-23",
       "ownership": "Company Owned",
       "city": "Darien",
       "state": "IL",
       "verifone_to_stratix": "In transit",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "FL0409",
-      "opening_date": "2026-12-25",
-      "ownership": "Company Owned",
-      "city": "Kissimmee",
-      "state": "FL",
-      "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
@@ -816,6 +757,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "NC0401",
+      "opening_date": "2026-12-29",
+      "ownership": "Company Owned",
+      "city": "Burlington",
+      "state": "NC",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "FL0603",
       "opening_date": "2026-12-30",
       "ownership": "Company Owned",
@@ -826,41 +777,31 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "IN0106",
-      "opening_date": "2026-12-31",
+      "id": "NC0203",
+      "opening_date": "2026-12-30",
       "ownership": "Company Owned",
-      "city": "Franklin",
-      "state": "IN",
-      "verifone_to_stratix": "Not delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "OH0604",
-      "opening_date": "2026-12-31",
-      "ownership": "Company Owned",
-      "city": "New Albany",
-      "state": "OH",
-      "verifone_to_stratix": "Not delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "NC0401",
-      "opening_date": "2027-01-01",
-      "ownership": "Company Owned",
-      "city": "Burlington",
+      "city": "Charlotte",
       "state": "NC",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "TX6602",
-      "opening_date": "2027-01-06",
+      "id": "VA0501",
+      "opening_date": "2026-12-30",
       "ownership": "Company Owned",
-      "city": "Corpus Christi",
-      "state": "TX",
+      "city": "Lynchburg",
+      "state": "VA",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "NC0208",
+      "opening_date": "2026-12-31",
+      "ownership": "Company Owned",
+      "city": "Concord",
+      "state": "NC",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -871,16 +812,6 @@
       "ownership": "Company Owned",
       "city": "Westerville",
       "state": "OH",
-      "verifone_to_stratix": "Delivered",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "NC0208",
-      "opening_date": "2027-01-08",
-      "ownership": "Company Owned",
-      "city": "Concord",
-      "state": "NC",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -906,21 +837,21 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "GA0502",
-      "opening_date": "2027-01-20",
+      "id": "FL0409",
+      "opening_date": "2027-01-19",
       "ownership": "Company Owned",
-      "city": "Milledgeville",
-      "state": "GA",
+      "city": "Kissimmee",
+      "state": "FL",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "IL0902",
-      "opening_date": "2027-01-21",
+      "id": "GA0502",
+      "opening_date": "2027-01-20",
       "ownership": "Company Owned",
-      "city": "Lyons",
-      "state": "IL",
+      "city": "Milledgeville",
+      "state": "GA",
       "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -956,6 +887,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "OH0604",
+      "opening_date": "2027-01-26",
+      "ownership": "Company Owned",
+      "city": "New Albany",
+      "state": "OH",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "FL0103",
       "opening_date": "2027-01-27",
       "ownership": "Company Owned",
@@ -971,16 +912,6 @@
       "ownership": "Company Owned",
       "city": "Melbourne",
       "state": "FL",
-      "verifone_to_stratix": "In transit",
-      "stratix_to_shop": "Not shipped",
-      "first_tamper_check": "No Devices"
-    },
-    {
-      "id": "TX4105",
-      "opening_date": "2027-01-27",
-      "ownership": "Company Owned",
-      "city": "Webster",
-      "state": "TX",
       "verifone_to_stratix": "In transit",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -1126,6 +1057,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "LA0701",
+      "opening_date": "2027-02-24",
+      "ownership": "Company Owned",
+      "city": "Alexandria",
+      "state": "LA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "CA6106",
       "opening_date": "2027-02-26",
       "ownership": "Company Owned",
@@ -1176,6 +1117,16 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "TX0810",
+      "opening_date": "2027-03-02",
+      "ownership": "Company Owned",
+      "city": "Cleburne",
+      "state": "TX",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "OH0203",
       "opening_date": "2027-03-03",
       "ownership": "Company Owned",
@@ -1201,6 +1152,16 @@
       "ownership": "Company Owned",
       "city": "Sonora",
       "state": "CA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "IN1001",
+      "opening_date": "2027-03-09",
+      "ownership": "Company Owned",
+      "city": "Granger",
+      "state": "IN",
       "verifone_to_stratix": "Not delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
@@ -1256,6 +1217,26 @@
       "first_tamper_check": "No Devices"
     },
     {
+      "id": "FL2304",
+      "opening_date": "2027-03-23",
+      "ownership": "Company Owned",
+      "city": "Lecanto",
+      "state": "FL",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "KS0108",
+      "opening_date": "2027-03-24",
+      "ownership": "Company Owned",
+      "city": "Shawnee",
+      "state": "KS",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
       "id": "OH0603",
       "opening_date": "2027-03-24",
       "ownership": "Company Owned",
@@ -1266,12 +1247,112 @@
       "first_tamper_check": "No Devices"
     },
     {
-      "id": "IN1001",
-      "opening_date": "2027-04-07",
+      "id": "CA7606",
+      "opening_date": "2027-03-26",
       "ownership": "Company Owned",
-      "city": "Granger",
+      "city": "Harbor City",
+      "state": "CA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "VA0601",
+      "opening_date": "2027-03-26",
+      "ownership": "Company Owned",
+      "city": "Harrisonburg",
+      "state": "VA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "LA0501",
+      "opening_date": "2027-03-27",
+      "ownership": "Company Owned",
+      "city": "Houma",
+      "state": "LA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "GA0205",
+      "opening_date": "2027-03-29",
+      "ownership": "Company Owned",
+      "city": "Snellville",
+      "state": "GA",
+      "verifone_to_stratix": "Delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "IL1602",
+      "opening_date": "2027-04-02",
+      "ownership": "Company Owned",
+      "city": "Springfield",
+      "state": "IL",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "CA3808",
+      "opening_date": "2027-04-05",
+      "ownership": "Company Owned",
+      "city": "Tulare",
+      "state": "CA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "IN0106",
+      "opening_date": "2027-04-05",
+      "ownership": "Company Owned",
+      "city": "Franklin",
       "state": "IN",
       "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "IL0805",
+      "opening_date": "2027-04-08",
+      "ownership": "Company Owned",
+      "city": "Plainfield",
+      "state": "IL",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "MO0505",
+      "opening_date": "2027-04-09",
+      "ownership": "Company Owned",
+      "city": "Wentzville",
+      "state": "MO",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "CA7303",
+      "opening_date": "2027-05-02",
+      "ownership": "Company Owned",
+      "city": "Placentia",
+      "state": "CA",
+      "verifone_to_stratix": "Not delivered",
+      "stratix_to_shop": "Not shipped",
+      "first_tamper_check": "No Devices"
+    },
+    {
+      "id": "IL0902",
+      "opening_date": "2027-06-03",
+      "ownership": "Company Owned",
+      "city": "Lyons",
+      "state": "IL",
+      "verifone_to_stratix": "Delivered",
       "stratix_to_shop": "Not shipped",
       "first_tamper_check": "No Devices"
     }

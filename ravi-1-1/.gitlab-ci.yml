@@ -1,0 +1,15 @@
+# Standalone deploy if this folder is ever its own GitLab project.
+# In the payments dashboard repo, the root .gitlab-ci.yml builds this site
+# but does not publish it. 1-1 notes are not part of the public dashboard.
+
+pages:
+  image: python:3.12-bookworm
+  stage: deploy
+  script:
+    - pip install -r requirements.txt
+    - mkdocs build --strict
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

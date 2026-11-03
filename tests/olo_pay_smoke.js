@@ -119,7 +119,7 @@ const weeks = olo.normalizeOloData(raw);
 const rawLatest = raw.weeks.at(-1);
 
 check("week count", weeks.length, raw.weeks.length);
-check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Oct 19 – Oct 25, 2026");
+check("weeks sorted, latest last", weeks[weeks.length - 1].label, "Oct 26 – Nov 1, 2026");
 check("oldest first", weeks[0].label, "Jun 15 – Jun 21, 2026");
 
 const latest = weeks[weeks.length - 1];
@@ -144,7 +144,7 @@ approx("Visa share pct", latest.brands[0].pctOfSales, rawLatest.card_brand_mix.V
 check("Visa transactions", latest.brands[0].transactions, rawLatest.card_brand_mix.Visa.TRANSACTION_COUNT);
 
 const ytd = olo.aggregateWeeks(weeks);
-check("history label", ytd.label, "Available history · Jun 15 – Oct 25, 2026");
+check("history label", ytd.label, "Available history · Jun 15 – Nov 1, 2026");
 check("history sort key", ytd.sortKey, "history");
 check("history id accepted", olo.isHistoryPeriod("history"), true);
 check("legacy ytd id accepted", olo.isHistoryPeriod("ytd"), true);
@@ -164,7 +164,7 @@ check("YTD auth format", olo.authPct(ytd.authRatePct), olo.authPct((approved / a
 approx("YTD refunds", ytd.refunds, sumWeeks((week) => week.totals.REFUND_VOLUME));
 approx("YTD voids", ytd.voids, sumWeeks((week) => week.totals.VOID_VOLUME));
 check("YTD has no wow sales", ytd.wow.salesPct, null);
-check("YTD brand Visa share", olo.sharePct(ytd.brands[0].pctOfSales / 100), "72.7%");
+check("YTD brand Visa share", olo.sharePct(ytd.brands[0].pctOfSales / 100), "72.6%");
 
 const salesTrend = olo.trendSeries(weeks, "sales");
 check("sales trend length", salesTrend.length, weeks.length);

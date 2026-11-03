@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-30T23:36:02+00:00",
+  "generated_at": "2026-11-03T04:00:19+00:00",
   "status": "certified",
   "certified": true,
   "assumptions": {
@@ -30,34 +30,34 @@
   "timeline": {
     "past": {
       "start": "2026-02-01",
-      "end": "2026-10-30",
+      "end": "2026-11-02",
       "opening_amount": 5700,
-      "shops_opened": 126,
-      "consumed_qty": 1260,
+      "shops_opened": 132,
+      "consumed_qty": 1320,
       "depot_qty_since_baseline": 0,
       "depot_qty_prior_contract": 1250
     },
     "present": {
-      "start": "2026-10-30",
+      "start": "2026-11-02",
       "end": "2027-06-03",
-      "planned_shops": 134,
-      "in_process_shops": 93,
-      "shipped_shops": 80,
+      "planned_shops": 129,
+      "in_process_shops": 87,
+      "shipped_shops": 74,
       "booked_shops": 13,
-      "pending_shops": 41,
-      "set_aside_units": 1340,
-      "committed_units": 930,
-      "pending_units": 410
+      "pending_shops": 42,
+      "set_aside_units": 1290,
+      "committed_units": 870,
+      "pending_units": 420
     },
     "future": {
       "start": "2027-06-03",
-      "remaining_units": 3100
+      "remaining_units": 3090
     }
   },
   "summary": {
     "baseline_inventory": 5700,
-    "as_of": "2026-10-30",
-    "extract_date": "2026-10-28",
+    "as_of": "2026-11-02",
+    "extract_date": "2026-11-02",
     "firm_inventory": 3510,
     "po_firm_inventory": 3510,
     "balance_now": 3630,
@@ -66,11 +66,11 @@
     "shipped_qty": 2060,
     "booked_shops": 13,
     "booked_qty": 130,
-    "po_pipeline_shops": 134,
-    "pending_shops": 41,
-    "pending_units": 410,
+    "po_pipeline_shops": 129,
+    "pending_shops": 42,
+    "pending_units": 420,
     "pipeline_end_date": "2027-06-03",
-    "zero_date": "2028-04-08"
+    "zero_date": "2028-04-07"
   },
   "series": {
     "firm": [
@@ -255,24 +255,19 @@
         "series": "firm"
       },
       {
-        "date": "2026-10-28",
-        "inventory": 3510.0,
-        "series": "firm"
-      },
-      {
-        "date": "2026-10-30",
+        "date": "2026-11-02",
         "inventory": 3510.0,
         "series": "firm"
       }
     ],
     "projected": [
       {
-        "date": "2026-10-30",
+        "date": "2026-11-02",
         "inventory": 3510.0,
         "series": "projected"
       },
       {
-        "date": "2026-10-31",
+        "date": "2026-11-03",
         "inventory": 3490.0,
         "series": "projected"
       },
@@ -347,58 +342,63 @@
         "series": "projected"
       },
       {
-        "date": "2027-02-15",
+        "date": "2027-02-11",
         "inventory": 3320.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-16",
+        "date": "2027-02-15",
         "inventory": 3310.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-17",
+        "date": "2027-02-16",
         "inventory": 3300.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-20",
+        "date": "2027-02-17",
         "inventory": 3290.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-22",
+        "date": "2027-02-20",
         "inventory": 3280.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-23",
+        "date": "2027-02-22",
         "inventory": 3270.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-25",
+        "date": "2027-02-23",
         "inventory": 3260.0,
         "series": "projected"
       },
       {
-        "date": "2027-02-26",
-        "inventory": 3230.0,
+        "date": "2027-02-25",
+        "inventory": 3250.0,
         "series": "projected"
       },
       {
-        "date": "2027-03-05",
+        "date": "2027-02-26",
         "inventory": 3220.0,
         "series": "projected"
       },
       {
-        "date": "2027-03-09",
+        "date": "2027-03-05",
         "inventory": 3210.0,
         "series": "projected"
       },
       {
+        "date": "2027-03-09",
+        "inventory": 3200.0,
+        "series": "projected"
+      },
+      {
         "date": "2027-03-10",
-        "inventory": 3190.0,
+        "inventory": 3180.0,
         "series": "projected"
       },
       {
@@ -432,237 +432,242 @@
         "series": "projected"
       },
       {
-        "date": "2027-04-18",
+        "date": "2027-03-31",
         "inventory": 3100.0,
+        "series": "projected"
+      },
+      {
+        "date": "2027-04-18",
+        "inventory": 3090.0,
         "series": "projected"
       },
       {
         "date": "2027-06-03",
-        "inventory": 3100.0,
+        "inventory": 3090.0,
         "series": "projected"
       },
       {
         "date": "2027-06-10",
-        "inventory": 3030.0,
+        "inventory": 3020.0,
         "series": "projected"
       },
       {
         "date": "2027-06-17",
-        "inventory": 2960.0,
+        "inventory": 2950.0,
         "series": "projected"
       },
       {
         "date": "2027-06-24",
-        "inventory": 2890.0,
+        "inventory": 2880.0,
         "series": "projected"
       },
       {
         "date": "2027-07-01",
-        "inventory": 2820.0,
+        "inventory": 2810.0,
         "series": "projected"
       },
       {
         "date": "2027-07-08",
-        "inventory": 2750.0,
+        "inventory": 2740.0,
         "series": "projected"
       },
       {
         "date": "2027-07-15",
-        "inventory": 2680.0,
+        "inventory": 2670.0,
         "series": "projected"
       },
       {
         "date": "2027-07-22",
-        "inventory": 2610.0,
+        "inventory": 2600.0,
         "series": "projected"
       },
       {
         "date": "2027-07-29",
-        "inventory": 2540.0,
+        "inventory": 2530.0,
         "series": "projected"
       },
       {
         "date": "2027-08-05",
-        "inventory": 2470.0,
+        "inventory": 2460.0,
         "series": "projected"
       },
       {
         "date": "2027-08-12",
-        "inventory": 2400.0,
+        "inventory": 2390.0,
         "series": "projected"
       },
       {
         "date": "2027-08-19",
-        "inventory": 2330.0,
+        "inventory": 2320.0,
         "series": "projected"
       },
       {
         "date": "2027-08-26",
-        "inventory": 2260.0,
+        "inventory": 2250.0,
         "series": "projected"
       },
       {
         "date": "2027-09-02",
-        "inventory": 2190.0,
+        "inventory": 2180.0,
         "series": "projected"
       },
       {
         "date": "2027-09-09",
-        "inventory": 2120.0,
+        "inventory": 2110.0,
         "series": "projected"
       },
       {
         "date": "2027-09-16",
-        "inventory": 2050.0,
+        "inventory": 2040.0,
         "series": "projected"
       },
       {
         "date": "2027-09-23",
-        "inventory": 1980.0,
+        "inventory": 1970.0,
         "series": "projected"
       },
       {
         "date": "2027-09-30",
-        "inventory": 1910.0,
+        "inventory": 1900.0,
         "series": "projected"
       },
       {
         "date": "2027-10-07",
-        "inventory": 1840.0,
+        "inventory": 1830.0,
         "series": "projected"
       },
       {
         "date": "2027-10-14",
-        "inventory": 1770.0,
+        "inventory": 1760.0,
         "series": "projected"
       },
       {
         "date": "2027-10-21",
-        "inventory": 1700.0,
+        "inventory": 1690.0,
         "series": "projected"
       },
       {
         "date": "2027-10-28",
-        "inventory": 1630.0,
+        "inventory": 1620.0,
         "series": "projected"
       },
       {
         "date": "2027-11-04",
-        "inventory": 1560.0,
+        "inventory": 1550.0,
         "series": "projected"
       },
       {
         "date": "2027-11-11",
-        "inventory": 1490.0,
+        "inventory": 1480.0,
         "series": "projected"
       },
       {
         "date": "2027-11-18",
-        "inventory": 1420.0,
+        "inventory": 1410.0,
         "series": "projected"
       },
       {
         "date": "2027-11-25",
-        "inventory": 1350.0,
+        "inventory": 1340.0,
         "series": "projected"
       },
       {
         "date": "2027-12-02",
-        "inventory": 1280.0,
+        "inventory": 1270.0,
         "series": "projected"
       },
       {
         "date": "2027-12-09",
-        "inventory": 1210.0,
+        "inventory": 1200.0,
         "series": "projected"
       },
       {
         "date": "2027-12-16",
-        "inventory": 1140.0,
+        "inventory": 1130.0,
         "series": "projected"
       },
       {
         "date": "2027-12-23",
-        "inventory": 1070.0,
+        "inventory": 1060.0,
         "series": "projected"
       },
       {
         "date": "2027-12-30",
-        "inventory": 1000.0,
+        "inventory": 990.0,
         "series": "projected"
       },
       {
         "date": "2028-01-06",
-        "inventory": 930.0,
+        "inventory": 920.0,
         "series": "projected"
       },
       {
         "date": "2028-01-13",
-        "inventory": 860.0,
+        "inventory": 850.0,
         "series": "projected"
       },
       {
         "date": "2028-01-20",
-        "inventory": 790.0,
+        "inventory": 780.0,
         "series": "projected"
       },
       {
         "date": "2028-01-27",
-        "inventory": 720.0,
+        "inventory": 710.0,
         "series": "projected"
       },
       {
         "date": "2028-02-03",
-        "inventory": 650.0,
+        "inventory": 640.0,
         "series": "projected"
       },
       {
         "date": "2028-02-10",
-        "inventory": 580.0,
+        "inventory": 570.0,
         "series": "projected"
       },
       {
         "date": "2028-02-17",
-        "inventory": 510.0,
+        "inventory": 500.0,
         "series": "projected"
       },
       {
         "date": "2028-02-24",
-        "inventory": 440.0,
+        "inventory": 430.0,
         "series": "projected"
       },
       {
         "date": "2028-03-02",
-        "inventory": 370.0,
+        "inventory": 360.0,
         "series": "projected"
       },
       {
         "date": "2028-03-09",
-        "inventory": 300.0,
+        "inventory": 290.0,
         "series": "projected"
       },
       {
         "date": "2028-03-16",
-        "inventory": 230.0,
+        "inventory": 220.0,
         "series": "projected"
       },
       {
         "date": "2028-03-23",
-        "inventory": 160.0,
+        "inventory": 150.0,
         "series": "projected"
       },
       {
         "date": "2028-03-30",
-        "inventory": 90.0,
+        "inventory": 80.0,
         "series": "projected"
       },
       {
         "date": "2028-04-06",
-        "inventory": 20.0,
+        "inventory": 10.0,
         "series": "projected"
       },
       {
-        "date": "2028-04-08",
+        "date": "2028-04-07",
         "inventory": 0.0,
         "series": "projected"
       }
@@ -671,41 +676,41 @@
   "crossings": [
     {
       "threshold": 3000,
-      "date": "2027-06-13",
+      "date": "2027-06-12",
       "label": "Jun 2027"
     },
     {
       "threshold": 2500,
-      "date": "2027-08-02",
+      "date": "2027-08-01",
       "label": "Aug 2027"
     },
     {
       "threshold": 2000,
-      "date": "2027-09-21",
+      "date": "2027-09-20",
       "label": "Sep 2027"
     },
     {
       "threshold": 1500,
-      "date": "2027-11-10",
+      "date": "2027-11-09",
       "label": "Nov 2027"
     },
     {
       "threshold": 1000,
-      "date": "2027-12-30",
+      "date": "2027-12-29",
       "label": "Dec 2027"
     }
   ],
   "gap": {
-    "date": "2026-10-30",
+    "date": "2026-11-02",
     "inventory": 3510,
-    "shops": 41,
-    "units": 410,
-    "label": "Pending Orders Gap: 41 Shops (410 units) in PO Pipeline awaiting MIDs/Booking."
+    "shops": 42,
+    "units": 420,
+    "label": "Pending Orders Gap: 42 Shops (420 units) in PO Pipeline awaiting MIDs/Booking."
   },
   "sources": {
-    "po_extract": "PO_Extract_102926_1549.xlsx",
-    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-10-28-06-33-11.xlsx",
-    "orders_extract_date": "2026-10-28",
+    "po_extract": "PO_Extract_110226_2039.xlsx",
+    "orders_report": "Daily Dutch Bros Booked Shipped Orders Report2026-11-02-06-33-29.xlsx",
+    "orders_extract_date": "2026-11-02",
     "verifone_burndown": "Dutch Bro Burndown Chart.xlsx",
     "verifone_tab": "10-16-2026"
   },

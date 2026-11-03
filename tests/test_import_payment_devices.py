@@ -356,21 +356,21 @@ def test_current_workbooks_count_pre_contract_po_matches_as_pending():
     if not payload["certified"]:
         return
     assert payload["summary"]["firm_inventory"] == 3510
-    assert payload["summary"]["pending_shops"] == 41
-    assert payload["summary"]["pending_units"] == 410
-    assert payload["gap"]["shops"] == 41
-    assert payload["gap"]["units"] == 410
+    assert payload["summary"]["pending_shops"] == 42
+    assert payload["summary"]["pending_units"] == 420
+    assert payload["gap"]["shops"] == 42
+    assert payload["gap"]["units"] == 420
     timeline = payload["timeline"]
     past, present, future = timeline["past"], timeline["present"], timeline["future"]
-    assert past["start"] == "2026-02-01" and past["end"] == "2026-10-28"
-    assert payload["summary"]["extract_date"] == "2026-10-28"
+    assert past["start"] == "2026-02-01" and past["end"] == "2026-11-02"
+    assert payload["summary"]["extract_date"] == "2026-11-02"
     assert past["opening_amount"] == 5700
-    assert past["shops_opened"] == 126 and past["consumed_qty"] == 1260
+    assert past["shops_opened"] == 132 and past["consumed_qty"] == 1320
     assert past["depot_qty_since_baseline"] == 0 and past["depot_qty_prior_contract"] == 1250
     assert present["end"] == "2027-06-03"
-    assert present["planned_shops"] == 134 and present["in_process_shops"] == 93
-    assert present["pending_shops"] == 41 and present["set_aside_units"] == 1340
-    assert future["remaining_units"] == 3100
+    assert present["planned_shops"] == 129 and present["in_process_shops"] == 87
+    assert present["pending_shops"] == 42 and present["set_aside_units"] == 1290
+    assert future["remaining_units"] == 3090
     assert payload["summary"]["firm_inventory"] - payload["summary"]["pending_units"] == future["remaining_units"]
     assert past["consumed_qty"] + present["set_aside_units"] + future["remaining_units"] == 5700
     assert payload["summary"]["po_firm_inventory"] == 3510

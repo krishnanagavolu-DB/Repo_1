@@ -33,11 +33,20 @@ def test_current_extracts_keep_tamper_status_and_name_the_itraq_gap():
     assert by_id["IL1504"]["opening_date"] == "2026-12-22"
     assert by_id["IL1504"]["stratix_to_shop"] == "Not shipped"
     assert by_id["IL1504"]["first_tamper_check"] == "No Devices"
-    # AZ0104 shipped 10/20 and was delivered 10/21. It read "Not shipped" while
-    # a one-shop PO extract let the pipeline fall back to a 12-day-old scrape.
-    assert by_id["AZ0104"]["opening_date"] == "2026-10-30"
-    assert by_id["AZ0104"]["first_tamper_check"] == "Completed"
-    assert by_id["AZ0104"]["stratix_to_shop"] == "Delivered"
+    # Shops that shipped once read "Not shipped" because a one-shop PO extract
+    # let the pipeline fall back to a 12-day-old scrape. Pin the invariant
+    # rather than a shop id, which ages out of the extract every week.
+    basis = ROOT / "data" / "raw" / "payment-devices" / payload["sources"]["po_basis"]
+    as_of = date.fromisoformat(payload["as_of"])
+    delivered = {
+        row["id"]
+        for row in nso.read_po_rows(basis)
+        if row["delivered_on"] is not None and row["delivered_on"] <= as_of
+    }
+    assert delivered, "the basis extract should carry at least one delivered shop"
+    for shop_id in delivered & set(by_id):
+        assert by_id[shop_id]["stratix_to_shop"] == "Delivered", shop_id
+
     statuses = {shop["verifone_to_stratix"] for shop in payload["shops"]}
     assert statuses <= {"Delivered", "In transit", "Not delivered"}
     assert {shop["stratix_to_shop"] for shop in payload["shops"]} <= {

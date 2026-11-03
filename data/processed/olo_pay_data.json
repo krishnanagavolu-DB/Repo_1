@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T14:39:38-07:00",
+  "generated_at": "2026-11-02T20:41:12-07:00",
   "week_cadence": "Monday-Sunday",
   "dashboard_tab": "Olo Pay",
   "environment": "prod",
@@ -1234,20 +1234,77 @@
         "TRANSACTION_COUNT_PCT": -1.4,
         "AUTH_RATE_PP": -0.07
       }
+    },
+    {
+      "week_start_date": "2026-10-26",
+      "week_end_date": "2026-11-01",
+      "totals": {
+        "SALES_VOLUME": 5883322.36,
+        "TIP_VOLUME": 423240.16,
+        "BILLED_VOLUME": 6306562.52,
+        "TRANSACTION_COUNT": 557147,
+        "ORDER_COUNT": 557147,
+        "TIPPED_ORDER_COUNT": 213468,
+        "AVG_TICKET": 10.56,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID, sales excluding tip",
+        "AVG_TIP_ON_TIPPED_ORDERS": 1.98,
+        "REFUND_VOLUME": 1017.79,
+        "VOID_VOLUME": 641.38
+      },
+      "authorization": {
+        "approved": 557147,
+        "declined": 18020,
+        "failed": 0,
+        "auth_rate_pct": 96.87,
+        "basis": "Sale attempts with STATUS in Approved, Declined, Failure"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 4259306.81,
+          "pct_of_digital_sales": 72.4,
+          "TRANSACTION_COUNT": 401667
+        },
+        "Mastercard": {
+          "amount": 1284569.17,
+          "pct_of_digital_sales": 21.8,
+          "TRANSACTION_COUNT": 123025
+        },
+        "Amex": {
+          "amount": 108101.12,
+          "pct_of_digital_sales": 1.9,
+          "TRANSACTION_COUNT": 9952
+        },
+        "Discover": {
+          "amount": 231345.26,
+          "pct_of_digital_sales": 3.9,
+          "TRANSACTION_COUNT": 22503
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 5883322.36,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 5.2,
+        "TRANSACTION_COUNT_PCT": 4.2,
+        "AUTH_RATE_PP": 0.14
+      }
     }
   ],
   "shop_coverage": {
     "gold_store_ownership_counts": {
-      "Company Owned": 1018,
+      "Company Owned": 1020,
       "Franchised": 314
     }
   },
   "certification": {
     "status": "certified",
     "certified": true,
-    "week_count": 19,
-    "latest_week_start": "2026-10-19",
-    "certified_at": "2026-10-28T14:39:38-07:00",
+    "week_count": 20,
+    "latest_week_start": "2026-10-26",
+    "certified_at": "2026-11-02T20:41:12-07:00",
     "scope": "Company Owned only; processor Stripe"
   }
 }

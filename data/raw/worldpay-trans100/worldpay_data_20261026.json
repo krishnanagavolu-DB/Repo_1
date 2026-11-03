@@ -1,0 +1,105 @@
+{
+  "generated_at": "2026-11-02T20:41:58-07:00",
+  "week_cadence": "Monday-Sunday",
+  "dashboard_tab": "Worldpay",
+  "environment": "prod",
+  "definitions": {
+    "SALES_VOLUME": "Approved IP auth dollars (AUTH_AMOUNT / 100) at Company Owned shops. Includes tip. What Worldpay authorized, not Genius drink sales.",
+    "TRANSACTION_COUNT": "Count of those approved IP rows after SYS_HASH dedupe.",
+    "AVG_TICKET": "SALES_VOLUME \u00f7 TRANSACTION_COUNT. Per auth, not per Genius order.",
+    "AUTHORIZATION_RATE": "Approved IP (AUTH_REQUEST_RESP_CODE = AA) \u00f7 all IP attempts \u00d7 100.",
+    "CARD_BRAND_MIX": "CARD_TYPE on approved IPs: Visa, Mastercard (MCRD), Amex, Discover (DISC)."
+  },
+  "methodology_file": "worldpay_methodology.json",
+  "filter": {
+    "layer": "SILVER_CLEANSED.WORLDPAY_BULK.WORLDPAY_TRANS_100",
+    "trans_type": "IP",
+    "approved": "AUTH_REQUEST_RESP_CODE = AA",
+    "shop_filter": "Company Owned via GOLD_SEMANTIC.SALES.VW_DIM_STORE_CURATED.OWNERSHIP. Franchised and unmapped excluded.",
+    "amount": "AUTH_AMOUNT cents / 100. Includes tip.",
+    "sales_excludes_tip": false
+  },
+  "brand_order": [
+    "Visa",
+    "Mastercard",
+    "Amex",
+    "Discover"
+  ],
+  "weeks": [
+    {
+      "week_start_date": "2026-10-26",
+      "week_end_date": "2026-11-01",
+      "totals": {
+        "SALES_VOLUME": 27439724.12,
+        "TRANSACTION_COUNT": 2282203,
+        "AVG_TICKET": 12.02,
+        "AVG_TICKET_BASIS": "approved IP auths, billed dollars including tip"
+      },
+      "authorization": {
+        "approved": 2282203,
+        "declined": 30335,
+        "auth_rate_pct": 98.69,
+        "basis": "IP attempts; approved = AUTH_REQUEST_RESP_CODE AA"
+      },
+      "card_brand_mix": {
+        "Visa": {
+          "amount": 20613716.93,
+          "pct_of_card_sales": 75.1,
+          "TRANSACTION_COUNT": 1712397
+        },
+        "Mastercard": {
+          "amount": 5416108.7,
+          "pct_of_card_sales": 19.7,
+          "TRANSACTION_COUNT": 452749
+        },
+        "Amex": {
+          "amount": 626088.16,
+          "pct_of_card_sales": 2.3,
+          "TRANSACTION_COUNT": 50352
+        },
+        "Discover": {
+          "amount": 783810.33,
+          "pct_of_card_sales": 2.9,
+          "TRANSACTION_COUNT": 66705
+        }
+      },
+      "mix_checksum": 100.0,
+      "ownership_split": {
+        "company_owned_sales": 27439724.12,
+        "franchised_sales": 0.0,
+        "unmapped_or_other_sales": 0.0
+      },
+      "week_over_week": {
+        "SALES_VOLUME_PCT": -1.0,
+        "TRANSACTION_COUNT_PCT": 0.4,
+        "AUTH_RATE_PP": 0.02
+      }
+    }
+  ],
+  "shop_coverage": {
+    "gold_store_ownership_counts": {
+      "Company Owned": 1020,
+      "Franchised": 314
+    }
+  },
+  "artifacts": {
+    "json": "worldpay_data_20261026.json",
+    "methodology": "worldpay_methodology.json"
+  },
+  "error_log": [
+    {
+      "code": "source_worldpay_trans_100",
+      "note": "SILVER_CLEANSED.WORLDPAY_BULK.WORLDPAY_TRANS_100. TRANS_TYPE=IP purchase auths. AUTH_AMOUNT is cents."
+    },
+    {
+      "code": "sales_include_tip",
+      "note": "No tip field on TRANS_100. SALES_VOLUME is billed auth, not Genius ex-tip sales."
+    },
+    {
+      "code": "dedupe_sys_hash",
+      "source_rows_after_dedupe": 2312538,
+      "distinct_id": 2312538,
+      "null_amount": 0
+    }
+  ]
+}

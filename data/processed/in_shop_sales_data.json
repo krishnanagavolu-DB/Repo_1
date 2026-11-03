@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T14:39:15-07:00",
+  "generated_at": "2026-11-02T20:40:38-07:00",
   "week_cadence": "Monday-Sunday",
   "definitions": {
     "SALES_VOLUME": "Company Owned payment dollars from Gold Semantic Sales. Quarantine false, subtype payment, refunds as signed ORDER_PAYMENT_AMOUNT.",
@@ -58,7 +58,7 @@
       "CUSTOM": "Gift Card / Dutch Pass"
     },
     "gold_store_ownership_counts": {
-      "Company Owned": 1018,
+      "Company Owned": 1020,
       "Franchised": 314
     }
   },
@@ -139,19 +139,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": null,
         "TRANSACTION_COUNT_PCT": null
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 39999316.29,
-          "orders": 3456793
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7563695.03,
-          "orders": 757089
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-07-06",
@@ -224,19 +212,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -3.8,
         "TRANSACTION_COUNT_PCT": -0.8
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38243938.71,
-          "orders": 3401756
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7510161.94,
-          "orders": 781279
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-07-13",
@@ -309,19 +285,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 3.8,
         "TRANSACTION_COUNT_PCT": 3.0
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 39831595.49,
-          "orders": 3514751
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7674298.23,
-          "orders": 792070
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-07-20",
@@ -394,19 +358,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -3.3,
         "TRANSACTION_COUNT_PCT": -2.6
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38406764.81,
-          "orders": 3414048
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7526588.67,
-          "orders": 784745
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-07-27",
@@ -479,19 +431,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -0.5,
         "TRANSACTION_COUNT_PCT": -0.2
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38292385.75,
-          "orders": 3421452
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7427314.91,
-          "orders": 770437
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-08-03",
@@ -564,19 +504,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 1.7,
         "TRANSACTION_COUNT_PCT": 2.8
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38774431.0,
-          "orders": 3491521
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7738867.79,
-          "orders": 817049
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-08-10",
@@ -649,19 +577,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -2.1,
         "TRANSACTION_COUNT_PCT": -1.7
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38291345.73,
-          "orders": 3456676
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7267791.84,
-          "orders": 777112
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-08-17",
@@ -734,19 +650,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 2.7,
         "TRANSACTION_COUNT_PCT": 3.1
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38584635.75,
-          "orders": 3509007
-        },
-        {
-          "label": "Order ahead",
-          "sales": 8201143.78,
-          "orders": 859394
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-08-24",
@@ -819,19 +723,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -2.5,
         "TRANSACTION_COUNT_PCT": -2.0
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 37657217.78,
-          "orders": 3444009
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7939365.62,
-          "orders": 837400
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-08-31",
@@ -904,19 +796,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -1.3,
         "TRANSACTION_COUNT_PCT": -2.0
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 37090262.72,
-          "orders": 3365873
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7898753.6,
-          "orders": 831709
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-09-07",
@@ -989,19 +869,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": 2.9,
         "TRANSACTION_COUNT_PCT": 2.1
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 38223547.76,
-          "orders": 3426431
-        },
-        {
-          "label": "Order ahead",
-          "sales": 8091299.87,
-          "orders": 858066
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-09-14",
@@ -1074,19 +942,7 @@
       "week_over_week": {
         "SALES_VOLUME_PCT": -4.7,
         "TRANSACTION_COUNT_PCT": -2.0
-      },
-      "channels": [
-        {
-          "label": "In shop",
-          "sales": 36216526.05,
-          "orders": 3347367
-        },
-        {
-          "label": "Order ahead",
-          "sales": 7934863.75,
-          "orders": 850546
-        }
-      ]
+      }
     },
     {
       "week_start_date": "2026-09-21",
@@ -1452,20 +1308,93 @@
         "SALES_VOLUME_PCT": -0.2,
         "TRANSACTION_COUNT_PCT": -1.0
       }
+    },
+    {
+      "week_start_date": "2026-10-26",
+      "week_end_date": "2026-11-01",
+      "totals": {
+        "SALES_VOLUME": 45328164.42,
+        "TRANSACTION_COUNT": 4317594,
+        "AVG_TICKET": 10.67,
+        "AVG_TICKET_BASIS": "distinct_ORDER_ID",
+        "ORDER_COUNT": 4247534
+      },
+      "tender_mix": {
+        "Card": {
+          "amount": 31668843.95,
+          "pct_of_total_sales": 69.9,
+          "TRANSACTION_COUNT": 2914769
+        },
+        "Cash": {
+          "amount": 6751083.72,
+          "pct_of_total_sales": 14.9,
+          "TRANSACTION_COUNT": 745629
+        },
+        "Gift Card / Dutch Pass": {
+          "amount": 6908236.75,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 657196,
+          "components": {
+            "GIFT": {
+              "amount": 4437225.4,
+              "TRANSACTION_COUNT": 412344
+            },
+            "CUSTOM": {
+              "amount": 2471011.35,
+              "TRANSACTION_COUNT": 244852
+            }
+          }
+        }
+      },
+      "tenders": [
+        {
+          "name": "Card",
+          "amount": 31668843.95,
+          "pct_of_total_sales": 69.9,
+          "TRANSACTION_COUNT": 2914769
+        },
+        {
+          "name": "Cash",
+          "amount": 6751083.72,
+          "pct_of_total_sales": 14.9,
+          "TRANSACTION_COUNT": 745629
+        },
+        {
+          "name": "Gift Card / Dutch Pass",
+          "amount": 6908236.75,
+          "pct_of_total_sales": 15.2,
+          "TRANSACTION_COUNT": 657196,
+          "components": {
+            "GIFT": {
+              "amount": 4437225.4,
+              "TRANSACTION_COUNT": 412344
+            },
+            "CUSTOM": {
+              "amount": 2471011.35,
+              "TRANSACTION_COUNT": 244852
+            }
+          }
+        }
+      ],
+      "mix_checksum": 100.0,
+      "week_over_week": {
+        "SALES_VOLUME_PCT": 0.6,
+        "TRANSACTION_COUNT_PCT": 1.4
+      }
     }
   ],
   "shop_coverage": {
-    "co_shops_in_gold_dim": 1018,
+    "co_shops_in_gold_dim": 1020,
     "franchised_shops_in_gold_dim": 314,
-    "excluded_store_codes_csv_only": 313
+    "excluded_store_codes_csv_only": 314
   },
   "artifacts": {
-    "json": "in_shop_sales_data_20261028.json",
+    "json": "in_shop_sales_data_20261102.json",
     "granular": {
       "status": "skipped",
       "note": "Row-level Parquet is off by default."
     },
-    "methodology": "in_shop_sales_methodology_20261028.json"
+    "methodology": "in_shop_sales_methodology_20261102.json"
   },
   "error_log": [
     {
@@ -1554,6 +1483,20 @@
       "payment_type": "UNKNOWN",
       "amount": -12.81,
       "rows": 7,
+      "action": "excluded_from_kpi_mix"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "CHECK",
+      "amount": 150.4,
+      "rows": 1,
+      "action": "excluded_from_kpi_mix"
+    },
+    {
+      "code": "unmapped_payment_type",
+      "payment_type": "UNKNOWN",
+      "amount": -9.8,
+      "rows": 9,
       "action": "excluded_from_kpi_mix"
     }
   ],

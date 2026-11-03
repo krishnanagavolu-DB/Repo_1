@@ -17,6 +17,10 @@ from datetime import date, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# The published site copies are encrypted from data/processed, so the combined
+# payload has to land there first. Writing only the site copies lets the next
+# encrypt run overwrite a fresh week with the previous one.
+PROCESSED = ROOT / "data" / "processed" / "in_shop_sales_data.json"
 TARGETS = [
     ROOT / "site" / "preview" / "data" / "in_shop_sales_data.json",
     ROOT / "site" / "data" / "in_shop_sales_data.json",
@@ -260,7 +264,7 @@ def main() -> int:
         print("\nNot copied. Fix the export and rerun.")
         return 1
 
-    targets = TARGETS[:1] if args.preview_only else TARGETS
+    targets = [PROCESSED] + (TARGETS[:1] if args.preview_only else TARGETS)
     rendered = json.dumps(payload, indent=2) + "\n"
     for target in targets:
         target.parent.mkdir(parents=True, exist_ok=True)

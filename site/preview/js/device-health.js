@@ -286,7 +286,7 @@ function renderBurndown(payload) {
             font: { size: 10 },
             callback: (value) => (value >= 1000 ? `${Math.round(value / 1000)}k` : `${value}`),
           },
-          grid: { color: "#e6eef3" },
+          grid: { color: "#EEF2F6" },
           border: { display: false },
         },
       },

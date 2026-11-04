@@ -12,6 +12,39 @@
   --bg: #e8eef2;
   --panel: #ffffff;
   --good: #147f40;
+
+  /* Neutral scale. Fifteen near-identical blue-greys had accumulated across
+     this file (#eef3f6, #e6edf3, #f7fafc, #c5d0db and friends); they are all
+     one of these four now, so a tint change is one edit instead of a hunt. */
+  --surface: #eef2f6;
+  --surface-soft: #f4f7fa;
+  --surface-dim: #dfe9f0;
+  --line-strong: #b8c7d6;
+  --ink-soft: #33475b;
+
+  /* Categorical chart ramp. Mirrors DBPalette in js/chart-labels.js, which is
+     what the canvases actually read; these exist for HTML swatches and keys.
+     Slots 5-8 are tints of the brand blue and slate, so a many-series chart
+     stays in the brand instead of reaching for a new hue. */
+  --chart-1: var(--blue);
+  --chart-2: var(--navy);
+  --chart-3: var(--yellow);
+  --chart-4: var(--red);
+  --chart-5: var(--muted);
+  --chart-6: #7fb3d9;
+  --chart-7: #9fc4de;
+  --chart-8: var(--line);
+
+  /* Status washes, derived from the brand red, yellow and green. Each family
+     had drifted into three or four barely distinguishable shades, so a
+     caution banner and a caution badge did not look related. */
+  --warn-wash: #fff8e2;
+  --warn-line: #f0d27a;
+  --warn-ink: #6a4e05;
+  --yellow-deep: #d4c400;
+  --alert-wash: #fdeced;
+  --alert-line: #f5c2c5;
+  --good-wash: #e3f3e8;
   --font: "futura-pt", "Futura PT", "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
@@ -56,7 +89,7 @@ body {
   color: var(--dark);
   font-size: 13px;
   line-height: 1.35;
-  border-bottom: 1px solid #d4c400;
+  border-bottom: 1px solid var(--yellow-deep);
 }
 
 .preview-banner strong {
@@ -177,7 +210,7 @@ body {
 .period-control {
   display: flex;
   align-items: stretch;
-  border: 1px solid #b8c7d6;
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
   background: #fff;
   min-height: 44px;
@@ -277,7 +310,7 @@ body {
   gap: 4px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--surface);
   color: var(--muted-2);
   font-size: 10px;
   font-weight: 700;
@@ -307,11 +340,11 @@ body {
   gap: 8px;
   margin-bottom: 20px;
   padding: 13px 18px;
-  border: 1px solid #f3e08a;
+  border: 1px solid var(--warn-line);
   border-left: 5px solid var(--yellow);
   border-radius: 8px;
-  background: #fffdf0;
-  color: #5c4a06;
+  background: var(--warn-wash);
+  color: var(--warn-ink);
   font-size: 14px;
   font-weight: 600;
 }
@@ -323,19 +356,19 @@ body {
   gap: 8px;
   margin-bottom: 20px;
   padding: 14px 18px;
-  border: 1px solid #f0d27a;
-  border-left: 5px solid #e8b931;
+  border: 1px solid var(--warn-line);
+  border-left: 5px solid var(--warn-line);
   border-radius: 8px;
-  background: #fff8e2;
-  color: #6a4e05;
+  background: var(--warn-wash);
+  color: var(--warn-ink);
   font-size: 14px;
 }
 
 .pos-banner-info {
-  border: 1px solid #e0c470;
+  border: 1px solid var(--warn-line);
   border-radius: 999px;
-  background: #fffdf6;
-  color: #6a4e05;
+  background: var(--warn-wash);
+  color: var(--warn-ink);
   font-family: var(--font);
   font-size: 12px;
   font-weight: 700;
@@ -363,7 +396,7 @@ body {
 }
 
 .pos-empty code {
-  background: #eef2f6;
+  background: var(--surface);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 13px;
@@ -515,7 +548,7 @@ body {
   align-items: baseline;
   gap: 9px;
   padding: 7px 0;
-  border-bottom: 1px dotted #e3eaf1;
+  border-bottom: 1px dotted var(--line);
   font-size: 11px;
 }
 
@@ -693,7 +726,7 @@ main {
 }
 
 .kpi-trend {
-  border-top: 1px solid #e8eef4;
+  border-top: 1px solid var(--surface);
   padding-top: 12px;
 }
 
@@ -771,7 +804,7 @@ main {
 
 .panel-band {
   padding: 7px 12px;
-  background: #dfe9f0;
+  background: var(--surface-dim);
   border-bottom: 1px solid var(--line);
   font-size: 11px;
   font-weight: 800;
@@ -852,7 +885,7 @@ main {
   justify-content: space-between;
   gap: 8px;
   padding: 3px 0;
-  border-bottom: 1px dotted #e3eaf1;
+  border-bottom: 1px dotted var(--line);
   font-size: 11.5px;
   min-width: 0;
 }
@@ -948,7 +981,7 @@ main {
 }
 
 .cat-btn {
-  border: 1px solid #c3d3e0;
+  border: 1px solid var(--line-strong);
   border-radius: 6px;
   background: #ffffff;
   padding: 6px 8px;
@@ -1086,7 +1119,7 @@ main {
 
 .mix-legend td {
   padding: 8px 0;
-  border-top: 1px solid #e8eef4;
+  border-top: 1px solid var(--surface);
 }
 
 .mix-legend tr:first-child td {
@@ -1298,7 +1331,7 @@ main {
 
 .coming-card {
   background: var(--panel);
-  border: 1px dashed #c5d0db;
+  border: 1px dashed var(--line-strong);
   border-radius: 10px;
   padding: 20px;
   color: var(--muted-2);
@@ -1320,9 +1353,9 @@ main {
   margin: 24px 28px;
   padding: 16px;
   border-radius: 8px;
-  background: #fff5f5;
+  background: var(--alert-wash);
   color: var(--red);
-  border: 1px solid #f5c2c5;
+  border: 1px solid var(--alert-line);
 }
 
 /* ===== Shared notices: friendly headline, technical detail behind a toggle ===== */
@@ -1335,8 +1368,8 @@ main {
 }
 
 .notice-error {
-  border-color: #f5c2c5;
-  background: #fff7f7;
+  border-color: var(--alert-line);
+  background: var(--alert-wash);
 }
 
 .notice-body h3,
@@ -1405,8 +1438,8 @@ main {
   margin: 0;
   padding: 10px 12px;
   border-radius: 6px;
-  background: #eef2f6;
-  color: #33475b;
+  background: var(--surface);
+  color: var(--ink-soft);
   font-size: 12.5px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1425,7 +1458,7 @@ main {
 
 .notice-fix code,
 .notice-body code {
-  background: #eef2f6;
+  background: var(--surface);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 12.5px;
@@ -1445,7 +1478,7 @@ main {
 .ask-data-head {
   padding: 20px 22px 16px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #eef3f6 0%, #ffffff 100%);
+  background: linear-gradient(180deg, var(--surface) 0%, #ffffff 100%);
 }
 
 .ask-data-head h2 {
@@ -1470,7 +1503,7 @@ main {
 }
 
 .ask-data-prompts button {
-  border: 1px solid #b8c7d6;
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: #fff;
   color: var(--blue);
@@ -1559,7 +1592,7 @@ main {
   max-height: 340px;
   overflow: auto;
   padding: 18px 22px;
-  background: #f8fafc;
+  background: var(--surface-soft);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1602,7 +1635,7 @@ main {
 }
 
 .chat-followups button {
-  border: 1px solid #b8c7d6;
+  border: 1px solid var(--line-strong);
   border-radius: 999px;
   background: #fff;
   color: var(--blue);
@@ -1630,7 +1663,7 @@ main {
 
 .ask-data-form input {
   flex: 1;
-  border: 1px solid #b8c7d6;
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
   padding: 14px 16px;
   font-family: var(--font);
@@ -1763,7 +1796,7 @@ body.auth-unlocked .auth-gate {
 
 .auth-form input {
   width: 100%;
-  border: 1px solid #b8c7d6;
+  border: 1px solid var(--line-strong);
   border-radius: 10px;
   padding: 14px 16px;
   font-family: var(--font);
@@ -1866,7 +1899,7 @@ body.auth-unlocked .auth-gate {
   overflow-y: auto;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
-  scrollbar-color: #154167 #e6eef3;
+  scrollbar-color: var(--navy) var(--surface);
 }
 
 .health-table-wrap::-webkit-scrollbar {
@@ -1878,7 +1911,7 @@ body.auth-unlocked .auth-gate {
 }
 
 .health-table-wrap::-webkit-scrollbar-thumb {
-  background: #154167;
+  background: var(--navy);
   border-radius: 999px;
 }
 
@@ -1899,7 +1932,7 @@ body.auth-unlocked .auth-gate {
 .health-table thead th {
   position: sticky;
   top: 0;
-  background: #f4f7fa;
+  background: var(--surface-soft);
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -1917,16 +1950,16 @@ body.auth-unlocked .auth-gate {
   display: inline-block;
   padding: 1px 8px;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--surface);
   font-size: 11px;
   font-weight: 700;
 }
 
-.health-delivered { background: #e3f3e8; color: var(--good); }
+.health-delivered { background: var(--good-wash); color: var(--good); }
 .health-in-transit,
-.health-shipped-and-in-transit { background: #fff4d6; color: #7a5a00; }
+.health-shipped-and-in-transit { background: var(--warn-wash); color: var(--warn-ink); }
 .health-not-delivered,
-.health-not-shipped { background: #fdeced; color: var(--red); }
+.health-not-shipped { background: var(--alert-wash); color: var(--red); }
 
 .e285-split {
   display: grid;
@@ -1938,7 +1971,7 @@ body.auth-unlocked .auth-gate {
 .e285-split div {
   padding: 8px 10px;
   border-radius: 8px;
-  background: #f4f7fa;
+  background: var(--surface-soft);
 }
 
 /* Total leads the card full width; the two placed buckets share a row so they
@@ -2156,7 +2189,7 @@ body.auth-unlocked .auth-gate {
 
 .channel-band-flag {
   padding: 2px 9px;
-  border: 1px dashed #c5d0db;
+  border: 1px dashed var(--line-strong);
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
@@ -2286,8 +2319,12 @@ body.auth-unlocked .auth-gate {
    wins the cross-axis size here and silently ignores width/height. */
 .executive-mix-panel .chart-wrap {
   flex: none;
-  width: 130px;
-  height: 130px;
+  /* The panel body is 300px tall, so 130 left half the box empty and made the
+     doughnut the blurriest thing on the slide once someone cropped it into a
+     deck. 160 is the widest the legend beside it tolerates without wrapping
+     "Gift Card / Dutch Pass". */
+  width: 160px;
+  height: 160px;
 }
 
 .executive-mix-panel .compact-legend {
@@ -2398,47 +2435,47 @@ body[data-active-tab="devices"] .period {
 
 .devices-era-past {
   background: rgba(21, 65, 103, 0.14);
-  box-shadow: inset 0 0 0 2px #154167;
+  box-shadow: inset 0 0 0 2px var(--navy);
 }
 .devices-era-past h3,
-.devices-era-past .devices-kpi-value { color: #154167; }
-.devices-era-past .devices-kpi { border-top-color: #154167; }
+.devices-era-past .devices-kpi-value { color: var(--navy); }
+.devices-era-past .devices-kpi { border-top-color: var(--navy); }
 
 .devices-era-present {
   background: rgba(0, 96, 152, 0.16);
-  box-shadow: inset 0 0 0 2px #006098;
+  box-shadow: inset 0 0 0 2px var(--blue);
 }
 .devices-era-present h3,
-.devices-era-present .devices-kpi-value { color: #006098; }
-.devices-era-present .devices-kpi { border-top-color: #006098; }
+.devices-era-present .devices-kpi-value { color: var(--blue); }
+.devices-era-present .devices-kpi { border-top-color: var(--blue); }
 
 .devices-era-future {
   background: rgba(217, 39, 45, 0.14);
-  box-shadow: inset 0 0 0 2px #d9272d;
+  box-shadow: inset 0 0 0 2px var(--red);
 }
 .devices-era-future h3,
-.devices-era-future .devices-kpi-value { color: #d9272d; }
-.devices-era-future .devices-kpi { border-top-color: #d9272d; }
+.devices-era-future .devices-kpi-value { color: var(--red); }
+.devices-era-future .devices-kpi { border-top-color: var(--red); }
 
 .devices-kpi {
   display: flex;
   flex-direction: column;
   background: #fff;
-  border: 1px solid var(--line, #d2dce5);
-  border-top: 3px solid var(--blue, #006098);
+  border: 1px solid var(--line, var(--line));
+  border-top: 3px solid var(--blue, var(--blue));
   border-radius: 12px;
   padding: 14px 16px 12px;
 }
 
 .devices-kpi-modelled {
-  border-top-color: var(--red, #d9272d);
+  border-top-color: var(--red, var(--red));
 }
 
 .devices-kpi-label {
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted, #5a6f82);
+  color: var(--muted, var(--muted));
   font-weight: 700;
 }
 
@@ -2452,14 +2489,14 @@ body[data-active-tab="devices"] .period {
   line-height: 34px;
   font-weight: 700;
   white-space: nowrap;
-  color: var(--navy, #154167);
+  color: var(--navy, var(--navy));
 }
 
 .devices-kpi-unit {
   margin-left: 2px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--muted, #5a6f82);
+  color: var(--muted, var(--muted));
 }
 
 .devices-kpi-note {
@@ -2467,7 +2504,7 @@ body[data-active-tab="devices"] .period {
   min-height: 34px;
   font-size: 12px;
   line-height: 17px;
-  color: var(--muted-2, #7a8da0);
+  color: var(--muted-2, var(--muted-2));
 }
 
 .devices-chart-head {
@@ -2488,16 +2525,16 @@ body[data-active-tab="devices"] .period {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--line, #d2dce5);
+  border: 1px solid var(--line, var(--line));
   border-radius: 999px;
-  background: #f7fafc;
+  background: var(--surface-soft);
 }
 
 .devices-runrate-label {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--muted, #5a6f82);
+  color: var(--muted, var(--muted));
   font-weight: 700;
 }
 
@@ -2506,29 +2543,29 @@ body[data-active-tab="devices"] .period {
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: var(--navy, #154167);
+  color: var(--navy, var(--navy));
 }
 
 .devices-runrate button {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid var(--line, #d2dce5);
+  border: 1px solid var(--line, var(--line));
   background: #fff;
-  color: var(--navy, #154167);
+  color: var(--navy, var(--navy));
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
 }
 
 .devices-runrate button:hover {
-  border-color: var(--blue, #006098);
-  color: var(--blue, #006098);
+  border-color: var(--blue, var(--blue));
+  color: var(--blue, var(--blue));
 }
 
 .devices-runrate input[type="range"] {
   width: 120px;
-  accent-color: var(--blue, #006098);
+  accent-color: var(--blue, var(--blue));
 }
 
 .devices-assumptions {
@@ -2541,7 +2578,7 @@ body[data-active-tab="devices"] .period {
   display: flex;
   flex-direction: column;
   background: #fff;
-  border: 1px solid var(--line, #d2dce5);
+  border: 1px solid var(--line, var(--line));
   border-radius: 12px;
   padding: 12px 14px 13px;
 }
@@ -2551,7 +2588,7 @@ body[data-active-tab="devices"] .period {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 700;
-  color: var(--navy, #154167);
+  color: var(--navy, var(--navy));
 }
 
 .devices-assumption-value {
@@ -2560,7 +2597,7 @@ body[data-active-tab="devices"] .period {
   font-size: 15px;
   line-height: 21px;
   font-weight: 700;
-  color: var(--navy, #154167);
+  color: var(--navy, var(--navy));
 }
 
 /* Two reserved lines keep the six cards on a consistent baseline whether the
@@ -2570,7 +2607,7 @@ body[data-active-tab="devices"] .period {
   min-height: 34px;
   font-size: 12px;
   line-height: 17px;
-  color: var(--muted-2, #7a8da0);
+  color: var(--muted-2, var(--muted-2));
 }
 
 @media (max-width: 1100px) {
@@ -2593,7 +2630,7 @@ body[data-active-tab="devices"] .period {
   z-index: 2;
   max-width: 280px;
   padding: 10px 12px;
-  border: 1px solid var(--red, #d9272d);
+  border: 1px solid var(--red, var(--red));
   border-radius: 10px;
   background: #fff;
   color: var(--navy);
@@ -2631,7 +2668,7 @@ body[data-active-tab="devices"] .period {
   margin: 0 auto 14px;
   padding: 4px;
   border-radius: 999px;
-  background: #dbe4ec;
+  background: var(--surface-dim);
   width: fit-content;
 }
 
@@ -2765,7 +2802,7 @@ body[data-active-tab="devices"] .period {
   padding: 12px;
   border-radius: 10px;
   border-top: 4px solid var(--line);
-  background: #f4f7fa;
+  background: var(--surface-soft);
 }
 
 .roadmap-stage h4 {
@@ -2850,7 +2887,7 @@ body[data-active-tab="devices"] .period {
   grid-column: var(--roadmap-col) / span var(--roadmap-span, 1);
   padding: 8px 12px;
   border-radius: 8px;
-  background: #e6edf3;
+  background: var(--surface);
   color: var(--dark);
 }
 
@@ -2909,7 +2946,7 @@ body[data-active-tab="dbpay"] .ask-data {
 }
 
 .tab-badge-private {
-  background: #fdeced;
+  background: var(--alert-wash);
   color: var(--red);
 }
 
@@ -3046,7 +3083,7 @@ body[data-active-tab="dbpay"] .ask-data {
   min-width: 92px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--surface);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -3055,9 +3092,9 @@ body[data-active-tab="dbpay"] .ask-data {
   color: var(--muted);
 }
 
-.dbpay-status-done { background: #e3f3e8; color: var(--good); }
+.dbpay-status-done { background: var(--good-wash); color: var(--good); }
 .dbpay-status-in-progress { background: rgba(0, 96, 152, 0.12); color: var(--blue); }
-.dbpay-status-blocked { background: #fdeced; color: var(--red); }
+.dbpay-status-blocked { background: var(--alert-wash); color: var(--red); }
 
 .dbpay-area {
   flex: none;
@@ -3174,7 +3211,7 @@ body[data-active-tab="dbpay"] .ask-data {
   margin-right: 6px;
   padding: 1px 8px;
   border-radius: 999px;
-  background: #eef2f6;
+  background: var(--surface);
   font-size: 11px;
   font-weight: 700;
   text-align: center;
@@ -3205,12 +3242,12 @@ body[data-active-tab="dbpay"] .ask-data {
 }
 
 .dbpay-status-on-hold {
-  background: #fff4d6;
-  color: #7a5a00;
+  background: var(--warn-wash);
+  color: var(--warn-ink);
 }
 
 .dbpay-status-closed {
-  background: #eef2f6;
+  background: var(--surface);
   color: var(--muted);
 }
 

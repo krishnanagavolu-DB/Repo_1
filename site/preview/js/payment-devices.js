@@ -3,7 +3,7 @@
 (function () {
 const DATA_URL = "data/payment_devices.json";
 const NAVY = "#154167";
-const MUTED = "#9aa8b5";
+const MUTED = "#7A8DA0";
 const BLACK = "#111111";
 const BLUE = "#006098";
 const RED = "#d9272d";

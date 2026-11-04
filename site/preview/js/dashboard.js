@@ -101,7 +101,28 @@ window.KPI_ORDER = window.KPI_SECTIONS.flatMap((section) => section.metrics);
 const KPI_ORDER = window.KPI_ORDER;
 const KPI_SECTIONS = window.KPI_SECTIONS;
 
-const MIX_COLORS = ["#006098", "#154167", "#F6E300", "#D9272D", "#4094A7", "#D2DCE5"];
+/* Shared brand ramp from chart-labels.js. The literals are the same values and
+   exist only so the node smoke tests can load this file without the page. */
+const PALETTE = window.DBPalette || {
+  blue: "#006098",
+  navy: "#154167",
+  yellow: "#F6E300",
+  red: "#D9272D",
+  slate: "#5A6F82",
+  sky: "#7FB3D9",
+  mist: "#9FC4DE",
+  line: "#D2DCE5",
+  grid: "#EEF2F6",
+};
+
+const MIX_COLORS = [
+  PALETTE.blue,
+  PALETTE.navy,
+  PALETTE.yellow,
+  PALETTE.red,
+  PALETTE.slate,
+  PALETTE.line,
+];
 
 let dashboardData = null;
 window.__dashboardState = { data: null, periodId: null };
@@ -123,7 +144,20 @@ const HERO_KEYS = ["auth_rate", "decline_volume", "sales_volume"];
 const COST_KEYS = ["downgrade_rate", "ic_rate", "ic_fee"];
 const CONTEXT_KEYS = ["transaction_volume", "aov", "returns_pct_of_sales"];
 
-const DECLINE_COLORS = ["#D9272D", "#006098", "#154167", "#4094A7", "#E99F41", "#D2DCE5"];
+/* Red leads: the first slice is the largest decline reason, and decline is the
+   one mix on the page where a red slice is the honest signal. */
+const DECLINE_COLORS = [
+  PALETTE.red,
+  PALETTE.blue,
+  PALETTE.navy,
+  PALETTE.slate,
+  PALETTE.sky,
+  PALETTE.line,
+];
+
+/* The decline-reason bar runs to eight rows, so it carries the ramp's light
+   tail on the end, where the smallest reasons sit. */
+const DECLINE_RAMP = [...DECLINE_COLORS.slice(0, 5), PALETTE.mist, PALETTE.line, PALETTE.yellow];
 
 function pct(value, digits = 2) {
   return `${(Number(value) * 100).toFixed(digits)}%`;
@@ -487,7 +521,7 @@ function renderAuthByEntry(items) {
         {
           data: rows.map((i) => Number(i.auth_rate) * 100),
           valueFormatter: (value) => `${Number(value).toFixed(1)}%`,
-          backgroundColor: ["#006098", "#154167", "#F6E300", "#D9272D", "#D2DCE5", "#4094A7"],
+          backgroundColor: MIX_COLORS,
           borderRadius: 4,
         },
       ],
@@ -509,7 +543,7 @@ function renderAuthByEntry(items) {
         x: {
           min: 0,
           max: 100,
-          grid: { color: "#eef2f6" },
+          grid: { color: PALETTE.grid },
           ticks: {
             color: "#5a6f82",
             callback: (v) => `${v}%`,
@@ -562,7 +596,7 @@ function renderDeclines(items) {
       datasets: [
         {
           data: top.map((i) => i.count),
-          backgroundColor: ["#D9272D", "#006098", "#F6E300", "#154167", "#D2DCE5", "#4094A7", "#E99F41", "#DE5C36"],
+          backgroundColor: DECLINE_RAMP,
           borderRadius: 4,
         },
       ],
@@ -586,7 +620,7 @@ function renderDeclines(items) {
       },
       scales: {
         x: {
-          grid: { color: "#eef2f6" },
+          grid: { color: PALETTE.grid },
           ticks: { color: "#5a6f82", font: { size: 10 }, callback: (v) => compactCount(v) },
         },
         y: {
@@ -712,7 +746,9 @@ function renderAuthTrend(data) {
           label: `${item.label} · ${(item.value * 100).toFixed(1)}%`,
           data: weeks.map(() => item.value * 100),
           inlineLabels: false,
-          borderColor: idx === 0 ? "#4094A7" : "#E99F41",
+          /* Dashed reference lines stay muted so they read as context, not
+             as another measured series. */
+          borderColor: idx === 0 ? PALETTE.slate : PALETTE.sky,
           borderWidth: 2,
           borderDash: [6, 4],
           pointRadius: 0,
@@ -745,7 +781,7 @@ function renderAuthTrend(data) {
         y: {
           suggestedMin: Math.max(0, Math.floor(floor - 1)),
           suggestedMax: 100,
-          grid: { color: "#eef2f6" },
+          grid: { color: PALETTE.grid },
           ticks: {
             color: "#5a6f82",
             font: { size: 10 },
@@ -938,7 +974,7 @@ function renderDeclinesOverTime(data) {
         x: { stacked: true, grid: { display: false }, ticks: { color: "#5a6f82", font: { size: 10 } } },
         y: {
           stacked: true,
-          grid: { color: "#eef2f6" },
+          grid: { color: PALETTE.grid },
           ticks: { color: "#5a6f82", font: { size: 10 }, callback: (v) => compactCount(v) },
         },
         y1: {

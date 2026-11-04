@@ -665,13 +665,16 @@ function contrastAgainstWhite(hex) {
   return 1.05 / (luminance + 0.05);
 }
 /* Canvases default to the display ratio, so pies and labels render soft on a
-   1x screen unless every chart on the page gets a 2x floor. */
+   1x screen unless every chart on the page gets a high-density floor. The mix
+   doughnut is ~160 CSS px and gets cropped into decks at roughly three times
+   that, which is where 2x was still visibly soft. */
 const chartLabelsJs = fs.readFileSync("site/preview/js/chart-labels.js", "utf8");
-check(
-  "every chart gets a 2x backing store by default",
-  /Chart\.defaults\.devicePixelRatio\s*=\s*Math\.max\(window\.devicePixelRatio \|\| 1, 2\)/.test(chartLabelsJs),
-  true
+const dprFloor = Number(
+  /Chart\.defaults\.devicePixelRatio\s*=\s*Math\.max\(window\.devicePixelRatio \|\| 1,\s*(\d+)\)/.exec(
+    chartLabelsJs
+  )?.[1]
 );
+check("every chart gets at least a 3x backing store by default", dprFloor >= 3, true);
 
 const askDataRef = html.indexOf('<section class="ask-data"');
 const lastTabPanelRef = html.lastIndexOf('class="tab-panel"');
@@ -711,13 +714,20 @@ check(
   contrastAgainstWhite(goodHex) >= 4.5,
   true
 );
-check("tender canvas has no forced !important width", css.includes("width: 130px !important"), false);
-check("tender canvas has no forced !important height", css.includes("height: 130px !important"), false);
-check(
-  "mix panel chart-wrap carries the fixed square size instead",
-  /\.executive-mix-panel\s+\.chart-wrap\s*\{[^}]*width:\s*130px/.test(css),
-  true
-);
+/* Forcing !important dimensions on the canvas fights Chart.js's own resize and
+   distorts the circle; the wrapper carries the size instead. */
+const tenderRules = [...css.matchAll(/([^{}]*(?:executive-mix-panel|chart-overview-tender)[^{}]*)\{([^}]*)\}/g)]
+  .map((match) => match[2])
+  .join("\n");
+check("tender canvas has no forced !important width", /width:[^;]*!important/.test(tenderRules), false);
+check("tender canvas has no forced !important height", /height:[^;]*!important/.test(tenderRules), false);
+/* Square, and big enough that a crop into a deck is not the blurriest thing on
+   the slide. The panel body is 300px tall, so anything under ~150 wastes it. */
+const mixWrap = /\.executive-mix-panel\s+\.chart-wrap\s*\{([^}]*)\}/.exec(css)?.[1] || "";
+const mixWidth = Number(/width:\s*(\d+)px/.exec(mixWrap)?.[1]);
+const mixHeight = Number(/height:\s*(\d+)px/.exec(mixWrap)?.[1]);
+check("mix panel chart-wrap is sized square", mixWidth === mixHeight && mixWidth > 0, true);
+check("mix panel doughnut is at least 150px so a cropped export stays sharp", mixWidth >= 150, true);
 // A fixed width/height alone is not enough: the shared `.panel-body
 // .chart-wrap { flex: 1 }` rule (used elsewhere for a chart that fills a
 // column-flow panel) has equal specificity and wins the cross-axis size via

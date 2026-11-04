@@ -174,7 +174,9 @@ const CHANNEL_ORDER = ["In shop", "Order ahead", "Other / delivery"];
 const CHANNEL_COLORS = {
   "In shop": "#006098",
   "Order ahead": "#154167",
-  "Other / delivery": "#4094A7",
+  /* Slate, not the old teal: this is the residual bucket, and a neutral says
+     so while staying distinct from the two blues beside it. */
+  "Other / delivery": "#5A6F82",
 };
 /* Below this share a true-width segment renders sub-pixel and disappears. */
 const MIN_SEGMENT_WIDTH_PCT = 1.5;
@@ -234,7 +236,7 @@ function buildChannelSplit(posWeek, channelWeek) {
       orders,
       avgTicket: orders ? sales / orders : null,
       share: sales / total,
-      color: CHANNEL_COLORS[String(row?.label || "").trim()] || "#4094A7",
+      color: CHANNEL_COLORS[String(row?.label || "").trim()] || "#5A6F82",
     });
   }
 
@@ -645,7 +647,7 @@ function salesMoneyScale(title, color, position) {
       font: { size: 10, weight: "700" },
       padding: { top: 0, bottom: 4 },
     },
-    grid: position === "left" ? { color: "#e6eef3", drawTicks: false } : { display: false },
+    grid: position === "left" ? { color: "#EEF2F6", drawTicks: false } : { display: false },
     border: { display: false },
     ticks: {
       color,
@@ -732,12 +734,12 @@ function buildSalesChartConfig(labels, datasets) {
             generateLabels(chart) {
               return chart.data.datasets.map((dataset, index) => {
                 const hidden = Boolean(chart.getDatasetMeta(index).hidden);
-                const color = hidden ? "#b7c3ce" : dataset.borderColor;
+                const color = hidden ? "#D2DCE5" : dataset.borderColor;
                 return {
                   text: latestSalesText(dataset),
                   fillStyle: color,
                   strokeStyle: color,
-                  fontColor: hidden ? "#8aa0b3" : "#154167",
+                  fontColor: hidden ? "#7A8DA0" : "#154167",
                   hidden: false,
                   datasetIndex: index,
                   pointStyle: "line",
